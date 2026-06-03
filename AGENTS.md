@@ -24,11 +24,9 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: Frontend scaffold complete, ready for Sample Analyzer plugin
-- **Recent Decisions**: 2026-06-03 — Created full folder structure, VISION.md, AGENTS.md, README.md, 9 architecture docs under docs/architecture/, initialized git with generic identity. Added opencode.json with instructions=[AGENTS.md, VISION.md] for compaction context.
-- **Recent Decisions**: 2026-06-03 — Backend scaffold complete: FastAPI app with lifespan (init_db, discover_plugins), Plugin ABC + auto-discovery, Provider ABC + registry with 4 stubs, SQLite schema + connection, Pydantic shared models, config via pydantic-settings, health endpoint verified. aubio skipped (needs MSVC build tools). Dev script `scripts/dev.ps1`. PYTHONPATH set to project root for imports.
-- **Recent Decisions**: 2026-06-03 — Plugin ABC enhanced with `input_schema` + `subscribes_to`. EventBus with on/off/emit. Plugin routes: list, execute, schema. Data contracts in shared/types.py. Three new architecture invariants (LLM never touches raw audio, plugins never call each other, every plugin needs input_schema).
-- **Recent Decisions**: 2026-06-03 — Error handling system: custom exception hierarchy (MusicCopilotError + 6 subtypes), rotating file logger (5MB × 3 backups, configurable level), hybrid approach (exceptions for internal flow, PluginResult for API, global safety net for unexpected crashes). Verified health + plugin routes still work.
+- **Current Focus**: Sample Analyzer plugin live — audio upload, BPM/key/scale analysis, event emission, tests passing
+- **Recent Decisions**: 2026-06-03 — Sample Analyzer plugin (plugins/sample_analyzer/plugin.py) uses librosa 0.11.0 chroma_cqt + music21 10.3.0 s.analyze('key') for Krumhansl-Schmuckler key detection. Upload endpoint (backend/app/api/upload.py) validates file extension + mimetype before saving. EventBus fires 'sample.analyzed' only after successful analysis. Frontend api.ts as single HTTP boundary with separate types.ts. Tests use scipy.io.wavfile for synthetic audio generation.
+- **Recent Decisions**: 2026-06-03 — librosa 0.11.0 beat_track returns np.ndarray (not scalar) — use float(np.atleast_1d(tempo)[0]). music21 10.3.0 KrumhanslSchmuckler uses s.analyze('key') returning Key object with .tonic (Pitch) and .mode (str) — not .solution.
 - **Blockers**: None
 
 ## Task History
@@ -41,9 +39,10 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-03 | Error handling + logging | Done — exceptions.py, logging.py with rotating files, hybrid exception/result pattern, global handlers in main.py |
 | 2026-06-03 | Frontend scaffold (Electron + React + TypeScript + Vite + Tailwind) | Done — 7 placeholder pages, sidebar layout, routing, Electron main/preload, all verified |
 | 2026-06-03 | UI consolidation — AI Studio + Music Theory + Samples | Done — merged 7 pages into 4, AI Studio with context panel, Music Theory with tabs, docs/design/decisions.md created |
+| 2026-06-03 | Sample Analyzer plugin + upload endpoint + Samples page + tests | Done — plugins/sample_analyzer/plugin.py with librosa BPM + Krumhansl-Schmuckler key detection via music21, upload endpoint with extension/mimetype validation, event emission (sample.analyzed), frontend api.ts/types.ts, drag-and-drop Samples page with result cards, 14 backend tests all passing |
 
 ## Feature Status (v0.1)
-- [ ] Samples (analyze BPM, key, scale)
+- [x] Samples (analyze BPM, key, scale)
 - [ ] Theory Engine (scales, chords, intervals)
 - [ ] Chord Progression Generator
 - [ ] MIDI Export Engine
@@ -61,6 +60,12 @@ Built with Electron + React + FastAPI + SQLite.
 - [x] opencode.json with instructions + compaction config
 - [x] Error handling (exception hierarchy + rotating file logger + global handlers)
 - [x] Frontend scaffold (Electron + React + TypeScript + Vite + Tailwind)
+- [x] File upload endpoint (POST /api/upload with extension/mimetype validation)
+- [x] Sample Analyzer plugin (BPM, key, scale, duration via librosa + music21 K-S)
+- [x] Event emission (sample.analyzed) with async event_bus.emit()
+- [x] Frontend api.ts (thin fetch wrapper) + types.ts (shared result types)
+- [x] Samples page (drag-and-drop upload + result cards UI)
+- [x] Backend tests (14 tests: event bus, plugin discovery, sample analyzer)
 
 ## Git Workflow
 - `git add -A && git commit -m "scope: message"` after every meaningful change.
@@ -70,6 +75,6 @@ Built with Electron + React + FastAPI + SQLite.
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Begin Sample Analyzer plugin (first real plugin with events)
-2. Wire Samples page to Sample Analyzer plugin
-3. Write first backend tests (theory engine + plugin discovery + event bus)
+1. Theory Engine plugin (scale/chord/interval analysis)
+2. Wire Music Theory page to Theory Engine plugin via api.ts
+3. Chord Progression Generator plugin
