@@ -18,24 +18,26 @@ User clicks "Analyze Sample" button
 ┌───────────────────┐
 │  Custom Hook       │  e.g., useSampleAnalysis.ts
 │  builds FormData   │
-│  POST /api/analyze │
+│  POST /api/plugins │
+│  /sample_analyzer  │
+│  /execute          │
 └────────┬──────────┘
          │  HTTP Request (localhost:8000)
          ▼
 ┌───────────────────┐
-│  FastAPI Route     │  e.g., analyze_router.analyze_file()
+│  FastAPI Route     │  /api/plugins/{name}/execute
 │  validates input   │
 │  delegates to      │
-│  service layer     │
+│  execute_plugin()  │
 └────────┬──────────┘
          │
          ▼
-┌───────────────────┐
-│  Service Layer     │  e.g., AudioAnalysisService
-│  orchestrates      │
-│  multiple plugins  │
-│  or calls a plugin │
-└────────┬──────────┘
+┌──────────────────────────┐
+│  execute_plugin()         │
+│  validates via input_     │
+│  schema if present        │
+│  calls plugin.execute()   │
+└────────┬─────────────────┘
          │
          ▼
 ┌───────────────────┐
@@ -50,8 +52,15 @@ User clicks "Analyze Sample" button
          │
          ▼
 ┌───────────────────┐
-│  Return result     │
-│  (dict / Pydantic) │
+│  event_bus.emit()  │  e.g., emit("sample.analyzed", ...)
+│  Other plugins     │  ChordGenerator.on_sample_analyzed reacts
+│  react asynchronously │
+└────────┬──────────┘
+         │
+         ▼
+┌───────────────────┐
+│  Return PluginResult│
+│  to HTTP response  │
 └────────┬──────────┘
          │  Response chain (reverse)
          ▼
@@ -87,5 +96,7 @@ User clicks "Analyze Sample" button
 
 - **Renderer never accesses the filesystem directly.** All file operations go through the preload bridge (Electron main process).
 - **Plugins never call AI providers directly.** They call `llm.generate()` which routes through the Provider Layer.
+- **Plugins never call other plugins directly.** They communicate via `event_bus.emit()`.
+- **LLMs never touch raw audio / MIDI.** Audio → DSP → structured JSON → LLM. The LLM's job is interpretation, not perception.
 - **Services are stateless.** State lives in SQLite or in React state.
 - **All async.** FastAPI routes are async, plugin execution is async, AI calls are async.

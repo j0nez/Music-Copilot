@@ -123,3 +123,46 @@ This document records the rationale behind architectural decisions. Add new entr
 - The dev script `scripts/dev.ps1` sets this automatically.
 
 **Impact:** Requires setting `PYTHONPATH` before running the backend. The dev script handles this. For production builds, a proper package bundling step would resolve this differently, but that's a future concern.
+
+---
+
+## 10. Event Bus for Plugin Communication
+
+**Decision:** Plugins communicate via a shared event bus (`event_bus.emit()` / `event_bus.on()`) — never by importing or calling another plugin directly.
+
+**Rationale:**
+- Prevents tight coupling between features — removing a plugin never breaks another.
+- Enables loose orchestration: Sample Analyzer emits `sample.analyzed`, Chord Generator and Finish My Idea both react independently.
+- Async by default — event handlers don't block the emitter.
+- New plugins can integrate with existing workflows without modifying existing code.
+- Based on common patterns in VS Code, Obsidian, and other plugin architectures.
+
+**Impact:** Requires a lightweight EventBus implementation (~30 lines). `discover_plugins()` auto-wires `subscribes_to` declarations during startup. Event naming follows `{source}.{action}` convention.
+
+---
+
+## 11. Input Schemas for Every Plugin
+
+**Decision:** Each plugin declares an `input_schema` (Pydantic model) that defines its expected inputs. The core validates inputs before execution and exposes the schema via the API.
+
+**Rationale:**
+- Frontend can auto-generate forms from the JSON Schema — no hardcoded UI per plugin.
+- Backend validates inputs before they reach plugin code — consistent error handling.
+- Self-documenting API — every plugin's capabilities are discoverable.
+- Required for an eventual plugin marketplace or community plugins.
+
+**Impact:** Adds `input_schema` field to `Plugin` ABC. `execute_plugin()` validates against it before calling `execute()`. `GET /api/plugins/{name}/schema` returns the JSON Schema representation. Existing plugins without a schema work fine (`input_schema = None`).
+
+---
+
+## 12. LLMs Never Handle Raw Audio
+
+**Decision:** LLMs receive only structured JSON (BPM, key, spectral features, etc.) — never raw audio waveforms, MIDI bytes, or feature-extraction responsibilities.
+
+**Rationale:**
+- LLMs cannot reliably perceive audio — they hallucinate BPM, key, and timbre.
+- Offline DSP libraries (librosa, pretty_midi) are deterministic, fast, and correct.
+- Separating perception (DSP) from interpretation (LLM) keeps each layer clean and testable.
+- Audio analysis works fully offline; only the interpretation step needs internet.
+
+**Impact:** Hard architecture invariant documented in AGENTS.md and decisions.md. All audio/MIDI analysis pipelines must: audio → DSP → JSON → LLM. Violations are design errors.

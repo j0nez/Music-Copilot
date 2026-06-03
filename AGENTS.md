@@ -7,9 +7,12 @@ Built with Electron + React + FastAPI + SQLite.
 ## Architecture Invariants
 - NEVER call AI models directly — always use `llm.generate(prompt)` via Provider Layer.
 - Every feature MUST be a plugin under `/plugins/` with a `Plugin` ABC subclass.
+- Plugins NEVER call other plugins directly — communicate via `event_bus.emit()`.
+- LLMs NEVER handle raw audio/MIDI — audio → DSP → structured JSON → LLM interpretation only.
 - SQLite for local state. No external DB dependencies.
 - Frontend ↔ Backend via REST. No direct filesystem access from renderer.
 - Audio/MIDI analysis must work fully offline.
+- Every plugin declares an `input_schema` (Pydantic model) for auto-validation and frontend form generation.
 - After every significant change: (1) update AGENTS.md (Active Context / Feature Status), (2) update ARCHITECTURE docs if structure changed, (3) `git add -A && git commit`.
 
 ## Coding Conventions
@@ -21,9 +24,10 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: Project scaffold with git, VISION.md, AGENTS.md, ARCHITECTURE docs
+- **Current Focus**: Plugin system with input_schema, EventBus, data contracts, API routes
 - **Recent Decisions**: 2026-06-03 — Created full folder structure, VISION.md, AGENTS.md, README.md, 9 architecture docs under docs/architecture/, initialized git with generic identity. Added opencode.json with instructions=[AGENTS.md, VISION.md] for compaction context.
 - **Recent Decisions**: 2026-06-03 — Backend scaffold complete: FastAPI app with lifespan (init_db, discover_plugins), Plugin ABC + auto-discovery, Provider ABC + registry with 4 stubs, SQLite schema + connection, Pydantic shared models, config via pydantic-settings, health endpoint verified. aubio skipped (needs MSVC build tools). Dev script `scripts/dev.ps1`. PYTHONPATH set to project root for imports.
+- **Recent Decisions**: 2026-06-03 — Plugin ABC enhanced with `input_schema` + `subscribes_to`. EventBus with on/off/emit. Plugin routes: list, execute, schema. Data contracts in shared/types.py. Three new architecture invariants (LLM never touches raw audio, plugins never call each other, every plugin needs input_schema).
 - **Blockers**: None
 
 ## Task History
@@ -32,6 +36,7 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-03 | Initial project scaffold | Done — folders, VISION.md, AGENTS.md, README.md, ARCHITECTURE docs, git init |
 | 2026-06-03 | Add opencode.json with instructions & compaction config | Done — AGENTS.md + VISION.md loaded as instructions, tail_turns=20 |
 | 2026-06-03 | Backend scaffold (FastAPI, plugins, providers, DB, config) | Done — app starts, health endpoint returns OK, all layers wired |
+| 2026-06-03 | Plugin system + EventBus + data contracts + schema routes | Done — input_schema on Plugin ABC, EventBus with on/off/emit, shared/types.py data contracts, GET/POST plugin API routes verified |
 
 ## Feature Status (v0.1)
 - [ ] Sample Analyzer
@@ -42,6 +47,18 @@ Built with Electron + React + FastAPI + SQLite.
 - [ ] Why Does This Sound Good?
 - [ ] Finish My Idea (basic)
 
+## Infrastructure Status
+- [x] Backend scaffold (FastAPI + lifespan + config)
+- [x] SQLite database (6 tables + init + connection)
+- [x] Plugin ABC with input_schema + auto-discovery
+- [x] EventBus (on/off/emit with auto-wiring)
+- [x] Data contracts (shared/types.py)
+- [x] Plugin API routes (list, execute, schema)
+- [x] Provider ABC + 4 stubs (OpenAI, Groq, GLM, OpenRouter)
+- [x] Git + GitHub remote (<https://github.com/j0nez/Music-Copilot>)
+- [x] opencode.json with instructions + compaction config
+- [ ] Frontend scaffold (Electron + React + TypeScript)
+
 ## Git Workflow
 - `git add -A && git commit -m "scope: message"` after every meaningful change.
 - Update AGENTS.md and ARCHITECTURE docs before each commit.
@@ -50,6 +67,6 @@ Built with Electron + React + FastAPI + SQLite.
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Initialize frontend (Electron + React + TypeScript)
-2. Begin Sample Analyzer plugin
-3. Write first backend tests
+1. Initialize frontend (Electron + React + TypeScript + Vite + Tailwind)
+2. Begin Sample Analyzer plugin (first real plugin with events)
+3. Write first backend tests (theory engine + plugin discovery + event bus)
