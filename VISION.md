@@ -76,6 +76,12 @@ Ship useful software immediately.
 - [ ] Drag-and-Drop MIDI — generate and drop .mid files into FL
 - [ ] FL Template Generator — genre-specific project templates
 - [ ] Project Analyzer — analyze FLP export data and stems
+- [ ] JUCE-Based Bridge Plugin — deep DAW integration like Splice Bridge
+
+**Splice Bridge-style deep integration (research):** A standalone C++ application using the JUCE framework that connects Music Copilot to FL Studio at a deeper level. Approaches ranked by difficulty:
+- **Easy:** Virtual MIDI port — backend writes to loopback MIDI port, FL Studio reads it as MIDI controller input (BPM sync, chord previews)
+- **Medium:** FL Studio Python Scripting — can run scripts reacting to transport changes (limited, no GUI or audio)
+- **Hard (Splice-level):** Full VST3 bridge plugin via JUCE — allows audio streaming from FL Studio's master channel, real-time BPM/position from the DAW host, and MIDI output back into the project. This is a 3-6 month standalone C++ project requiring knowledge of audio plugin development.
 
 ### Phase 8 — Producer Coach
 - [ ] Mix Feedback — analyze export, detect mud/harshness/dynamics
