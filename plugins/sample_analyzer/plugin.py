@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 import librosa.feature.rhythm
+import librosa.onset
 import numpy as np
 from music21 import note, stream
 from pydantic import BaseModel
@@ -58,8 +59,16 @@ class SampleAnalyzerPlugin(Plugin):
 
     def _detect_bpm(self, y: np.ndarray, sr: int) -> float | None:
         try:
+            onset_multi = librosa.onset.onset_strength_multi(
+                y=y, sr=sr, hop_length=256,
+            )
+            per_band_max = onset_multi.max(axis=1, keepdims=True)
+            per_band_max = np.where(per_band_max > 1e-10, per_band_max, 1.0)
+            onset_env = (onset_multi / per_band_max).mean(axis=0)
+
             bpm = librosa.feature.rhythm.tempo(
-                y=y, sr=sr,
+                onset_envelope=onset_env, sr=sr,
+                hop_length=256,
                 start_bpm=120.0,
                 std_bpm=2.0,
             )
