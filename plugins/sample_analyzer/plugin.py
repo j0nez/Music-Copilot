@@ -61,6 +61,11 @@ class SampleAnalyzerPlugin(Plugin):
 
     def _detect_bpm(self, y: np.ndarray, sr: int) -> float | None:
         try:
+            clip_samples = sr * 8
+            if len(y) < clip_samples:
+                repeats = int(np.ceil(clip_samples / len(y)))
+                y = np.tile(y, repeats)[:clip_samples]
+
             tempo, confidence = _bpm_model.predict_from_audio(
                 y, sr, include_confidence=True,
             )

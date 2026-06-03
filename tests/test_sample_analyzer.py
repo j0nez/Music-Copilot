@@ -107,3 +107,23 @@ async def test_sample_analyzer_detects_174_bpm(tmp_path):
     assert 60 <= result.data["bpm"] <= 240
     assert result.data["key"] is not None
     assert result.data["length_seconds"] is not None
+
+
+async def test_sample_analyzer_short_audio(tmp_path):
+    discover_plugins()
+    sr = 22050
+    short_dur = 3.0
+    interval = int(sr * 60.0 / 140)
+    total = int(sr * short_dur)
+    signal = np.zeros(total, dtype=np.int16)
+    for start in range(0, total, interval):
+        end = min(start + 3, total)
+        signal[start:end] = 8000
+    dest = tmp_path / "short_140.wav"
+    wavfile.write(str(dest), sr, signal)
+
+    result = await execute_plugin("sample_analyzer", file_path=str(dest))
+
+    assert result.success, f"Plugin failed: {result.error}"
+    assert result.data["bpm"] is not None
+    assert 60 <= result.data["bpm"] <= 240
