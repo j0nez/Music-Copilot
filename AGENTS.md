@@ -22,13 +22,14 @@ Built with Electron + React + FastAPI + SQLite.
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
 - **Current Focus**: Project scaffold with git, VISION.md, AGENTS.md, ARCHITECTURE docs
-- **Recent Decisions**: 2026-06-03 — Created full folder structure, VISION.md, AGENTS.md, README.md, 9 architecture docs under docs/architecture/, initialized git with generic identity
+- **Recent Decisions**: 2026-06-03 — Created full folder structure, VISION.md, AGENTS.md, README.md, 9 architecture docs under docs/architecture/, initialized git with generic identity. Added opencode.json with instructions=[AGENTS.md, VISION.md] for compaction context.
 - **Blockers**: None
 
 ## Task History
 | Date | Task | Outcome |
 |------|------|---------|
 | 2026-06-03 | Initial project scaffold | Done — folders, VISION.md, AGENTS.md, README.md, ARCHITECTURE docs, git init |
+| 2026-06-03 | Add opencode.json with instructions & compaction config | Done — AGENTS.md + VISION.md loaded as instructions, tail_turns=20 |
 
 ## Feature Status (v0.1)
 - [ ] Sample Analyzer
