@@ -24,7 +24,7 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: Plugin system with input_schema, EventBus, data contracts, API routes
+- **Current Focus**: Error handling system complete, ready for frontend scaffold
 - **Recent Decisions**: 2026-06-03 — Created full folder structure, VISION.md, AGENTS.md, README.md, 9 architecture docs under docs/architecture/, initialized git with generic identity. Added opencode.json with instructions=[AGENTS.md, VISION.md] for compaction context.
 - **Recent Decisions**: 2026-06-03 — Backend scaffold complete: FastAPI app with lifespan (init_db, discover_plugins), Plugin ABC + auto-discovery, Provider ABC + registry with 4 stubs, SQLite schema + connection, Pydantic shared models, config via pydantic-settings, health endpoint verified. aubio skipped (needs MSVC build tools). Dev script `scripts/dev.ps1`. PYTHONPATH set to project root for imports.
 - **Recent Decisions**: 2026-06-03 — Plugin ABC enhanced with `input_schema` + `subscribes_to`. EventBus with on/off/emit. Plugin routes: list, execute, schema. Data contracts in shared/types.py. Three new architecture invariants (LLM never touches raw audio, plugins never call each other, every plugin needs input_schema).

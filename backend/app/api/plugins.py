@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from backend.app.models.shared import ApiResponse
+from backend.app.models.shared import ApiResponse, ErrorDetail
 from plugins import (
     execute_plugin,
     get_plugin_schema,
@@ -25,7 +25,7 @@ async def plugin_schema(name: str):
         return ApiResponse(
             success=False,
             data=None,
-            error={"code": "NOT_FOUND", "message": f"Plugin '{name}' has no schema or not found"},
+            error=ErrorDetail(code="NOT_FOUND", message=f"Plugin '{name}' has no schema or not found"),
         )
     return ApiResponse(success=True, data={"schema": schema})
 
@@ -36,5 +36,5 @@ async def run_plugin(name: str, payload: dict = {}):
     return ApiResponse(
         success=result.success,
         data=result.data if result.success else None,
-        error={"code": "PLUGIN_ERROR", "message": result.error} if result.error else None,
+        error=ErrorDetail(code="PLUGIN_ERROR", message=result.error) if result.error else None,
     )
