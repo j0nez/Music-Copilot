@@ -2,12 +2,9 @@ import { NavLink, Outlet } from "react-router-dom";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: "◉" },
-  { to: "/analyze", label: "Sample Analyzer", icon: "▤" },
-  { to: "/theory", label: "Theory Engine", icon: "♩" },
-  { to: "/chords", label: "Chord Generator", icon: "♬" },
-  { to: "/chat", label: "Producer Chat", icon: "💬" },
-  { to: "/why", label: "Why Does This Sound Good?", icon: "?" },
-  { to: "/finish", label: "Finish My Idea", icon: "✚" },
+  { to: "/theory", label: "Music Theory", icon: "♩" },
+  { to: "/ai-studio", label: "AI Studio", icon: "💬" },
+  { to: "/samples", label: "Samples", icon: "▤" },
 ];
 
 export default function Layout() {

@@ -61,39 +61,31 @@ frontend/
 ```
 App
 ├── Layout
-│   ├── Sidebar (navigation)
+│   ├── Sidebar (4 nav items: Dashboard, Music Theory, AI Studio, Samples)
 │   └── MainContent
 │
 ├── Pages
 │   ├── Dashboard
-│   ├── SampleAnalyzer
-│   │   ├── FileUpload
-│   │   └── AnalysisResults
-│   ├── TheoryEngine
-│   │   ├── ScaleGenerator
-│   │   ├── ChordBuilder
-│   │   └── IntervalAnalyzer
-│   ├── ChordGenerator
-│   │   ├── InputForm (key, mood, genre)
-│   │   ├── ProgressionDisplay
-│   │   └── MidiExportButton
-│   ├── ProducerChat
-│   │   ├── ChatWindow
-│   │   └── MessageInput
-│   ├── WhyDoesThisSoundGood
-│   │   ├── InputForm
-│   │   └── AnalysisDisplay
-│   └── FinishMyIdea
-│       ├── FileUpload
-│       └── Suggestions
+│   ├── MusicTheory
+│   │   ├── ScaleGenerator (tab)
+│   │   ├── ChordBuilder (tab)
+│   │   ├── IntervalAnalyzer (tab)
+│   │   └── ChordProgressions (tab)
+│   ├── AiStudio
+│   │   ├── ChatArea (message history + input)
+│   │   ├── ContextPanel (right sidebar)
+│   │   │   ├── ActiveFile
+│   │   │   ├── AnalysisResult
+│   │   │   └── Suggestions
+│   │   └── FileDropZone (drag-and-drop into chat)
+│   └── Samples
+│       └── FileUpload
 │
-└── Shared Components
+└── Shared Components (future)
     ├── Button
     ├── Input
     ├── Select
-    ├── Modal
-    ├── Spinner
-    └── ErrorBoundary
+    └── Spinner
 ```
 
 ## State Management
@@ -157,12 +149,9 @@ Routes are defined declaratively:
 <Routes>
   <Route element={<Layout />}>
     <Route path="/" element={<Dashboard />} />
-    <Route path="/analyze" element={<SampleAnalyzer />} />
-    <Route path="/theory" element={<TheoryEngine />} />
-    <Route path="/chords" element={<ChordGenerator />} />
-    <Route path="/chat" element={<ProducerChat />} />
-    <Route path="/why" element={<WhyDoesThisSoundGood />} />
-    <Route path="/finish" element={<FinishMyIdea />} />
+    <Route path="/theory" element={<MusicTheory />} />
+    <Route path="/ai-studio" element={<AiStudio />} />
+    <Route path="/samples" element={<Samples />} />
   </Route>
 </Routes>
 ```

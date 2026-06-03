@@ -40,15 +40,14 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-03 | Plugin system + EventBus + data contracts + schema routes | Done — input_schema on Plugin ABC, EventBus with on/off/emit, shared/types.py data contracts, GET/POST plugin API routes verified |
 | 2026-06-03 | Error handling + logging | Done — exceptions.py, logging.py with rotating files, hybrid exception/result pattern, global handlers in main.py |
 | 2026-06-03 | Frontend scaffold (Electron + React + TypeScript + Vite + Tailwind) | Done — 7 placeholder pages, sidebar layout, routing, Electron main/preload, all verified |
+| 2026-06-03 | UI consolidation — AI Studio + Music Theory + Samples | Done — merged 7 pages into 4, AI Studio with context panel, Music Theory with tabs, docs/design/decisions.md created |
 
 ## Feature Status (v0.1)
-- [ ] Sample Analyzer
-- [ ] Theory Engine
+- [ ] Samples (analyze BPM, key, scale)
+- [ ] Theory Engine (scales, chords, intervals)
 - [ ] Chord Progression Generator
 - [ ] MIDI Export Engine
-- [ ] Producer Chat
-- [ ] Why Does This Sound Good?
-- [ ] Finish My Idea (basic)
+- [ ] AI Studio (chat + analysis + composition assistant)
 
 ## Infrastructure Status
 - [x] Backend scaffold (FastAPI + lifespan + config)
@@ -72,4 +71,5 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Next Actions
 1. Begin Sample Analyzer plugin (first real plugin with events)
-2. Write first backend tests (theory engine + plugin discovery + event bus)
+2. Wire Samples page to Sample Analyzer plugin
+3. Write first backend tests (theory engine + plugin discovery + event bus)

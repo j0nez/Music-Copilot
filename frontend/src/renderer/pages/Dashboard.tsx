@@ -4,33 +4,18 @@ export default function Dashboard() {
       <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <FeatureCard
-          title="Sample Analyzer"
-          description="Detect BPM, key, and scale from audio files"
+          title="Music Theory"
+          description="Scales, chords, intervals, and chord progressions"
           status="planned"
         />
         <FeatureCard
-          title="Theory Engine"
-          description="Scale generation, chord construction, interval analysis"
+          title="AI Studio"
+          description="Chat, analysis, and composition assistant — all in one place"
           status="planned"
         />
         <FeatureCard
-          title="Chord Generator"
-          description="Generate chord progressions by key, mood, and genre"
-          status="planned"
-        />
-        <FeatureCard
-          title="Producer Chat"
-          description="Ask AI-powered production questions"
-          status="planned"
-        />
-        <FeatureCard
-          title="Why Does This Sound Good?"
-          description="Understand tension, resolution, and harmony in your music"
-          status="planned"
-        />
-        <FeatureCard
-          title="Finish My Idea"
-          description="Get structure suggestions for your unfinished track"
+          title="Samples"
+          description="Upload and analyze audio files for BPM, key, and scale"
           status="planned"
         />
       </div>
