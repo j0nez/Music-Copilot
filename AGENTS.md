@@ -24,7 +24,7 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: Error handling system complete, ready for frontend scaffold
+- **Current Focus**: Frontend scaffold complete, ready for Sample Analyzer plugin
 - **Recent Decisions**: 2026-06-03 — Created full folder structure, VISION.md, AGENTS.md, README.md, 9 architecture docs under docs/architecture/, initialized git with generic identity. Added opencode.json with instructions=[AGENTS.md, VISION.md] for compaction context.
 - **Recent Decisions**: 2026-06-03 — Backend scaffold complete: FastAPI app with lifespan (init_db, discover_plugins), Plugin ABC + auto-discovery, Provider ABC + registry with 4 stubs, SQLite schema + connection, Pydantic shared models, config via pydantic-settings, health endpoint verified. aubio skipped (needs MSVC build tools). Dev script `scripts/dev.ps1`. PYTHONPATH set to project root for imports.
 - **Recent Decisions**: 2026-06-03 — Plugin ABC enhanced with `input_schema` + `subscribes_to`. EventBus with on/off/emit. Plugin routes: list, execute, schema. Data contracts in shared/types.py. Three new architecture invariants (LLM never touches raw audio, plugins never call each other, every plugin needs input_schema).
@@ -39,6 +39,7 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-03 | Backend scaffold (FastAPI, plugins, providers, DB, config) | Done — app starts, health endpoint returns OK, all layers wired |
 | 2026-06-03 | Plugin system + EventBus + data contracts + schema routes | Done — input_schema on Plugin ABC, EventBus with on/off/emit, shared/types.py data contracts, GET/POST plugin API routes verified |
 | 2026-06-03 | Error handling + logging | Done — exceptions.py, logging.py with rotating files, hybrid exception/result pattern, global handlers in main.py |
+| 2026-06-03 | Frontend scaffold (Electron + React + TypeScript + Vite + Tailwind) | Done — 7 placeholder pages, sidebar layout, routing, Electron main/preload, all verified |
 
 ## Feature Status (v0.1)
 - [ ] Sample Analyzer
@@ -60,7 +61,7 @@ Built with Electron + React + FastAPI + SQLite.
 - [x] Git + GitHub remote (<https://github.com/j0nez/Music-Copilot>)
 - [x] opencode.json with instructions + compaction config
 - [x] Error handling (exception hierarchy + rotating file logger + global handlers)
-- [ ] Frontend scaffold (Electron + React + TypeScript)
+- [x] Frontend scaffold (Electron + React + TypeScript + Vite + Tailwind)
 
 ## Git Workflow
 - `git add -A && git commit -m "scope: message"` after every meaningful change.
@@ -70,6 +71,5 @@ Built with Electron + React + FastAPI + SQLite.
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Initialize frontend (Electron + React + TypeScript + Vite + Tailwind)
-2. Begin Sample Analyzer plugin (first real plugin with events)
-3. Write first backend tests (theory engine + plugin discovery + event bus)
+1. Begin Sample Analyzer plugin (first real plugin with events)
+2. Write first backend tests (theory engine + plugin discovery + event bus)

@@ -1,6 +1,7 @@
 param(
     [switch]$BackendOnly,
-    [switch]$FrontendOnly
+    [switch]$FrontendOnly,
+    [switch]$Electron
 )
 
 $rootDir = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
@@ -22,7 +23,15 @@ function Start-Frontend {
     npm run dev
 }
 
-if ($FrontendOnly) {
+function Start-Electron {
+    Write-Host "Starting Electron + Vite..." -ForegroundColor Green
+    Set-Location -LiteralPath $frontendDir
+    npm run dev:electron
+}
+
+if ($Electron) {
+    Start-Electron
+} elseif ($FrontendOnly) {
     Start-Frontend
 } elseif ($BackendOnly) {
     Start-Backend
