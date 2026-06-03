@@ -109,3 +109,17 @@ This document records the rationale behind architectural decisions. Add new entr
 - Each phase builds on the previous without architectural rewrites.
 
 **Impact:** v0.1 features are a subset of the full vision. Every feature in later phases will slot into the existing architecture unchanged.
+
+---
+
+## 9. PYTHONPATH-Based Package Resolution
+
+**Decision:** The project root is added to `PYTHONPATH` so `backend.`, `plugins.`, `providers.`, and `shared.` are all importable as top-level packages.
+
+**Rationale:**
+- The codebase spans multiple independent package directories (`backend/`, `plugins/`, `providers/`, `shared/`) that are siblings, not nested.
+- A single `pyproject.toml` in `backend/` can't cover all of them.
+- PYTHONPATH is the simplest cross-platform solution — no symlinks, no monorepo tooling.
+- The dev script `scripts/dev.ps1` sets this automatically.
+
+**Impact:** Requires setting `PYTHONPATH` before running the backend. The dev script handles this. For production builds, a proper package bundling step would resolve this differently, but that's a future concern.

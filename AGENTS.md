@@ -23,6 +23,7 @@ Built with Electron + React + FastAPI + SQLite.
 - **Phase**: v0.1 MVP Foundation
 - **Current Focus**: Project scaffold with git, VISION.md, AGENTS.md, ARCHITECTURE docs
 - **Recent Decisions**: 2026-06-03 — Created full folder structure, VISION.md, AGENTS.md, README.md, 9 architecture docs under docs/architecture/, initialized git with generic identity. Added opencode.json with instructions=[AGENTS.md, VISION.md] for compaction context.
+- **Recent Decisions**: 2026-06-03 — Backend scaffold complete: FastAPI app with lifespan (init_db, discover_plugins), Plugin ABC + auto-discovery, Provider ABC + registry with 4 stubs, SQLite schema + connection, Pydantic shared models, config via pydantic-settings, health endpoint verified. aubio skipped (needs MSVC build tools). Dev script `scripts/dev.ps1`. PYTHONPATH set to project root for imports.
 - **Blockers**: None
 
 ## Task History
@@ -30,6 +31,7 @@ Built with Electron + React + FastAPI + SQLite.
 |------|------|---------|
 | 2026-06-03 | Initial project scaffold | Done — folders, VISION.md, AGENTS.md, README.md, ARCHITECTURE docs, git init |
 | 2026-06-03 | Add opencode.json with instructions & compaction config | Done — AGENTS.md + VISION.md loaded as instructions, tail_turns=20 |
+| 2026-06-03 | Backend scaffold (FastAPI, plugins, providers, DB, config) | Done — app starts, health endpoint returns OK, all layers wired |
 
 ## Feature Status (v0.1)
 - [ ] Sample Analyzer
@@ -48,7 +50,6 @@ Built with Electron + React + FastAPI + SQLite.
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Initialize backend (FastAPI + Python project files)
-2. Initialize frontend (Electron + React + TypeScript)
-3. Set up SQLite database layer
-4. Begin Sample Analyzer plugin
+1. Initialize frontend (Electron + React + TypeScript)
+2. Begin Sample Analyzer plugin
+3. Write first backend tests
