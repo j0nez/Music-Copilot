@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Runtime data
+data/db/*.db
+data/samples/*
+data/exports/*
+!data/*/.gitkeep
+
+# Environment
+.env
+.env.local
+
+# Generated
+*.mid
+*.wav
+*.mp3
