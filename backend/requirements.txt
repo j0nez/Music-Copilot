@@ -8,6 +8,7 @@ aiofiles>=23.2.0
 
 # Audio Analysis
 librosa>=0.10.0
+deeprhythm>=0.0.13
 # aubio>=0.4.9  # Requires C++ build tools on Windows — add manually if needed
 
 # MIDI

@@ -2,8 +2,8 @@ import logging
 from pathlib import Path
 
 import librosa.feature.rhythm
-import librosa.onset
 import numpy as np
+from deeprhythm import DeepRhythmPredictor
 from music21 import note, stream
 from pydantic import BaseModel
 
@@ -11,6 +11,8 @@ from plugins.base import Plugin, PluginResult
 from plugins.events import event_bus
 
 logger = logging.getLogger("music_copilot.sample_analyzer")
+
+_bpm_model = DeepRhythmPredictor()
 
 
 class SampleAnalyzerInput(BaseModel):
@@ -59,20 +61,22 @@ class SampleAnalyzerPlugin(Plugin):
 
     def _detect_bpm(self, y: np.ndarray, sr: int) -> float | None:
         try:
-            onset_multi = librosa.onset.onset_strength_multi(
-                y=y, sr=sr, hop_length=256,
+            tempo, confidence = _bpm_model.predict_from_audio(
+                y, sr, include_confidence=True,
             )
-            per_band_max = onset_multi.max(axis=1, keepdims=True)
-            per_band_max = np.where(per_band_max > 1e-10, per_band_max, 1.0)
-            onset_env = (onset_multi / per_band_max).mean(axis=0)
 
-            bpm = librosa.feature.rhythm.tempo(
-                onset_envelope=onset_env, sr=sr,
-                hop_length=256,
-                start_bpm=120.0,
-                std_bpm=2.0,
-            )
-            return round(float(np.atleast_1d(bpm)[0]), 1)
+            if confidence < 0.5:
+                logger.warning(
+                    "DeepRhythm low confidence (%.2f), falling back to librosa", confidence,
+                )
+                bpm = librosa.feature.rhythm.tempo(
+                    y=y, sr=sr,
+                    start_bpm=120.0,
+                    std_bpm=2.0,
+                )
+                return round(float(np.atleast_1d(bpm)[0]), 1)
+
+            return round(float(tempo), 1)
         except Exception as e:
             logger.warning("BPM detection failed: %s", e)
             return None
