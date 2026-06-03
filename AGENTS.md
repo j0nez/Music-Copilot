@@ -28,6 +28,7 @@ Built with Electron + React + FastAPI + SQLite.
 - **Recent Decisions**: 2026-06-03 — Created full folder structure, VISION.md, AGENTS.md, README.md, 9 architecture docs under docs/architecture/, initialized git with generic identity. Added opencode.json with instructions=[AGENTS.md, VISION.md] for compaction context.
 - **Recent Decisions**: 2026-06-03 — Backend scaffold complete: FastAPI app with lifespan (init_db, discover_plugins), Plugin ABC + auto-discovery, Provider ABC + registry with 4 stubs, SQLite schema + connection, Pydantic shared models, config via pydantic-settings, health endpoint verified. aubio skipped (needs MSVC build tools). Dev script `scripts/dev.ps1`. PYTHONPATH set to project root for imports.
 - **Recent Decisions**: 2026-06-03 — Plugin ABC enhanced with `input_schema` + `subscribes_to`. EventBus with on/off/emit. Plugin routes: list, execute, schema. Data contracts in shared/types.py. Three new architecture invariants (LLM never touches raw audio, plugins never call each other, every plugin needs input_schema).
+- **Recent Decisions**: 2026-06-03 — Error handling system: custom exception hierarchy (MusicCopilotError + 6 subtypes), rotating file logger (5MB × 3 backups, configurable level), hybrid approach (exceptions for internal flow, PluginResult for API, global safety net for unexpected crashes). Verified health + plugin routes still work.
 - **Blockers**: None
 
 ## Task History
@@ -37,6 +38,7 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-03 | Add opencode.json with instructions & compaction config | Done — AGENTS.md + VISION.md loaded as instructions, tail_turns=20 |
 | 2026-06-03 | Backend scaffold (FastAPI, plugins, providers, DB, config) | Done — app starts, health endpoint returns OK, all layers wired |
 | 2026-06-03 | Plugin system + EventBus + data contracts + schema routes | Done — input_schema on Plugin ABC, EventBus with on/off/emit, shared/types.py data contracts, GET/POST plugin API routes verified |
+| 2026-06-03 | Error handling + logging | Done — exceptions.py, logging.py with rotating files, hybrid exception/result pattern, global handlers in main.py |
 
 ## Feature Status (v0.1)
 - [ ] Sample Analyzer
@@ -57,6 +59,7 @@ Built with Electron + React + FastAPI + SQLite.
 - [x] Provider ABC + 4 stubs (OpenAI, Groq, GLM, OpenRouter)
 - [x] Git + GitHub remote (<https://github.com/j0nez/Music-Copilot>)
 - [x] opencode.json with instructions + compaction config
+- [x] Error handling (exception hierarchy + rotating file logger + global handlers)
 - [ ] Frontend scaffold (Electron + React + TypeScript)
 
 ## Git Workflow

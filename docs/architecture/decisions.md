@@ -166,3 +166,17 @@ This document records the rationale behind architectural decisions. Add new entr
 - Audio analysis works fully offline; only the interpretation step needs internet.
 
 **Impact:** Hard architecture invariant documented in AGENTS.md and decisions.md. All audio/MIDI analysis pipelines must: audio → DSP → JSON → LLM. Violations are design errors.
+
+---
+
+## 13. Hybrid Error Handling (Exceptions + Result Objects)
+
+**Decision:** Use typed exceptions (`MusicCopilotError` subclasses) for internal logging and control flow, but always return `PluginResult` objects to API callers. A global FastAPI exception handler catches unhandled exceptions as a safety net.
+
+**Rationale:**
+- **Exceptions for logging** — each error has a severity (WARNING vs ERROR) that determines log level. Structured `code` + `message` fields make logs searchable and machine-readable.
+- **Result objects for API** — predictable, always-200 responses from plugin routes. Frontend checks `success` field unconditionally.
+- **Global safety net** — truly unexpected 500s are caught, logged with full traceback, and returned as clean JSON instead of raw tracebacks.
+- **Pydantic ValidationError** is caught at the schema level — input errors never reach plugin code.
+
+**Impact:** Two new files (`exceptions.py`, `logging.py`). `execute_plugin()` now catches `ValidationError` and `Exception` separately, logs at appropriate severity, and returns `PluginResult`. Global handlers in `main.py` catch the rest. Logging uses rotating files (5MB × 3 backups) at configurable level.

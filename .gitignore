@@ -23,6 +23,7 @@ Thumbs.db
 data/db/*.db
 data/samples/*
 data/exports/*
+data/logs/*
 !data/*/.gitkeep
 
 # Environment

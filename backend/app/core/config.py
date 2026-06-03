@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     ai_model: str = "mixtral-8x7b-32768"
     ai_api_key: str = ""
 
+    log_path: Path = PROJECT_ROOT / "data" / "logs" / "app.log"
+    log_level: str = "DEBUG"
+
     data_dir: Path = PROJECT_ROOT / "data"
     upload_dir: Path = PROJECT_ROOT / "data" / "uploads"
     export_dir: Path = PROJECT_ROOT / "data" / "exports"

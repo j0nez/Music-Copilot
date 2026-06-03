@@ -107,30 +107,103 @@ async def list_samples(db=Depends(get_db)):
 
 ## Error Handling
 
-Custom exception hierarchy mapped to HTTP responses:
+Hybrid approach: typed exceptions for internal routing and logging, but `PluginResult` return values for the API layer with a safety-net global handler.
+
+### Exception Hierarchy
 
 ```python
 class MusicCopilotError(Exception):
-    code: str
-    status_code: int
-    message: str
+    code: str          # Machine-readable, e.g. "INVALID_FILE"
+    message: str       # Human-readable default message
+    status_code: int   # HTTP status code
+    severity: str      # "ERROR" | "WARNING"
 
-class FileValidationError(MusicCopilotError):
-    code = "INVALID_FILE"
+class InputValidationError(MusicCopilotError):
+    code = "INVALID_INPUT"
     status_code = 422
+    severity = "WARNING"
+
+class PluginNotFoundError(MusicCopilotError):
+    code = "PLUGIN_NOT_FOUND"
+    status_code = 404
+    severity = "WARNING"
 
 class PluginExecutionError(MusicCopilotError):
     code = "PLUGIN_ERROR"
     status_code = 500
 
-# Global exception handler in main.py
+class AIProviderError(MusicCopilotError):
+    code = "AI_ERROR"
+    status_code = 502
+
+class FileValidationError(MusicCopilotError):
+    code = "INVALID_FILE"
+    status_code = 422
+
+class DatabaseError(MusicCopilotError):
+    code = "DATABASE_ERROR"
+    status_code = 500
+```
+
+### Error Flow
+
+```
+Unexpected Exception (anywhere)
+        │
+        ├──► Global handler catches it
+        │     logger.critical() + HTTP 500 + ApiResponse(error)
+        │
+Plugin code raises Exception
+        │
+        ├──► execute_plugin() catches it
+        │     logger.error() + returns PluginResult(success=False)
+        │
+Input validates via Pydantic schema
+        │
+        ├──► ValidationError caught by execute_plugin()
+        │     logger.warning() + returns PluginResult(success=False)
+        │
+MusicCopilotError raised
+        │
+        ├──► Global handler catches it
+        │     logger.error/warning() + correct HTTP status + ApiResponse(error)
+```
+
+### Global Exception Handlers
+
+Registered in `main.py`:
+
+```python
 @app.exception_handler(MusicCopilotError)
-async def handle_music_copilot_error(request, exc: MusicCopilotError):
+async def handle_music_copilot_error(request, exc):
     return JSONResponse(
         status_code=exc.status_code,
-        content={"success": False, "data": None, "error": {"code": exc.code, "message": exc.message}},
+        content=ApiResponse(success=False, error={"code": exc.code, "message": exc.message}),
+    )
+
+@app.exception_handler(Exception)
+async def handle_unexpected_error(request, exc):
+    logger.critical("Unhandled exception: %s", exc, exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content=ApiResponse(success=False, error={"code": "INTERNAL_ERROR", "message": "..."}),
     )
 ```
+
+## Logging
+
+Standard Python logging with rotating file handler (5MB per file, 3 backups):
+
+```
+data/logs/app.log          # Current log
+data/logs/app.log.1        # Rotated
+data/logs/app.log.2
+data/logs/app.log.3
+```
+
+Format: `2026-06-03 16:30:00 | ERROR | music_copilot.plugins | Plugin 'x' failed`
+
+Configured via `Settings.log_path` and `Settings.log_level`. The level can be toggled between DEBUG (verbose) and INFO (production) without code changes.
 
 ## Key Conventions
 
@@ -138,3 +211,5 @@ async def handle_music_copilot_error(request, exc: MusicCopilotError):
 - Service methods are static or class methods (no service instances needed in v0.1).
 - Database connections are short-lived (request-scoped via Depends).
 - Plugins are executed via `execute_plugin(name, **kwargs)` — never imported directly.
+- Errors are logged at the correct severity (WARNING for user errors, ERROR for system failures, CRITICAL for unhandled crashes).
+- The rotating log file is read-only for debugging — never programmatically parsed.
