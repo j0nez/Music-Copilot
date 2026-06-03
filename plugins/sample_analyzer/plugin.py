@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-import librosa
+import librosa.feature.rhythm
 import numpy as np
 from music21 import note, stream
 from pydantic import BaseModel
@@ -58,8 +58,12 @@ class SampleAnalyzerPlugin(Plugin):
 
     def _detect_bpm(self, y: np.ndarray, sr: int) -> float | None:
         try:
-            tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-            return float(np.atleast_1d(tempo)[0])
+            bpm = librosa.feature.rhythm.tempo(
+                y=y, sr=sr,
+                start_bpm=120.0,
+                std_bpm=2.0,
+            )
+            return round(float(np.atleast_1d(bpm)[0]), 1)
         except Exception as e:
             logger.warning("BPM detection failed: %s", e)
             return None

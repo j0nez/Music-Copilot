@@ -8,17 +8,17 @@ from plugins.events import event_bus
 pytestmark = pytest.mark.asyncio
 
 SR = 22050
-BPM = 120
-BEAT_INTERVAL = 60.0 / BPM
 DURATION = 8.0
 
 
 def _generate_test_tone(tmp_path) -> str:
+    bpm = 120
+    interval = 60.0 / bpm
     t = np.linspace(0, DURATION, int(SR * DURATION), endpoint=False)
     signal = np.zeros(int(SR * DURATION))
 
-    for i in range(int(DURATION / BEAT_INTERVAL)):
-        start = int(i * BEAT_INTERVAL * SR)
+    for i in range(int(DURATION / interval)):
+        start = int(i * interval * SR)
         tone_len = int(0.1 * SR)
         if start + tone_len >= len(signal):
             break
@@ -31,6 +31,20 @@ def _generate_test_tone(tmp_path) -> str:
 
     dest = tmp_path / "test_tone.wav"
     wavfile.write(str(dest), SR, signal_int16)
+    return str(dest)
+
+
+def _generate_click_track(tmp_path, bpm: int, filename: str) -> str:
+    interval_samples = int(SR * 60.0 / bpm)
+    total_samples = int(SR * DURATION)
+    signal = np.zeros(total_samples, dtype=np.int16)
+
+    for start in range(0, total_samples, interval_samples):
+        end = min(start + 3, total_samples)
+        signal[start:end] = 8000
+
+    dest = tmp_path / filename
+    wavfile.write(str(dest), SR, signal)
     return str(dest)
 
 
@@ -70,3 +84,23 @@ async def test_sample_analyzer_emits_event(tmp_path):
     assert len(received) == 1
     assert received[0]["bpm"] == pytest.approx(120, abs=10)
     assert received[0]["key"] is not None
+
+
+async def test_sample_analyzer_detects_143_bpm(tmp_path):
+    discover_plugins()
+    file_path = _generate_click_track(tmp_path, 143, "click_143.wav")
+
+    result = await execute_plugin("sample_analyzer", file_path=file_path)
+
+    assert result.success, f"Plugin failed: {result.error}"
+    assert result.data["bpm"] == pytest.approx(143, abs=3)
+
+
+async def test_sample_analyzer_detects_174_bpm(tmp_path):
+    discover_plugins()
+    file_path = _generate_click_track(tmp_path, 174, "click_174.wav")
+
+    result = await execute_plugin("sample_analyzer", file_path=file_path)
+
+    assert result.success, f"Plugin failed: {result.error}"
+    assert result.data["bpm"] == pytest.approx(174, abs=3)
