@@ -81,7 +81,7 @@ class SampleAnalyzerPlugin(Plugin):
                     hop_time = 512 / sr
                     lag_p = int(round(60.0 / bpm_val / hop_time))
                     lag_d = int(round(60.0 / doubled / hop_time))
-                    if lag_d < len(ac) and ac[lag_d] >= 0.5 * ac[lag_p]:
+                    if lag_d < len(ac) and ac[lag_d] > ac[lag_p]:
                         bpm_val = doubled
 
             if confidence < 0.5:
