@@ -54,4 +54,13 @@ export interface TheoryProgression {
   genre: string;
 }
 
+export interface SavedProgression {
+  id: number;
+  key: string;
+  mood: string | null;
+  genre: string | null;
+  chords: ProgressionChord[];
+  created_at: string;
+}
+
 export type TheoryResult = TheoryScale | TheoryChord | TheoryInterval | TheoryProgression;

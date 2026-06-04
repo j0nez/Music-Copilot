@@ -1,4 +1,11 @@
-import type { ApiResponse, SampleAnalysisResult, TheoryResult, UploadResult } from './types';
+import type {
+  ApiResponse,
+  ProgressionChord,
+  SampleAnalysisResult,
+  SavedProgression,
+  TheoryResult,
+  UploadResult,
+} from './types';
 
 const BASE = 'http://localhost:8000/api';
 
@@ -43,4 +50,30 @@ export async function theoryEngine(
     mode,
     ...params,
   });
+}
+
+export async function saveProgression(
+  key: string,
+  mood: string | null,
+  genre: string | null,
+  chords: ProgressionChord[],
+): Promise<ApiResponse<{ id: number }>> {
+  return post<{ id: number }>('/progressions/', { key, mood, genre, chords });
+}
+
+export async function listProgressions(
+  sortBy = 'created_at',
+  sortOrder = 'DESC',
+): Promise<ApiResponse<{ progressions: SavedProgression[] }>> {
+  const res = await fetch(`http://localhost:8000/api/progressions/?sort_by=${sortBy}&sort_order=${sortOrder}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function deleteProgression(id: number): Promise<ApiResponse<{ deleted: boolean }>> {
+  const res = await fetch(`http://localhost:8000/api/progressions/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
 }

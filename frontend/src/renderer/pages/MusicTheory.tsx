@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { theoryEngine } from '../api';
+import { saveProgression as apiSaveProgression, theoryEngine } from '../api';
 import type { TheoryScale, TheoryChord, TheoryInterval, TheoryProgression, ProgressionChord } from '../types';
 
 const tabs = ['Scale Generator', 'Chord Builder', 'Interval Analyzer', 'Chord Progressions'] as const;
@@ -282,11 +282,14 @@ function ChordProgressions() {
   const [genre, setGenre] = useState('Techno');
   const [result, setResult] = useState<TheoryProgression | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     setLoading(true);
     setResult(null);
+    setSavedMsg(null);
     setError(null);
     try {
       const res = await theoryEngine('progression', { key, mood: mood.toLowerCase(), genre });
@@ -299,6 +302,25 @@ function ChordProgressions() {
       setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+    setSaving(true);
+    setSavedMsg(null);
+    setError(null);
+    try {
+      const res = await apiSaveProgression(result.key, result.mood, result.genre, result.chords);
+      if (res.success) {
+        setSavedMsg('Saved to Library');
+      } else {
+        setError(res.error?.message ?? 'Failed to save');
+      }
+    } catch {
+      setError('Failed to connect to backend');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -335,10 +357,13 @@ function ChordProgressions() {
           className="px-4 py-2 bg-primary-700 rounded-lg text-sm hover:bg-primary-600 transition-colors disabled:opacity-50">
           {loading ? 'Generating...' : 'Generate'}
         </button>
-        <button className="px-4 py-2 bg-surface-700 rounded-lg text-sm hover:bg-surface-600 transition-colors disabled:opacity-50">
-          Save
+        <button onClick={handleSave} disabled={saving || !result}
+          className="px-4 py-2 bg-surface-700 rounded-lg text-sm hover:bg-surface-600 transition-colors disabled:opacity-50">
+          {saving ? 'Saving...' : 'Save'}
         </button>
       </div>
+
+      {savedMsg && <p className="mt-4 text-green-300 text-sm">{savedMsg}</p>}
 
       {error && <p className="mt-4 text-red-300 text-sm">{error}</p>}
 

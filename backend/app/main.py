@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.app.api import plugins as plugin_routes
+from backend.app.api import progressions as progression_routes
 from backend.app.api import upload as upload_routes
 from backend.app.core.config import settings
 from backend.app.core.exceptions import MusicCopilotError
@@ -46,6 +47,7 @@ app.add_middleware(
 )
 
 app.include_router(plugin_routes.router, prefix="/api")
+app.include_router(progression_routes.router, prefix="/api")
 app.include_router(upload_routes.router, prefix="/api")
 
 

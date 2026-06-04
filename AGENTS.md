@@ -24,8 +24,9 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: Theory Engine plugin done + Music Theory page wired to backend. 36 tests pass. Next: Chord Progression Generator or Progression Library API.
-- **Recent Decisions**: 2026-06-03 — Sample Analyzer plugin (plugins/sample_analyzer/plugin.py) uses librosa 0.11.0 chroma_cqt + music21 10.3.0 s.analyze('key') for Krumhansl-Schmuckler key detection. Upload endpoint (backend/app/api/upload.py) validates file extension + mimetype before saving. EventBus fires 'sample.analyzed' only after successful analysis. Frontend api.ts as single HTTP boundary with separate types.ts. Tests use scipy.io.wavfile for synthetic audio generation.
+- **Current Focus**: Progression Library API + frontend done. Save from Music Theory → browse/delete in Library page. 43 tests pass. Next: Chord Progression Generator plugin.
+- **Recent Decisions**: 2026-06-04 — Progression Library API uses dedicated router (backend/app/api/progressions.py) + DAO (backend/app/db/progressions.py), not a plugin, since it's a persistence layer not an analysis/generation feature. Three endpoints: POST (save), GET (list with sort), DELETE. Frontend Library page (Library.tsx) is a sortable table with date/mood/genre/key columns. Save button in Music Theory wired with loading/success state. 7 new tests, 43 total.
+- **Recent Decisions**: 2026-06-04 — Sample Analyzer plugin (plugins/sample_analyzer/plugin.py) uses librosa 0.11.0 chroma_cqt + music21 10.3.0 s.analyze('key') for Krumhansl-Schmuckler key detection. Upload endpoint (backend/app/api/upload.py) validates file extension + mimetype before saving. EventBus fires 'sample.analyzed' only after successful analysis. Frontend api.ts as single HTTP boundary with separate types.ts. Tests use scipy.io.wavfile for synthetic audio generation.
 - **Recent Decisions**: 2026-06-03 — librosa 0.11.0 beat_track returns np.ndarray (not scalar) — use float(np.atleast_1d(tempo)[0]). music21 10.3.0 KrumhanslSchmuckler uses s.analyze('key') returning Key object with .tonic (Pitch) and .mode (str) — not .solution.
 - **Recent Decisions**: 2026-06-03 — BPM detection switched from librosa.beat.beat_track to librosa.feature.rhythm.tempo with std_bpm=2.0. beat_track's dynamic-programming beat tracker introduced errors for off-center tempos (174→107.7) by deriving BPM from median inter-beat-interval of poorly tracked beats. Direct autocorrelation via tempo() avoids this entirely. Click-track tests at 143 and 174 BPM added to prevent regression.
 - **Recent Decisions**: 2026-06-03 — BPM detection further improved by switching from single-band onset envelope to multi-band onset (librosa.onset.onset_strength_multi) with per-band normalization to [0,1] before averaging. This gives quiet high-frequency bands (hi-hats carrying beat-rate periodicity) equal influence as loud low-frequency bands (kicks carrying half-time groove). Also increased frame rate (hop_length=512→256) for finer autocorrelation resolution. Click-track tests at 143 and 174 BPM confirmed no regression.
@@ -49,13 +50,14 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-04 | Tempo-doubling heuristics (autocorrelation, multi-band, proportional threshold) | Removed — autocorrelation approach fundamentally unreliable for percussion. Replaced with user BPM range selector. |
 | 2026-06-04 | BPM range selector for half-time fix | Done — dropdown with 4 options (Auto / 50–150 / 100–200 / 150–250) on Samples page. Backend doubles/halves when detected BPM falls outside the selected range. Zero false positives, full user control. |
 | 2026-06-04 | Theory Engine plugin + 19 tests | Done — scales (11 types), chords (9 qualities), intervals, progressions (10 mood×key combos). All offline, no AI. 36 total tests passing. |
+| 2026-06-04 | Progression Library API + frontend + tests | Done — 3 endpoints (save, list, delete), DAO helper, sortable Library table, Save button wired in Music Theory. 7 new tests, 43 total. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)
 - [x] Theory Engine (scales, chords, intervals)
 - [ ] Chord Progression Generator
 - [ ] MIDI Export Engine
-- [ ] Progression & Melody Library (save, browse, sort, preview, drag-and-drop MIDI)
+- [x] Progression & Melody Library (save, browse, sort — MIDI drag-and-drop stubbed)
 - [ ] AI Studio (chat + analysis + composition assistant)
 
 ## Infrastructure Status
@@ -75,7 +77,10 @@ Built with Electron + React + FastAPI + SQLite.
 - [x] Event emission (sample.analyzed) with async event_bus.emit()
 - [x] Frontend api.ts (thin fetch wrapper) + types.ts (shared result types)
 - [x] Samples page (drag-and-drop upload + result cards UI)
-- [x] Backend tests (36 tests: event bus, plugin discovery, sample analyzer, theory engine)
+- [x] Progression Library API (POST/GET/DELETE + DAO)
+- [x] Library page (sortable table with delete)
+- [x] Save button wired in Music Theory page
+- [x] Backend tests (43 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions)
 
 ## Git Workflow
 - `git add -A && git commit -m "scope: message"` after every meaningful change.
@@ -85,6 +90,5 @@ Built with Electron + React + FastAPI + SQLite.
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Progression Library API + save/list frontend framework
-2. Chord Progression Generator plugin
-3. MIDI Export Engine + drag-and-drop into FL Studio
+1. Chord Progression Generator plugin
+2. MIDI Export Engine + drag-and-drop into FL Studio

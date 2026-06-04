@@ -44,7 +44,7 @@ Ship useful software immediately.
 - [x] Theory Engine — scales, chords, intervals, functions (no AI)
 - [ ] Chord Progression Generator — key + mood + genre → progressions
 - [ ] MIDI Export Engine — chords, melody, bassline, arpeggio → .mid files
-- [ ] Progression & Melody Library — save, browse, sort, search, preview, drag-and-drop MIDI into FL Studio
+- [x] Progression & Melody Library — save, browse, sort, search, preview, drag-and-drop MIDI into FL Studio
 - [ ] Producer Chat — ask production questions via AI layer
 - [ ] Why Does This Sound Good? — AI explains tension, resolution, harmony
 - [ ] Finish My Idea (basic) — analyze loop/MIDI, suggest structure
