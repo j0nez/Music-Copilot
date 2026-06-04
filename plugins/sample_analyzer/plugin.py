@@ -76,12 +76,25 @@ class SampleAnalyzerPlugin(Plugin):
             if bpm_val < 140:
                 doubled = bpm_val * 2
                 if doubled <= 300:
-                    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
-                    ac = librosa.autocorrelate(onset_env)
+                    onset_multi = librosa.onset.onset_strength_multi(y=y, sr=sr, channels=[0, 32, 64, 96, 128])
+                    onset_norm = np.array([
+                        (band - band.min()) / max(band.max() - band.min(), 1e-10)
+                        for band in onset_multi
+                    ])
+                    onset_env = np.mean(onset_norm, axis=0)
+                    n = len(onset_env)
+                    ac = librosa.autocorrelate(onset_env).astype(np.float64)
+                    for k in range(n):
+                        ac[k] /= (n - k)
                     hop_time = 512 / sr
                     lag_p = int(round(60.0 / bpm_val / hop_time))
                     lag_d = int(round(60.0 / doubled / hop_time))
-                    if lag_d < len(ac) and ac[lag_d] > ac[lag_p]:
+                    logger.debug(
+                        "Doubling check: BPM=%s, lag_p=%s(ac=%.4f), lag_d=%s(ac=%.4f)",
+                        round(bpm_val, 1), lag_p, ac[lag_p] if lag_p < n else -1,
+                        lag_d, ac[lag_d] if lag_d < n else -1,
+                    )
+                    if lag_d < n and ac[lag_d] > ac[lag_p]:
                         bpm_val = doubled
 
             if confidence < 0.5:
