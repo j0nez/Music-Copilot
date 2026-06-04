@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from backend.app.api import exports as export_routes
 from backend.app.api import plugins as plugin_routes
 from backend.app.api import progressions as progression_routes
 from backend.app.api import upload as upload_routes
@@ -46,6 +47,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(export_routes.router, prefix="/api")
 app.include_router(plugin_routes.router, prefix="/api")
 app.include_router(progression_routes.router, prefix="/api")
 app.include_router(upload_routes.router, prefix="/api")

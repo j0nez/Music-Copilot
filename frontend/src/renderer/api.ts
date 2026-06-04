@@ -1,5 +1,6 @@
 import type {
   ApiResponse,
+  MidiExportResult,
   ProgressionChord,
   SampleAnalysisResult,
   SavedProgression,
@@ -76,4 +77,16 @@ export async function deleteProgression(id: number): Promise<ApiResponse<{ delet
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+export async function exportMidi(
+  key: string,
+  chords: ProgressionChord[],
+  bpm = 120,
+): Promise<ApiResponse<MidiExportResult>> {
+  return post<MidiExportResult>('/plugins/midi_export/execute', { key, chords, bpm });
+}
+
+export function downloadMidiUrl(progressionId: number, bpm = 120): string {
+  return `http://localhost:8000/api/progressions/${progressionId}/midi?bpm=${bpm}`;
 }

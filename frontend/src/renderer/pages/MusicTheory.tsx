@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { saveProgression as apiSaveProgression, theoryEngine } from '../api';
-import type { TheoryScale, TheoryChord, TheoryInterval, TheoryProgression, ProgressionChord } from '../types';
+import { exportMidi as apiExportMidi, saveProgression as apiSaveProgression, theoryEngine } from '../api';
+import type { MidiExportResult, TheoryChord, TheoryInterval, TheoryProgression, ProgressionChord, TheoryScale } from '../types';
 
 const tabs = ['Scale Generator', 'Chord Builder', 'Interval Analyzer', 'Chord Progressions'] as const;
 type Tab = (typeof tabs)[number];
@@ -283,6 +283,7 @@ function ChordProgressions() {
   const [result, setResult] = useState<TheoryProgression | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -324,6 +325,27 @@ function ChordProgressions() {
     }
   };
 
+  const handleExportMidi = async () => {
+    if (!result) return;
+    setExporting(true);
+    setError(null);
+    try {
+      const res = await apiExportMidi(result.key, result.chords);
+      if (res.success && res.data) {
+        const a = document.createElement('a');
+        a.href = `http://localhost:8000/api/exports/${res.data.filename}`;
+        a.download = res.data.filename;
+        a.click();
+      } else {
+        setError(res.error?.message ?? 'Failed to export MIDI');
+      }
+    } catch {
+      setError('Failed to connect to backend');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="rounded-lg border border-surface-700 p-4">
       <p className="text-sm text-gray-500 mb-4">
@@ -360,6 +382,10 @@ function ChordProgressions() {
         <button onClick={handleSave} disabled={saving || !result}
           className="px-4 py-2 bg-surface-700 rounded-lg text-sm hover:bg-surface-600 transition-colors disabled:opacity-50">
           {saving ? 'Saving...' : 'Save'}
+        </button>
+        <button onClick={handleExportMidi} disabled={exporting || !result}
+          className="px-4 py-2 bg-blue-900/40 rounded-lg text-sm hover:bg-blue-900/60 transition-colors disabled:opacity-50">
+          {exporting ? 'Exporting...' : 'Export MIDI'}
         </button>
       </div>
 

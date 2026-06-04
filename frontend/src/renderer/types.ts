@@ -63,4 +63,11 @@ export interface SavedProgression {
   created_at: string;
 }
 
+export interface MidiExportResult {
+  file_path: string;
+  filename: string;
+  bpm: number;
+  length_bars: number;
+}
+
 export type TheoryResult = TheoryScale | TheoryChord | TheoryInterval | TheoryProgression;

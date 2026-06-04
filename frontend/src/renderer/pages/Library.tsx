@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { deleteProgression, listProgressions } from '../api';
+import { deleteProgression, downloadMidiUrl, listProgressions } from '../api';
 import type { SavedProgression } from '../types';
 
 type SortField = 'key' | 'mood' | 'genre' | 'created_at';
@@ -106,6 +106,7 @@ export default function Library() {
                 >
                   Saved{sortArrow('created_at')}
                 </th>
+                <th className="pb-3 pr-4">MIDI</th>
                 <th className="pb-3" />
               </tr>
             </thead>
@@ -128,6 +129,15 @@ export default function Library() {
                   </td>
                   <td className="py-3 pr-4 text-gray-500 text-xs" title={p.created_at}>
                     {new Date(p.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="py-3 pr-4">
+                    <a
+                      href={downloadMidiUrl(p.id)}
+                      download
+                      className="px-3 py-1 rounded bg-blue-900/40 text-blue-300 text-xs hover:bg-blue-900/60 transition-colors inline-block"
+                    >
+                      MIDI
+                    </a>
                   </td>
                   <td className="py-3">
                     <button

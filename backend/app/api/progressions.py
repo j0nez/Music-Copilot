@@ -1,14 +1,18 @@
+import json
 import logging
 
 from fastapi import APIRouter
+from fastapi.responses import FileResponse
 
 from backend.app.core.exceptions import InputValidationError, DatabaseError
+from backend.app.db.database import get_connection
 from backend.app.db.progressions import (
     delete_progression,
     list_progressions,
     save_progression,
 )
 from backend.app.models.shared import ApiResponse, ErrorDetail
+from backend.app.services.midi.generator import generate_midi
 
 logger = logging.getLogger("music_copilot.progressions_api")
 
@@ -61,3 +65,26 @@ async def remove_progression(progression_id: int):
         )
 
     return ApiResponse(success=True, data={"deleted": True})
+
+
+@router.get("/{progression_id}/midi")
+async def download_progression_midi(progression_id: int, bpm: int = 120):
+    try:
+        conn = get_connection()
+        row = conn.execute(
+            "SELECT key, chords FROM progressions WHERE id = ?", (progression_id,)
+        ).fetchone()
+        conn.close()
+    except Exception as exc:
+        raise DatabaseError(f"Failed to read progression: {exc}") from exc
+
+    if row is None:
+        return ApiResponse(
+            success=False,
+            data=None,
+            error=ErrorDetail(code="NOT_FOUND", message=f"Progression {progression_id} not found"),
+        )
+
+    chords = json.loads(row["chords"])
+    dest = generate_midi(row["key"], chords, bpm=bpm)
+    return FileResponse(str(dest), media_type="audio/midi", filename=dest.name)
