@@ -83,9 +83,29 @@ export async function deleteProgression(id: number): Promise<ApiResponse<{ delet
 export async function exportMidi(
   key: string,
   chords: ProgressionChord[],
-  bpm = 120,
+  opts?: {
+    bpm?: number;
+    style?: string;
+    voicing?: string;
+    genre?: string;
+    mood?: string;
+    arpeggio_pattern?: string;
+    articulation?: string;
+    base_velocity?: number;
+  },
 ): Promise<ApiResponse<MidiExportResult>> {
-  return post<MidiExportResult>('/plugins/midi_export/execute', { key, chords, bpm });
+  return post<MidiExportResult>('/plugins/midi_export/execute', {
+    key,
+    chords,
+    bpm: opts?.bpm ?? 120,
+    style: opts?.style ?? 'block',
+    voicing: opts?.voicing ?? 'close',
+    genre: opts?.genre ?? 'house',
+    mood: opts?.mood ?? 'uplifting',
+    arpeggio_pattern: opts?.arpeggio_pattern ?? 'up',
+    articulation: opts?.articulation ?? 'auto',
+    base_velocity: opts?.base_velocity ?? 100,
+  });
 }
 
 export function downloadMidiUrl(progressionId: number, bpm = 120): string {

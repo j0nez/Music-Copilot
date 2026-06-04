@@ -287,6 +287,8 @@ function ChordProgressions() {
   const [exporting, setExporting] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [midiStyle, setMidiStyle] = useState('block');
+  const [midiVoicing, setMidiVoicing] = useState('close');
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -331,7 +333,12 @@ function ChordProgressions() {
     setExporting(true);
     setError(null);
     try {
-      const res = await apiExportMidi(result.key, result.chords);
+      const res = await apiExportMidi(result.key, result.chords, {
+        style: midiStyle,
+        voicing: midiVoicing,
+        genre: genre.toLowerCase(),
+        mood: mood.toLowerCase(),
+      });
       if (res.success && res.data) {
         const a = document.createElement('a');
         a.href = `http://localhost:8000/api/exports/${res.data.filename}`;
@@ -396,7 +403,22 @@ function ChordProgressions() {
 
       {result && (
         <div className="mt-6">
-          <p className="text-md font-semibold text-gray-200 mb-3">{result.key} — {result.mood}</p>
+          <div className="flex items-center gap-4 mb-3">
+            <p className="text-md font-semibold text-gray-200">{result.key} — {result.mood}</p>
+            <span className="text-xs text-gray-500">MIDI: </span>
+            <select value={midiStyle} onChange={(e) => setMidiStyle(e.target.value)}
+              className="bg-surface-800 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary-500">
+              <option value="block">Block</option>
+              <option value="arpeggio">Arpeggio</option>
+              <option value="full">Full (Bass+Chords)</option>
+            </select>
+            <select value={midiVoicing} onChange={(e) => setMidiVoicing(e.target.value)}
+              className="bg-surface-800 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary-500">
+              <option value="close">Close</option>
+              <option value="open">Open</option>
+              <option value="drop2">Drop 2</option>
+            </select>
+          </div>
           <div className="flex flex-wrap gap-3">
             {result.chords.map((chord: ProgressionChord, i: number) => (
               <div key={i}
@@ -437,6 +459,8 @@ function ChordGenerator() {
   const [exporting, setExporting] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [midiStyle, setMidiStyle] = useState('block');
+  const [midiVoicing, setMidiVoicing] = useState('close');
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -481,7 +505,12 @@ function ChordGenerator() {
     setExporting(true);
     setError(null);
     try {
-      const res = await apiExportMidi(result.key, result.chords);
+      const res = await apiExportMidi(result.key, result.chords, {
+        style: midiStyle,
+        voicing: midiVoicing,
+        genre: genre.toLowerCase(),
+        mood: mood.toLowerCase(),
+      });
       if (res.success && res.data) {
         const a = document.createElement('a');
         a.href = `http://localhost:8000/api/exports/${res.data.filename}`;
@@ -560,7 +589,22 @@ function ChordGenerator() {
 
       {result && (
         <div className="mt-6">
-          <p className="text-md font-semibold text-gray-200 mb-3">{result.key} — {result.mood}</p>
+          <div className="flex items-center gap-4 mb-3">
+            <p className="text-md font-semibold text-gray-200">{result.key} — {result.mood}</p>
+            <span className="text-xs text-gray-500">MIDI: </span>
+            <select value={midiStyle} onChange={(e) => setMidiStyle(e.target.value)}
+              className="bg-surface-800 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary-500">
+              <option value="block">Block</option>
+              <option value="arpeggio">Arpeggio</option>
+              <option value="full">Full (Bass+Chords)</option>
+            </select>
+            <select value={midiVoicing} onChange={(e) => setMidiVoicing(e.target.value)}
+              className="bg-surface-800 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary-500">
+              <option value="close">Close</option>
+              <option value="open">Open</option>
+              <option value="drop2">Drop 2</option>
+            </select>
+          </div>
           <p className="text-xs text-gray-500 mb-3">{result.chords.length} chords</p>
           <div className="flex flex-wrap gap-3">
             {result.chords.map((chord: ProgressionChord, i: number) => (

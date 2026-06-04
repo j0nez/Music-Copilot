@@ -5,6 +5,7 @@ from pathlib import Path
 import pretty_midi
 
 from backend.app.core.config import settings
+from backend.app.services.midi.models import MidiFile
 
 logger = logging.getLogger("music_copilot.midi")
 
@@ -74,4 +75,30 @@ def generate_midi(
     dest = settings.export_dir / f"{stem}.mid"
     midi.write(str(dest))
     logger.info("MIDI written: %s (%d chords, %d bpm)", dest.name, len(chords), bpm)
+    return dest
+
+
+def write_midi(midi_file: MidiFile) -> Path:
+    pm = pretty_midi.PrettyMIDI(initial_tempo=float(midi_file.bpm))
+
+    for track in midi_file.tracks:
+        inst = pretty_midi.Instrument(program=track.program)
+        seconds_per_beat = 60.0 / midi_file.bpm
+
+        for note in track.notes:
+            pm_note = pretty_midi.Note(
+                velocity=max(0, min(127, note.velocity)),
+                pitch=max(0, min(127, note.pitch)),
+                start=note.start_beat * seconds_per_beat,
+                end=(note.start_beat + note.duration_beats) * seconds_per_beat,
+            )
+            inst.notes.append(pm_note)
+
+        pm.instruments.append(inst)
+
+    settings.export_dir.mkdir(parents=True, exist_ok=True)
+    stem = uuid.uuid4().hex[:12]
+    dest = settings.export_dir / f"{stem}.mid"
+    pm.write(str(dest))
+    logger.info("MIDI written: %s (%d tracks, %d bpm)", dest.name, len(midi_file.tracks), midi_file.bpm)
     return dest
