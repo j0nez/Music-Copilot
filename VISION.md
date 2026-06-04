@@ -44,6 +44,7 @@ Ship useful software immediately.
 - [ ] Theory Engine — scales, chords, intervals, functions (no AI)
 - [ ] Chord Progression Generator — key + mood + genre → progressions
 - [ ] MIDI Export Engine — chords, melody, bassline, arpeggio → .mid files
+- [ ] Progression & Melody Library — save, browse, sort, search, preview, drag-and-drop MIDI into FL Studio
 - [ ] Producer Chat — ask production questions via AI layer
 - [ ] Why Does This Sound Good? — AI explains tension, resolution, harmony
 - [ ] Finish My Idea (basic) — analyze loop/MIDI, suggest structure
@@ -73,7 +74,7 @@ Ship useful software immediately.
 - [ ] Project-Aware Suggestions — analyze project, suggest FX/drums/transitions
 
 ### Phase 7 — FL Studio Integration
-- [ ] Drag-and-Drop MIDI — generate and drop .mid files into FL
+- [x] Drag-and-Drop MIDI — generate and drop .mid files into FL (framework in Phase 1, polished here)
 - [ ] FL Template Generator — genre-specific project templates
 - [ ] Project Analyzer — analyze FLP export data and stems
 - [ ] JUCE-Based Bridge Plugin — deep DAW integration like Splice Bridge
@@ -102,8 +103,9 @@ Build only these for the first release:
 2. Theory Engine
 3. Chord Progression Generator
 4. MIDI Export Engine
-5. Producer Chat
-6. Why Does This Sound Good?
-7. Finish My Idea (basic)
+5. Progression & Melody Library (save, browse, sort, preview, drag-and-drop MIDI)
+6. Producer Chat
+7. Why Does This Sound Good?
+8. Finish My Idea (basic)
 
 This alone is a genuinely useful tool for FL Studio producers and creates the foundation for every future feature without architectural rewrites.
