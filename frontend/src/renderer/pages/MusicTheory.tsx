@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { exportMidi as apiExportMidi, saveProgression as apiSaveProgression, theoryEngine } from '../api';
+import { chordGenerator as apiChordGenerator, exportMidi as apiExportMidi, saveProgression as apiSaveProgression, theoryEngine } from '../api';
 import type { MidiExportResult, TheoryChord, TheoryInterval, TheoryProgression, ProgressionChord, TheoryScale } from '../types';
 
-const tabs = ['Scale Generator', 'Chord Builder', 'Interval Analyzer', 'Chord Progressions'] as const;
+const tabs = ['Scale Generator', 'Chord Builder', 'Interval Analyzer', 'Chord Progressions', 'Chord Generator'] as const;
 type Tab = (typeof tabs)[number];
 
 const NOTES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -54,6 +54,7 @@ export default function MusicTheory() {
       {activeTab === 'Chord Builder' && <ChordBuilder />}
       {activeTab === 'Interval Analyzer' && <IntervalAnalyzer />}
       {activeTab === 'Chord Progressions' && <ChordProgressions />}
+      {activeTab === 'Chord Generator' && <ChordGenerator />}
     </div>
   );
 }
@@ -396,6 +397,171 @@ function ChordProgressions() {
       {result && (
         <div className="mt-6">
           <p className="text-md font-semibold text-gray-200 mb-3">{result.key} — {result.mood}</p>
+          <div className="flex flex-wrap gap-3">
+            {result.chords.map((chord: ProgressionChord, i: number) => (
+              <div key={i}
+                className="px-4 py-3 rounded-lg bg-purple-800/30 border border-purple-700/40 text-center min-w-[80px]">
+                <p className="text-lg font-bold text-purple-200">{chord.roman}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{chord.name}</p>
+                <p className="text-xs text-gray-500 mt-1">{chord.notes.join('–')}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const GENERATOR_KEYS = [
+  'C Minor', 'C# Minor', 'D Minor', 'Eb Minor', 'E Minor', 'F Minor',
+  'F# Minor', 'G Minor', 'G# Minor', 'A Minor', 'Bb Minor', 'B Minor',
+  'C Major', 'C# Major', 'D Major', 'Eb Major', 'E Major', 'F Major',
+  'F# Major', 'G Major', 'Ab Major', 'A Major', 'Bb Major', 'B Major',
+];
+
+const GENERATOR_MOODS = ['Dark', 'Uplifting', 'Emotional', 'Melancholic', 'Energetic', 'Dreamy', 'Aggressive'];
+const GENERATOR_GENRES = ['Techno', 'House', 'Trance', 'Deep House', 'Progressive House', 'Melodic Techno'];
+const COMPLEXITY_OPTIONS = ['Simple', 'Advanced'];
+const LENGTH_OPTIONS = [4, 8, 16];
+
+function ChordGenerator() {
+  const [key, setKey] = useState('A Minor');
+  const [mood, setMood] = useState('Dark');
+  const [genre, setGenre] = useState('Techno');
+  const [length, setLength] = useState(4);
+  const [complexity, setComplexity] = useState('Simple');
+  const [result, setResult] = useState<TheoryProgression | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    setResult(null);
+    setSavedMsg(null);
+    setError(null);
+    try {
+      const res = await apiChordGenerator(key, mood, genre, length, complexity.toLowerCase());
+      if (res.success && res.data) {
+        setResult(res.data as TheoryProgression);
+      } else {
+        setError(res.error?.message ?? 'Failed to generate progression');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+    setSaving(true);
+    setSavedMsg(null);
+    setError(null);
+    try {
+      const res = await apiSaveProgression(result.key, result.mood, result.genre, result.chords);
+      if (res.success) {
+        setSavedMsg('Saved to Library');
+      } else {
+        setError(res.error?.message ?? 'Failed to save');
+      }
+    } catch {
+      setError('Failed to connect to backend');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleExportMidi = async () => {
+    if (!result) return;
+    setExporting(true);
+    setError(null);
+    try {
+      const res = await apiExportMidi(result.key, result.chords);
+      if (res.success && res.data) {
+        const a = document.createElement('a');
+        a.href = `http://localhost:8000/api/exports/${res.data.filename}`;
+        a.download = res.data.filename;
+        a.click();
+      } else {
+        setError(res.error?.message ?? 'Failed to export MIDI');
+      }
+    } catch {
+      setError('Failed to connect to backend');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg border border-surface-700 p-4">
+      <p className="text-sm text-gray-500 mb-4">
+        Generate chord progressions with advanced music theory rules. Supports all keys, multiple moods, and configurable length.
+      </p>
+      <div className="grid grid-cols-5 gap-4 mb-4 max-w-2xl">
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">Key</label>
+          <select value={key} onChange={(e) => setKey(e.target.value)}
+            className="w-full bg-surface-800 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary-500">
+            {GENERATOR_KEYS.map((k) => <option key={k}>{k}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">Mood</label>
+          <select value={mood} onChange={(e) => setMood(e.target.value)}
+            className="w-full bg-surface-800 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary-500">
+            {GENERATOR_MOODS.map((m) => <option key={m}>{m}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">Genre</label>
+          <select value={genre} onChange={(e) => setGenre(e.target.value)}
+            className="w-full bg-surface-800 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary-500">
+            {GENERATOR_GENRES.map((g) => <option key={g}>{g}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">Bars</label>
+          <select value={length} onChange={(e) => setLength(Number(e.target.value))}
+            className="w-full bg-surface-800 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary-500">
+            {LENGTH_OPTIONS.map((l) => <option key={l}>{l}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">Complexity</label>
+          <select value={complexity} onChange={(e) => setComplexity(e.target.value)}
+            className="w-full bg-surface-800 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary-500">
+            {COMPLEXITY_OPTIONS.map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button onClick={handleGenerate} disabled={loading}
+          className="px-4 py-2 bg-primary-700 rounded-lg text-sm hover:bg-primary-600 transition-colors disabled:opacity-50">
+          {loading ? 'Generating...' : 'Generate'}
+        </button>
+        <button onClick={handleSave} disabled={saving || !result}
+          className="px-4 py-2 bg-surface-700 rounded-lg text-sm hover:bg-surface-600 transition-colors disabled:opacity-50">
+          {saving ? 'Saving...' : 'Save'}
+        </button>
+        <button onClick={handleExportMidi} disabled={exporting || !result}
+          className="px-4 py-2 bg-blue-900/40 rounded-lg text-sm hover:bg-blue-900/60 transition-colors disabled:opacity-50">
+          {exporting ? 'Exporting...' : 'Export MIDI'}
+        </button>
+      </div>
+
+      {savedMsg && <p className="mt-4 text-green-300 text-sm">{savedMsg}</p>}
+
+      {error && <p className="mt-4 text-red-300 text-sm">{error}</p>}
+
+      {result && (
+        <div className="mt-6">
+          <p className="text-md font-semibold text-gray-200 mb-3">{result.key} — {result.mood}</p>
+          <p className="text-xs text-gray-500 mb-3">{result.chords.length} chords</p>
           <div className="flex flex-wrap gap-3">
             {result.chords.map((chord: ProgressionChord, i: number) => (
               <div key={i}

@@ -4,6 +4,7 @@ import type {
   ProgressionChord,
   SampleAnalysisResult,
   SavedProgression,
+  TheoryProgression,
   TheoryResult,
   UploadResult,
 } from './types';
@@ -89,4 +90,16 @@ export async function exportMidi(
 
 export function downloadMidiUrl(progressionId: number, bpm = 120): string {
   return `http://localhost:8000/api/progressions/${progressionId}/midi?bpm=${bpm}`;
+}
+
+export async function chordGenerator(
+  key: string,
+  mood: string,
+  genre: string,
+  length = 4,
+  complexity = 'simple',
+): Promise<ApiResponse<TheoryProgression>> {
+  return post<TheoryProgression>('/plugins/chord_generator/execute', {
+    key, mood: mood.toLowerCase(), genre, length, complexity,
+  });
 }

@@ -42,8 +42,8 @@ Ship useful software immediately.
 
 - [x] Sample Analyzer — BPM, key, scale, length from .wav/.mp3/.flac
 - [x] Theory Engine — scales, chords, intervals, functions (no AI)
-- [ ] Chord Progression Generator — key + mood + genre → progressions
-- [ ] MIDI Export Engine — chords, melody, bassline, arpeggio → .mid files
+- [x] Chord Progression Generator — key + mood + genre → progressions
+- [x] MIDI Export Engine — chords, melody, bassline, arpeggio → .mid files
 - [x] Progression & Melody Library — save, browse, sort, search, preview, drag-and-drop MIDI into FL Studio
 - [ ] Producer Chat — ask production questions via AI layer
 - [ ] Why Does This Sound Good? — AI explains tension, resolution, harmony
