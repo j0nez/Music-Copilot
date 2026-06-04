@@ -24,14 +24,14 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: DeepRhythm BPM detects half-time correctly (87 for 174 BPM) — needs tempo-doubling heuristic to prefer the beat rate when autocorrelation supports it
+- **Current Focus**: Tempo-doubling heuristic implemented — 174 BPM drum sample now reports correctly. Next: Theory Engine plugin.
 - **Recent Decisions**: 2026-06-03 — Sample Analyzer plugin (plugins/sample_analyzer/plugin.py) uses librosa 0.11.0 chroma_cqt + music21 10.3.0 s.analyze('key') for Krumhansl-Schmuckler key detection. Upload endpoint (backend/app/api/upload.py) validates file extension + mimetype before saving. EventBus fires 'sample.analyzed' only after successful analysis. Frontend api.ts as single HTTP boundary with separate types.ts. Tests use scipy.io.wavfile for synthetic audio generation.
 - **Recent Decisions**: 2026-06-03 — librosa 0.11.0 beat_track returns np.ndarray (not scalar) — use float(np.atleast_1d(tempo)[0]). music21 10.3.0 KrumhanslSchmuckler uses s.analyze('key') returning Key object with .tonic (Pitch) and .mode (str) — not .solution.
 - **Recent Decisions**: 2026-06-03 — BPM detection switched from librosa.beat.beat_track to librosa.feature.rhythm.tempo with std_bpm=2.0. beat_track's dynamic-programming beat tracker introduced errors for off-center tempos (174→107.7) by deriving BPM from median inter-beat-interval of poorly tracked beats. Direct autocorrelation via tempo() avoids this entirely. Click-track tests at 143 and 174 BPM added to prevent regression.
 - **Recent Decisions**: 2026-06-03 — BPM detection further improved by switching from single-band onset envelope to multi-band onset (librosa.onset.onset_strength_multi) with per-band normalization to [0,1] before averaging. This gives quiet high-frequency bands (hi-hats carrying beat-rate periodicity) equal influence as loud low-frequency bands (kicks carrying half-time groove). Also increased frame rate (hop_length=512→256) for finer autocorrelation resolution. Click-track tests at 143 and 174 BPM confirmed no regression.
 - **Recent Decisions**: 2026-06-03 — BPM detection replaced entirely with DeepRhythm CNN (deeprhythm 0.0.13, PyTorch-based). Achieves 95.91% Acc1 on CPU at 0.12s — significantly more accurate than librosa's signal-processing approach (66.84% Acc1). Falls back to librosa.feature.rhythm.tempo when confidence < 0.5. Model weights (~7 MB) cached at ~/.cache/deeprhythm/ on first use. Key/scale detection untouched.
 - **Recent Decisions**: 2026-06-03 — Short audio (< 8s) tiled with np.tile to meet DeepRhythm's 8-second clip minimum. Prevents AttributeError crash in split_audio when audio is shorter than clip_length. The repeating preserves periodicity so DeepRhythm still detects the correct tempo. New test added for 3-second audio. Confidence-based fallback still active.
-- **Next Up**: Tempo-doubling heuristic — after DeepRhythm returns a BPM < 140, compute onset autocorrelation at the doubled BPM lag. If ≥ 50% of primary peak strength, prefer the doubled value. Catches 87→174 half-time groove without hallucinating for genuinely slow audio.
+- **Recent Decisions**: 2026-06-04 — Tempo-doubling heuristic added to _detect_bpm. When DeepRhythm returns BPM < 140, computes onset autocorrelation at doubled lag. If doubled lag has ≥ 50% of primary peak strength, prefers the doubled value. Fixes 174→87 half-time groove detection without hallucinating for genuinely slow audio. All 17 tests pass.
 - **Blockers**: None
 
 ## Task History
@@ -46,6 +46,7 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-03 | UI consolidation — AI Studio + Music Theory + Samples | Done — merged 7 pages into 4, AI Studio with context panel, Music Theory with tabs, docs/design/decisions.md created |
 | 2026-06-03 | Sample Analyzer plugin + upload endpoint + Samples page + tests | Done — plugins/sample_analyzer/plugin.py with librosa BPM + Krumhansl-Schmuckler key detection via music21, upload endpoint with extension/mimetype validation, event emission (sample.analyzed), frontend api.ts/types.ts, drag-and-drop Samples page with result cards, 14 backend tests all passing |
 | 2026-06-03 | BPM detection: beat_track → tempo() → multi-band onset → DeepRhythm CNN | Done — three iterative improvements: (1) beat_track → tempo() fixed 174→107.7 to 174→123, (2) multi-band onset normalization added no further improvement, (3) DeepRhythm CNN replaces signal-processing entirely. Short audio (<8s) tiled to 8s to prevent split_audio crash. 17 tests passing. |
+| 2026-06-04 | Tempo-doubling heuristic for half-time groove detection | Done — onset autocorrelation at doubled lag, ≥50% threshold, prefers 174 over 87 when audio supports it. 17 tests pass. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)

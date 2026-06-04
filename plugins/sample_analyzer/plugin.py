@@ -1,7 +1,9 @@
 import logging
 from pathlib import Path
 
+import librosa
 import librosa.feature.rhythm
+import librosa.onset
 import numpy as np
 from deeprhythm import DeepRhythmPredictor
 from music21 import note, stream
@@ -69,6 +71,18 @@ class SampleAnalyzerPlugin(Plugin):
             tempo, confidence = _bpm_model.predict_from_audio(
                 y, sr, include_confidence=True,
             )
+            bpm_val = float(tempo)
+
+            if bpm_val < 140:
+                doubled = bpm_val * 2
+                if doubled <= 300:
+                    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+                    ac = librosa.autocorrelate(onset_env)
+                    hop_time = 512 / sr
+                    lag_p = int(round(60.0 / bpm_val / hop_time))
+                    lag_d = int(round(60.0 / doubled / hop_time))
+                    if lag_d < len(ac) and ac[lag_d] >= 0.5 * ac[lag_p]:
+                        bpm_val = doubled
 
             if confidence < 0.5:
                 logger.warning(
@@ -81,7 +95,7 @@ class SampleAnalyzerPlugin(Plugin):
                 )
                 return round(float(np.atleast_1d(bpm)[0]), 1)
 
-            return round(float(tempo), 1)
+            return round(bpm_val, 1)
         except Exception as e:
             logger.warning("BPM detection failed: %s", e)
             return None
