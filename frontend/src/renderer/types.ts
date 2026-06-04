@@ -18,3 +18,40 @@ export interface ApiResponse<T> {
   data: T | null;
   error?: { code: string; message: string } | null;
 }
+
+export interface TheoryScale {
+  key: string;
+  scale: string;
+  notes: string[];
+  intervals: string[];
+}
+
+export interface TheoryChord {
+  root: string;
+  quality: string;
+  notes: string[];
+  function: string | null;
+}
+
+export interface TheoryInterval {
+  note1: string;
+  note2: string;
+  interval: string;
+  semitones: number;
+}
+
+export interface ProgressionChord {
+  roman: string;
+  name: string;
+  notes: string[];
+  quality: string;
+}
+
+export interface TheoryProgression {
+  key: string;
+  chords: ProgressionChord[];
+  mood: string;
+  genre: string;
+}
+
+export type TheoryResult = TheoryScale | TheoryChord | TheoryInterval | TheoryProgression;

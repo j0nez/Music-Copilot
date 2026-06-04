@@ -1,4 +1,4 @@
-import type { ApiResponse, SampleAnalysisResult, UploadResult } from './types';
+import type { ApiResponse, SampleAnalysisResult, TheoryResult, UploadResult } from './types';
 
 const BASE = 'http://localhost:8000/api';
 
@@ -32,5 +32,15 @@ export async function analyzeSample(
     file_path: filePath,
     min_bpm: minBpm,
     max_bpm: maxBpm,
+  });
+}
+
+export async function theoryEngine(
+  mode: string,
+  params: Record<string, unknown>,
+): Promise<ApiResponse<TheoryResult>> {
+  return post<TheoryResult>('/plugins/theory_engine/execute', {
+    mode,
+    ...params,
   });
 }
