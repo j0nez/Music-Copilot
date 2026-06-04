@@ -24,7 +24,7 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: BPM range selector on Samples page — user picks a range (e.g. 100–200 BPM) to fix half-time doubling. Next: Theory Engine plugin.
+- **Current Focus**: Theory Engine plugin done (scales, chords, intervals, progressions). 36 tests pass. Next: Wire Music Theory frontend page.
 - **Recent Decisions**: 2026-06-03 — Sample Analyzer plugin (plugins/sample_analyzer/plugin.py) uses librosa 0.11.0 chroma_cqt + music21 10.3.0 s.analyze('key') for Krumhansl-Schmuckler key detection. Upload endpoint (backend/app/api/upload.py) validates file extension + mimetype before saving. EventBus fires 'sample.analyzed' only after successful analysis. Frontend api.ts as single HTTP boundary with separate types.ts. Tests use scipy.io.wavfile for synthetic audio generation.
 - **Recent Decisions**: 2026-06-03 — librosa 0.11.0 beat_track returns np.ndarray (not scalar) — use float(np.atleast_1d(tempo)[0]). music21 10.3.0 KrumhanslSchmuckler uses s.analyze('key') returning Key object with .tonic (Pitch) and .mode (str) — not .solution.
 - **Recent Decisions**: 2026-06-03 — BPM detection switched from librosa.beat.beat_track to librosa.feature.rhythm.tempo with std_bpm=2.0. beat_track's dynamic-programming beat tracker introduced errors for off-center tempos (174→107.7) by deriving BPM from median inter-beat-interval of poorly tracked beats. Direct autocorrelation via tempo() avoids this entirely. Click-track tests at 143 and 174 BPM added to prevent regression.
@@ -48,10 +48,11 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-03 | BPM detection: beat_track → tempo() → multi-band onset → DeepRhythm CNN | Done — three iterative improvements: (1) beat_track → tempo() fixed 174→107.7 to 174→123, (2) multi-band onset normalization added no further improvement, (3) DeepRhythm CNN replaces signal-processing entirely. Short audio (<8s) tiled to 8s to prevent split_audio crash. 17 tests passing. |
 | 2026-06-04 | Tempo-doubling heuristics (autocorrelation, multi-band, proportional threshold) | Removed — autocorrelation approach fundamentally unreliable for percussion. Replaced with user BPM range selector. |
 | 2026-06-04 | BPM range selector for half-time fix | Done — dropdown with 4 options (Auto / 50–150 / 100–200 / 150–250) on Samples page. Backend doubles/halves when detected BPM falls outside the selected range. Zero false positives, full user control. |
+| 2026-06-04 | Theory Engine plugin + 19 tests | Done — scales (11 types), chords (9 qualities), intervals, progressions (10 mood×key combos). All offline, no AI. 36 total tests passing. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)
-- [ ] Theory Engine (scales, chords, intervals)
+- [x] Theory Engine (scales, chords, intervals)
 - [ ] Chord Progression Generator
 - [ ] MIDI Export Engine
 - [ ] Progression & Melody Library (save, browse, sort, preview, drag-and-drop MIDI)
