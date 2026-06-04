@@ -25,8 +25,12 @@ export async function uploadFile(file: File): Promise<ApiResponse<UploadResult>>
 
 export async function analyzeSample(
   filePath: string,
+  minBpm = 0,
+  maxBpm = 0,
 ): Promise<ApiResponse<SampleAnalysisResult>> {
   return post<SampleAnalysisResult>('/plugins/sample_analyzer/execute', {
     file_path: filePath,
+    min_bpm: minBpm,
+    max_bpm: maxBpm,
   });
 }

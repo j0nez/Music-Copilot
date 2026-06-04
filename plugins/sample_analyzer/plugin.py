@@ -1,9 +1,7 @@
 import logging
 from pathlib import Path
 
-import librosa
 import librosa.feature.rhythm
-import librosa.onset
 import numpy as np
 from deeprhythm import DeepRhythmPredictor
 from music21 import note, stream
@@ -19,6 +17,8 @@ _bpm_model = DeepRhythmPredictor()
 
 class SampleAnalyzerInput(BaseModel):
     file_path: str
+    min_bpm: int = 0
+    max_bpm: int = 0
 
 
 PITCH_CLASSES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -30,7 +30,7 @@ class SampleAnalyzerPlugin(Plugin):
     version = "0.1.0"
     input_schema = SampleAnalyzerInput
 
-    async def execute(self, file_path: str, **kwargs) -> PluginResult:
+    async def execute(self, file_path: str, min_bpm: int = 0, max_bpm: int = 0, **kwargs) -> PluginResult:
         path = Path(file_path)
         if not path.exists():
             return PluginResult(
@@ -41,7 +41,7 @@ class SampleAnalyzerPlugin(Plugin):
             y, sr = librosa.load(str(path))
 
             duration = float(librosa.get_duration(y=y, sr=sr))
-            bpm = self._detect_bpm(y, sr)
+            bpm = self._detect_bpm(y, sr, min_bpm=min_bpm, max_bpm=max_bpm)
             key_name, scale_type = self._detect_key(y, sr)
             scale = f"{key_name} {scale_type}" if key_name and scale_type else None
 
@@ -61,7 +61,7 @@ class SampleAnalyzerPlugin(Plugin):
             logger.error("Analysis failed for %s: %s", file_path, e, exc_info=True)
             return PluginResult(success=False, data={}, error=str(e))
 
-    def _detect_bpm(self, y: np.ndarray, sr: int) -> float | None:
+    def _detect_bpm(self, y: np.ndarray, sr: int, min_bpm: int = 0, max_bpm: int = 0) -> float | None:
         try:
             clip_samples = sr * 8
             if len(y) < clip_samples:
@@ -73,29 +73,13 @@ class SampleAnalyzerPlugin(Plugin):
             )
             bpm_val = float(tempo)
 
-            if bpm_val < 140:
-                doubled = bpm_val * 2
-                if doubled <= 300:
-                    onset_multi = librosa.onset.onset_strength_multi(y=y, sr=sr, channels=[0, 32, 64, 96, 128])
-                    onset_norm = np.array([
-                        (band - band.min()) / max(band.max() - band.min(), 1e-10)
-                        for band in onset_multi
-                    ])
-                    onset_env = np.mean(onset_norm, axis=0)
-                    n = len(onset_env)
-                    ac = librosa.autocorrelate(onset_env).astype(np.float64)
-                    for k in range(n):
-                        ac[k] /= (n - k)
-                    hop_time = 512 / sr
-                    lag_p = int(round(60.0 / bpm_val / hop_time))
-                    lag_d = int(round(60.0 / doubled / hop_time))
-                    logger.debug(
-                        "Doubling check: BPM=%s, lag_p=%s(ac=%.4f), lag_d=%s(ac=%.4f)",
-                        round(bpm_val, 1), lag_p, ac[lag_p] if lag_p < n else -1,
-                        lag_d, ac[lag_d] if lag_d < n else -1,
-                    )
-                    if lag_d < n and ac[lag_d] > ac[lag_p]:
-                        bpm_val = doubled
+            if min_bpm > 0 and max_bpm > 0:
+                if bpm_val < min_bpm and min_bpm <= bpm_val * 2 <= max_bpm:
+                    logger.debug("BPM %s < %s, doubled to %s", bpm_val, min_bpm, bpm_val * 2)
+                    bpm_val = bpm_val * 2
+                elif bpm_val > max_bpm and min_bpm <= bpm_val / 2 <= max_bpm:
+                    logger.debug("BPM %s > %s, halved to %s", bpm_val, max_bpm, bpm_val / 2)
+                    bpm_val = bpm_val / 2
 
             if confidence < 0.5:
                 logger.warning(

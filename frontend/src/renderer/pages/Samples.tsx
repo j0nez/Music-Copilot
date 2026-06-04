@@ -2,11 +2,19 @@ import { useState, useRef } from 'react';
 import { uploadFile, analyzeSample } from '../api';
 import type { SampleAnalysisResult } from '../types';
 
+const BPM_RANGES = [
+  { label: 'Auto (no adjustment)', min: 0, max: 0 },
+  { label: 'Slow – 50–150 BPM', min: 50, max: 150 },
+  { label: 'Medium – 100–200 BPM', min: 100, max: 200 },
+  { label: 'Fast – 150–250 BPM', min: 150, max: 250 },
+];
+
 export default function Samples() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SampleAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [rangeIdx, setRangeIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (f: File) => {
@@ -22,7 +30,8 @@ export default function Samples() {
         return;
       }
 
-      const analyzeRes = await analyzeSample(uploadRes.data.file_path);
+      const r = BPM_RANGES[rangeIdx];
+      const analyzeRes = await analyzeSample(uploadRes.data.file_path, r.min, r.max);
       if (!analyzeRes.success || !analyzeRes.data) {
         setError(analyzeRes.error?.message ?? 'Analysis failed');
         return;
@@ -50,6 +59,19 @@ export default function Samples() {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Samples</h2>
+
+      <div className="mb-4 flex items-center gap-3">
+        <label className="text-sm text-gray-400">BPM range:</label>
+        <select
+          value={rangeIdx}
+          onChange={(e) => setRangeIdx(+e.target.value)}
+          className="rounded border border-surface-700 bg-surface-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+        >
+          {BPM_RANGES.map((r, i) => (
+            <option key={i} value={i}>{r.label}</option>
+          ))}
+        </select>
+      </div>
 
       <div
         onDrop={onDrop}
