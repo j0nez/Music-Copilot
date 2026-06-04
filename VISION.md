@@ -40,8 +40,8 @@ These must never be violated without a project-wide discussion:
 ### Phase 1 — MVP Foundation
 Ship useful software immediately.
 
-- [ ] Sample Analyzer — BPM, key, scale, length from .wav/.mp3/.flac
-- [ ] Theory Engine — scales, chords, intervals, functions (no AI)
+- [x] Sample Analyzer — BPM, key, scale, length from .wav/.mp3/.flac
+- [x] Theory Engine — scales, chords, intervals, functions (no AI)
 - [ ] Chord Progression Generator — key + mood + genre → progressions
 - [ ] MIDI Export Engine — chords, melody, bassline, arpeggio → .mid files
 - [ ] Progression & Melody Library — save, browse, sort, search, preview, drag-and-drop MIDI into FL Studio

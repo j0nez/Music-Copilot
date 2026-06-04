@@ -24,7 +24,7 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: Theory Engine plugin done (scales, chords, intervals, progressions). 36 tests pass. Next: Wire Music Theory frontend page.
+- **Current Focus**: Theory Engine plugin done + Music Theory page wired to backend. 36 tests pass. Next: Chord Progression Generator or Progression Library API.
 - **Recent Decisions**: 2026-06-03 — Sample Analyzer plugin (plugins/sample_analyzer/plugin.py) uses librosa 0.11.0 chroma_cqt + music21 10.3.0 s.analyze('key') for Krumhansl-Schmuckler key detection. Upload endpoint (backend/app/api/upload.py) validates file extension + mimetype before saving. EventBus fires 'sample.analyzed' only after successful analysis. Frontend api.ts as single HTTP boundary with separate types.ts. Tests use scipy.io.wavfile for synthetic audio generation.
 - **Recent Decisions**: 2026-06-03 — librosa 0.11.0 beat_track returns np.ndarray (not scalar) — use float(np.atleast_1d(tempo)[0]). music21 10.3.0 KrumhanslSchmuckler uses s.analyze('key') returning Key object with .tonic (Pitch) and .mode (str) — not .solution.
 - **Recent Decisions**: 2026-06-03 — BPM detection switched from librosa.beat.beat_track to librosa.feature.rhythm.tempo with std_bpm=2.0. beat_track's dynamic-programming beat tracker introduced errors for off-center tempos (174→107.7) by deriving BPM from median inter-beat-interval of poorly tracked beats. Direct autocorrelation via tempo() avoids this entirely. Click-track tests at 143 and 174 BPM added to prevent regression.
@@ -75,7 +75,7 @@ Built with Electron + React + FastAPI + SQLite.
 - [x] Event emission (sample.analyzed) with async event_bus.emit()
 - [x] Frontend api.ts (thin fetch wrapper) + types.ts (shared result types)
 - [x] Samples page (drag-and-drop upload + result cards UI)
-- [x] Backend tests (17 tests: event bus, plugin discovery, sample analyzer)
+- [x] Backend tests (36 tests: event bus, plugin discovery, sample analyzer, theory engine)
 
 ## Git Workflow
 - `git add -A && git commit -m "scope: message"` after every meaningful change.
@@ -85,8 +85,6 @@ Built with Electron + React + FastAPI + SQLite.
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Theory Engine plugin (scale/chord/interval analysis)
-2. Wire Music Theory page to Theory Engine plugin via api.ts
-3. Progression Library API + save/list frontend framework
-4. Chord Progression Generator plugin
-5. MIDI Export Engine + drag-and-drop into FL Studio
+1. Progression Library API + save/list frontend framework
+2. Chord Progression Generator plugin
+3. MIDI Export Engine + drag-and-drop into FL Studio
