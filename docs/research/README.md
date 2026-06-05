@@ -10,8 +10,8 @@ Individual research documents for technical decisions in Music Copilot.
 4. **[Model Recommendations](./model-recommendations.md)** — Lightweight offline models vs. free API tiers for audio, MIDI, and music analysis. Evaluates BPM/key, stem separation, music tagging, generation, LLM inference, and structure analysis with comparison tables, phase-based recommendations, and license analysis. *(Researched — 2026-06-05)*
 5. **[Music Theory & Music Algorithms](./music-theory-algorithms.md)** — Counterpoint, voice-leading, cadence detection, key modulation, and algorithmic composition. *(Researched — 2026-06-05)*
 6. **[Advanced MIDI Generation](./advanced-midi-generation.md)** — Multi-track MIDI, procedural melody (isobar), swing quantization, velocity patterns/humanization (midihum), drum pattern generation (PEuclidean), bassline generation, and the existing MIDI infrastructure in Music Copilot. *(Researched — 2026-06-05)*
-7. **Overall Musical Understanding** — Structure analysis, genre classification, harmonic reduction, and intelligent music comprehension. *(Not yet researched.)*
+7. **[Overall Musical Understanding](./overall-musical-understanding.md)** — Holistic music analysis: full automatic transcription (Omnizart), structure/section boundary detection (MSAF), genre/mood classification (musicnn), energy/tension curves, audio-to-MIDI, music similarity, unified analysis pipeline architecture. *(Researched — 2026-06-05)*
 
 ---
 
-**Last updated:** 2026-06-05 (Topic 6 — Advanced MIDI Generation added)
+**Last updated:** 2026-06-05 (Topic 7 — Overall Musical Understanding added. All 7 research topics complete.)

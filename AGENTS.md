@@ -24,7 +24,7 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation (Design / Research)
-- **Current Focus**: Research phase — 5/7 topics complete. Remaining: advanced MIDI generation, overall musical understanding. Next: implement dashboard + Project concept + Ideas table migration after research is done.
+- **Current Focus**: Research phase — 7/7 topics complete. All research documented. Next: implement dashboard + Project concept + Ideas table migration + Global search + AI Studio.
 - **Recent Decisions**: 2026-06-05 — FL Studio integration research completed (docs/research/fl-studio-integration.md). Splice Bridge case study added as section 10 — reverse-engineered VST3/AU plugin architecture, 3 generations (Bridge 2021, native DAW integrations 2025-2026, Sounds Plugin 2026 beta), comparison to Music Copilot's proposed VST3 bridge. Key finding: keep skip-Tier-4 strategy; if built, use JUCE + named pipes, thin plugin. 29 references.
 - **Recent Decisions**: 2026-06-05 — Model Recommendations research completed (docs/research/model-recommendations.md). Evaluated 20+ tools across 5 categories. Confirmed deeprhythm + music21 as SOTA offline BPM/key. Recommended Groq (free tier) as primary LLM provider. ACE-Step 1.5 (Apache-2.0) best for AI music generation. Procedural (music21 + arvo) preferred over ML for Phase 1-3. Essentia flagged for AGPL license issue. 20 references.
 - **Recent Decisions**: 2026-06-05 — Music Theory & Algorithms research completed (docs/research/music-theory-algorithms.md). 12 references across 6 topics: music21 voice leading (VoiceLeadingQuartet with 6 motion types), Roman numeral analysis (functionalityScore, secondary dominants), cadence detection (cadence-detector + CADET GNN vs music21-based approach), key modulation (5 algorithms via WindowedAnalysis), algorithmic composition (isobar 426 stars for Phase 3 melodies, arvo for procedural/counter-melody), post-tonal set theory. Key finding: all Phase 1-2 features need zero new dependencies — music21 already provides everything. isobar recommended for Phase 3 Melody/Bassline Generator.
@@ -40,6 +40,8 @@ Built with Electron + React + FastAPI + SQLite.
 - **Recent Decisions**: 2026-06-03 — BPM detection replaced entirely with DeepRhythm CNN (deeprhythm 0.0.13, PyTorch-based). Achieves 95.91% Acc1 on CPU at 0.12s — significantly more accurate than librosa's signal-processing approach (66.84% Acc1). Falls back to librosa.feature.rhythm.tempo when confidence < 0.5. Model weights (~7 MB) cached at ~/.cache/deeprhythm/ on first use. Key/scale detection untouched.
 - **Recent Decisions**: 2026-06-03 — Short audio (< 8s) tiled with np.tile to meet DeepRhythm's 8-second clip minimum. Prevents AttributeError crash in split_audio when audio is shorter than clip_length. The repeating preserves periodicity so DeepRhythm still detects the correct tempo. New test added for 3-second audio. Confidence-based fallback still active.
 - **Recent Decisions**: 2026-06-04 — Tempo-doubling heuristic removed (fragile — autocorrelation couldn't reliably distinguish half-time from full-time). Replaced with user-selectable BPM range dropdown (Auto / 50–150 / 100–200 / 150–250). Backend: `SampleAnalyzerInput` has `min_bpm`/`max_bpm` fields — if detected BPM is outside range and doubling/halving fits, applies correction. Frontend: `<select>` dropdown above drop zone. Zero false positives since user opts in. All 17 tests pass.
+- **Recent Decisions**: 2026-06-05 — Overall Musical Understanding research completed (docs/research/overall-musical-understanding.md). 9 sections covering: Omnizart (MIT, 1.9k ★, v0.6.3 May 2026 — full polyphonic AMT with 6 transcription modes), MSAF (MIT, 555 ★ — section boundary detection), energy/tension curves from librosa, genre/mood via musicnn (ISC, 704 ★), audio-to-MIDI comparison table, music similarity (Gaia reference + custom librosa approach), MIRFLEX unified extraction framework, 3-layer analysis pipeline architecture, phase-based recommendations. 26 references. Key finding: Omnizart is the biggest Phase 3+ unlock — single `pip install omnizart` gives chord/drum/beat/music/vocal transcription.
+- **Recent Decisions**: 2026-06-05 — RULES.md updated with rotation strategy for rate-limit avoidance: websearch (≤3) → webfetch → websearch (≤3) → webfetch → alternation pattern documented.
 - **Blockers**: None
 
 ## Task History
@@ -64,7 +66,10 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-04 | New dashboard design + docs | Design — co-hero bento grid replaces 4-page nav. docs/design/new-dashboard.md created. VISION.md Phase 1 expanded with Project concept, Idea Library expansion, Global Search. |
 | 2026-06-05 | Research Topic 3 — FL Studio Integration | Done — docs/research/fl-studio-integration.md with 9 sections (MIDI scripting API, piano roll/Edison, Flapi, virtual MIDI ports, JUCE VST3, drag-and-drop, tiered architecture). Splice Bridge case study added as section 10. 29 references. |
 | 2026-06-05 | Research Topic 4 — Model Recommendations | Done — docs/research/model-recommendations.md. 20+ tools across 5 categories (analysis, stem sep, tagging, generation, LLM). Phase-based recommendation table. 20 references. |
-| 2026-06-05 | Git commit after research phase catch-up | Committed all markdown/docs. Preparing for compaction. |
+| 2026-06-05 | Research Topic 5 — Music theory & algorithms (mathematical deep-dive) | Done — updated docs/research/music-theory-algorithms.md to 641 lines. 7 new sections: Tymoczko, Neo-Riemannian, Spiral Array, Lerdahl TPS, Forte set theory, K-S cognitive profiles, comma problem. 15 new references (13–27). |
+| 2026-06-05 | Research Topic 6 — Advanced MIDI Generation | Done — docs/research/advanced-midi-generation.md with 7 sections (isobar deep-dive, swing, humanization, drums, basslines, MIDI infrastructure mapping, phase recommendations). 12 references. Committed (80b79f5). |
+| 2026-06-05 | Research Topic 7 — Overall Musical Understanding | Done — docs/research/overall-musical-understanding.md with 9 sections (Omnizart AMT, MSAF structure analysis, energy/tension curves, genre/mood/instrumentation, audio-to-MIDI comparison, music similarity, MIRFLEX, 3-layer pipeline architecture, phase recommendations). 26 references. Key finding: Omnizart (MIT, v0.6.3, May 2026) is the biggest Phase 3+ unlock. |
+| 2026-06-05 | docs/research/RULES.md — rotation strategy | Done — updated with alternation pattern: websearch (≤3) → webfetch → websearch. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)
@@ -99,7 +104,9 @@ Built with Electron + React + FastAPI + SQLite.
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)
 - [x] Research Topic 4 — Model recommendations (20+ tools)
-- [x] Research Topic 5 — Music theory & algorithms (12 references)
+- [x] Research Topic 5 — Music theory & algorithms (27 references)
+- [x] Research Topic 6 — Advanced MIDI generation (12 references)
+- [x] Research Topic 7 — Overall musical understanding (26 references)
 
 ## Git Workflow
 - `git add -A && git commit -m "scope: message"` after every meaningful change.
@@ -109,10 +116,8 @@ Built with Electron + React + FastAPI + SQLite.
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Research remaining topics: music theory & algorithms, advanced MIDI generation, overall musical understanding
-2. Document remaining research in `docs/research/`
-3. Dashboard implementation (bento grid layout, Project Anchor, Music Theory panel, Chord Pads)
-4. Project concept (projects table, API, session persistence)
-5. Idea Library migration (progressions → ideas table)
-6. Global search (Ctrl+K overlay)
-7. AI Studio integration (Producer Chat, Why Does This Sound Good?, Finish My Idea)
+1. Dashboard implementation (bento grid layout, Project Anchor, Music Theory panel, Chord Pads)
+2. Project concept (projects table, API, session persistence)
+3. Idea Library migration (progressions → ideas table)
+4. Global search (Ctrl+K overlay)
+5. AI Studio integration (Producer Chat, Why Does This Sound Good?, Finish My Idea)

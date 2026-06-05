@@ -13,18 +13,23 @@ Two tools are available for gathering external information:
 
 ### Pacing Rules
 
-1. **Max 3 parallel `websearch` calls per batch.** Beyond that triggers a multi-minute 429 lockout on the entire session.
+1. **Max 3 concurrent `websearch` calls per batch.** Beyond that triggers a multi-minute 429 lockout on the entire session.
 
-2. **Use `webfetch` for any URL you already know.** If you have a GitHub repo URL, PyPI page, or docs site — fetch it directly. This never hits the search API rate limit.
-
-3. **If you get a 429, switch to `webfetch`.** The search API locks up but `webfetch` keeps working fine. For remaining unknowns, wait a few minutes then retry at most 2 at a time.
-
-4. **Priority order:**
+2. **Rotate between tools — never do two consecutive websearch rounds.** After each websearch batch (≤3 calls), switch to a webfetch round (fetch known URLs from results). Alternate:
    ```
-   webfetch (known URL) > websearch ≤3 at a time > wait + retry
+   websearch (≤3) → webfetch → websearch (≤3) → webfetch → ...
    ```
 
-5. **Plan searches before executing.** List what you need, group by known-URL vs. search-needed, and batch accordingly. This minimizes search calls.
+3. **Use `webfetch` for any URL you already know.** GitHub repos, PyPI pages, docs sites — fetch directly. This never hits the search API rate limit and fills the cooling-off period between search batches.
+
+4. **If you get a 429, switch to `webfetch` immediately.** The search API locks up but `webfetch` keeps working fine. For remaining unknowns, switch back after 2–3 webfetch rounds to retry websearch.
+
+5. **Priority order:**
+   ```
+   webfetch (known URL) > websearch ≤3 at a time > webfetch fallback > wait + retry
+   ```
+
+6. **Plan searches before executing.** List what you need, group by known-URL vs. search-needed, and batch accordingly. This minimizes search calls and ensures the rotation strategy can be planned upfront.
 
 ### Failure Recovery
 
