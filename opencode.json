@@ -1,5 +1,36 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "instructions": ["AGENTS.md", "VISION.md"],
-  "compaction": { "auto": true, "tail_turns": 20 }
+  "compaction": { "auto": true, "tail_turns": 20 },
+  "mcp": {
+    "tavily": {
+      "type": "remote",
+      "url": "https://mcp.tavily.com/mcp/?tavilyApiKey=PASTE_YOUR_TAVILY_API_KEY_HERE",
+      "enabled": false
+    },
+    "firecrawl": {
+      "type": "remote",
+      "url": "https://mcp.firecrawl.dev/v2/mcpp",
+      "enabled": false,
+      "headers": {
+        "Authorization": "Bearer PASTE_YOUR_FIRECRAWL_API_KEY_HERE"
+      }
+    },
+    "open-websearch": {
+      "type": "local",
+      "command": ["cmd", "/c", "npx", "-y", "open-websearch@latest"],
+      "enabled": true,
+      "environment": {
+        "MODE": "stdio",
+        "DEFAULT_SEARCH_ENGINE": "duckduckgo",
+        "ALLOWED_SEARCH_ENGINES": "duckduckgo,bing,brave,exa,startpage",
+        "SYSTEMROOT": "C:/Windows"
+      }
+    },
+    "duckduckgo": {
+      "type": "local",
+      "command": ["cmd", "/c", "python", "-m", "duckduckgo_mcp_server.server"],
+      "enabled": true
+    }
+  }
 }

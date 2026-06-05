@@ -15,6 +15,17 @@ Built with Electron + React + FastAPI + SQLite.
 - Every plugin declares an `input_schema` (Pydantic model) for auto-validation and frontend form generation.
 - After every significant change: (1) update AGENTS.md (Active Context / Feature Status), (2) update ARCHITECTURE docs if structure changed, (3) `git add -A && git commit`.
 
+## Search Fallback Chain
+When performing web searches, always try sources in this order. Skip to the next if rate-limited or unavailable:
+1. **built-in `websearch`** (Exa AI) — fast, free, but rate-limited at ~10 concurrent calls with >7min cooldown
+2. **Tavily MCP** (`tavily` server, if enabled) — AI-optimized results, 1,000 credits/month, best quality
+3. **Firecrawl MCP** (`firecrawl` server, if enabled) — JS rendering support, 1,000 pages/month
+4. **Open-WebSearch MCP** (`open-websearch` server) — multi-engine: duckduckgo, bing, brave, exa, startpage
+5. **DuckDuckGo MCP** (`duckduckgo` server) — lightweight Python fallback
+6. **built-in `webfetch`** — no rate limit, but only for known URLs
+
+For diverse results in research: use Open-WebSearch's `engines` parameter to query multiple backends simultaneously (`engines: ["duckduckgo", "brave", "exa"]`).
+
 ## Coding Conventions
 - **Python**: FastAPI async routes, Pydantic v2, `ruff` formatting, type hints everywhere.
 - **TypeScript**: Strict mode, functional components, no `any`.
@@ -41,7 +52,7 @@ Built with Electron + React + FastAPI + SQLite.
 - **Recent Decisions**: 2026-06-03 — Short audio (< 8s) tiled with np.tile to meet DeepRhythm's 8-second clip minimum. Prevents AttributeError crash in split_audio when audio is shorter than clip_length. The repeating preserves periodicity so DeepRhythm still detects the correct tempo. New test added for 3-second audio. Confidence-based fallback still active.
 - **Recent Decisions**: 2026-06-04 — Tempo-doubling heuristic removed (fragile — autocorrelation couldn't reliably distinguish half-time from full-time). Replaced with user-selectable BPM range dropdown (Auto / 50–150 / 100–200 / 150–250). Backend: `SampleAnalyzerInput` has `min_bpm`/`max_bpm` fields — if detected BPM is outside range and doubling/halving fits, applies correction. Frontend: `<select>` dropdown above drop zone. Zero false positives since user opts in. All 17 tests pass.
 - **Recent Decisions**: 2026-06-05 — Overall Musical Understanding research completed (docs/research/overall-musical-understanding.md). 9 sections covering: Omnizart (MIT, 1.9k ★, v0.6.3 May 2026 — full polyphonic AMT with 6 transcription modes), MSAF (MIT, 555 ★ — section boundary detection), energy/tension curves from librosa, genre/mood via musicnn (ISC, 704 ★), audio-to-MIDI comparison table, music similarity (Gaia reference + custom librosa approach), MIRFLEX unified extraction framework, 3-layer analysis pipeline architecture, phase-based recommendations. 26 references. Key finding: Omnizart is the biggest Phase 3+ unlock — single `pip install omnizart` gives chord/drum/beat/music/vocal transcription.
-- **Recent Decisions**: 2026-06-05 — RULES.md updated with rotation strategy for rate-limit avoidance: websearch (≤3) → webfetch → websearch (≤3) → webfetch → alternation pattern documented.
+- **Recent Decisions**: 2026-06-05 — Search fallback chain implemented in opencode.json with 4 MCP servers. Order: websearch → Tavily (1k/mo) → Firecrawl (1k/mo) → Open-WebSearch (9 engines) → DuckDuckGo → webfetch. Tavily and Firecrawl use API keys (no CC, configured in opencode.json). Open-WebSearch and DuckDuckGo are zero-config. AGENTS.md now documents the fallback chain as agent instructions.
 - **Blockers**: None
 
 ## Task History
@@ -70,6 +81,7 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-05 | Research Topic 6 — Advanced MIDI Generation | Done — docs/research/advanced-midi-generation.md with 7 sections (isobar deep-dive, swing, humanization, drums, basslines, MIDI infrastructure mapping, phase recommendations). 12 references. Committed (80b79f5). |
 | 2026-06-05 | Research Topic 7 — Overall Musical Understanding | Done — docs/research/overall-musical-understanding.md with 9 sections (Omnizart AMT, MSAF structure analysis, energy/tension curves, genre/mood/instrumentation, audio-to-MIDI comparison, music similarity, MIRFLEX, 3-layer pipeline architecture, phase recommendations). 26 references. Key finding: Omnizart (MIT, v0.6.3, May 2026) is the biggest Phase 3+ unlock. |
 | 2026-06-05 | docs/research/RULES.md — rotation strategy | Done — updated with alternation pattern: websearch (≤3) → webfetch → websearch. |
+| 2026-06-05 | Search chain MCP servers (Tavily, Firecrawl, Open-WebSearch, DuckDuckGo) | Done — 4 MCP servers configured in opencode.json, fallback chain documented in AGENTS.md, DuckDuckGo MCP installed via pip.
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)
