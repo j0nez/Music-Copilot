@@ -31,7 +31,7 @@ Already identified in Topic 5 as the **primary candidate for Phase 3 Melody/Bass
 |---------|---------|-------------------|
 | `PDegree(seq, scale)` | Map scale degrees to note numbers in key | All genres — ensures melodic notes stay in key |
 | `PSeries(start, step, length)` | Arithmetic series | Melodic sequences, bass arpeggios |
-| `PArpeggiator(pattern, scale)` | Arpeggiation patterns | Up/down/updown/random — house, trance leads |
+| `PArpeggiator(pattern, scale)` | Arpeggiation patterns | UP/DOWN/UPDOWN/CONVERGE/DIVERGE/RANDOM — house, trance leads |
 | `PWalk(start, maxStep, min, max)` | Random walk | Ambient melodies, techno basslines |
 | `PMarkov(order, values)` | Markov chain | Controlled-random melodies, fills |
 | `PFilterByKey(pattern, key)` | Retain only in-key notes | All genres — filter external input |
@@ -120,7 +120,7 @@ timeline.to_midifile("arrangement.mid", 32)
 - **Melody Generator (Phase 3):** `PDegree(PSeries(...), scale) + octave` gives key-constrained scalar melodies. `PMarkov` adds controlled randomness. `PWalk` for ambient. Zero new dependencies beyond `pip install isobar`.
 - **Bassline Generator (Phase 3):** Root-fifth patterns via `PDegree` + `PWalk` for passing tones. Already works with Music Copilot's chord progressions.
 - **Drum Generator (Phase 3):** `PEuclidean` covers all standard world/electronic rhythms. Combine with `PWhite`/`PBrown` for velocity variation. No genre-specific presets — would need custom genre templates mapping k/n values to kick/snare/hat parts.
-- **Arpeggiation (Phase 1 — already implemented):** MIDI Expression Engine already handles up/down/updown/trance arpeggiation. isobar's `PArpeggiator` is an alternative if more complex patterns are needed later.
+- **Arpeggiation (Phase 1 — already implemented):** MIDI Expression Engine already handles up/down/updown/trance arpeggiation. isobar's `PArpeggiator` adds CONVERGE and DIVERGE modes not currently available — useful if more exotic patterns are needed later.
 - **Multi-track arrangement (Phase 4):** Single `Timeline` can schedule multiple tracks simultaneously. Write to `.mid` file for export.
 - **Limitation:** No built-in swing/groove. Timing is perfectly quantized. Swing must be applied as a post-processing step.
 
@@ -303,26 +303,30 @@ For Music Copilot, a drum pattern generator would need:
 
 **Limitations:** Last update Oct 2025 but no visible source repository. Small scope — generates note sequences, not full MIDI with timing/velocity. Not recommended as a dependency.
 
-### 5.2 Walking-Bass-Generator (MaxHilsdorf)
+### 5.2 Walking-Bass-Generator (MaxHilsdorf) — Notebook Prototype
 
 | Property | Value |
 |----------|-------|
 | URL | https://github.com/MaxHilsdorf/Walking-Bass-Generator |
+| Stars | 1 |
+| Watchers | 3 |
+| Language | Jupyter Notebook (100%) |
 | License | Not specified |
-| Approach | Rule-based algorithm with contour control |
-| Input | Chord progression (list of chord names) |
-| Output | MIDI file |
+| Approach | Rule-based algorithm, one chord per bar, quarter notes only |
 
-**Algorithm:**
-1. Extract chord tones for each chord in progression
-2. Generate bass notes using rules:
-   - Root on beat 1 of each bar
-   - Passing tones on weak beats (diatonic/ chromatic approach)
-   - Voice-leading constraints: prefer stepwise motion between chords
-   - Contour control: ascending, descending, or mixed
-3. Write to MIDI file with configurable tempo, time signature, and octave
+**A lightweight Jupyter Notebook, not a proper library.** No PyPI package, no `setup.py`, no CLI. Useful as a reference for the rule-based approach.
 
-**Not suitable as a dependency** (no PyPI package, no clear license), but the algorithm is instructive for a custom implementation.
+**Algorithm (verified from source):**
+1. For each chord in progression:
+   - **Beat 1:** Root of the chord (first instance: random octave; subsequent: nearest pitch from previous)
+   - **Beat 3:** Fifth of the chord (random octave)
+   - **Beat 2 (direction-dependent):** Third (major chord) or seventh (minor/dominant chord) chosen by whether the line is moving up or down
+   - **Beat 4:** Chromatic approach tone — one semitone above or below the next chord's root
+2. Export via `MIDIUtil` (not pretty_midi)
+
+**Limitations:** One chord per bar, quarter notes only, simple rule set, no swing/variation, no velocity dynamics, no passing tones beyond the chromatic approach.
+
+**Verdict:** Educational reference only. The algorithm is instructive (root-fifth framework + chromatic approach) but too limited for production use. Not suitable for Music Copilot's Phase 3 needs — isobar + custom rules is a far better approach.
 
 ### 5.3 HMM-Based Walking Bass (Research)
 
@@ -345,7 +349,7 @@ This covers the **Phase 1 approach** (simple pattern-based). The research above 
 ### Suitability for Music Copilot
 
 - **Phase 1 (current):** Existing `build_arrangement()` is sufficient for basic root-fifth basslines.
-- **Phase 3:** Replace with isobar `PDegree` + `PWalk` for melodic basslines. Add passing-tone logic. Walking-Bass-Generator's algorithm as a reference for rule-based generation.
+- **Phase 3:** Replace with isobar `PDegree` + `PWalk` for melodic basslines. Add passing-tone logic. Walking-Bass-Generator's notebook algorithm (root-fifth + chromatic approach) as a reference for rule-based generation.
 - **Phase 5:** HMM-based approach for genre-specific modeling (jazz walking bass, techno synth bass, DnB Reese bass patterns).
 
 ---
@@ -358,7 +362,7 @@ The project already has substantial MIDI generation capability built in Topics 1
 |---------|-------------------|-------------------|---------|
 | Chord generation | 50+ templates, 7 moods, 24 keys | Neo-Riemannian / Tymoczko advanced modes | music21 (built-in) |
 | Voicing (close, open, drop2) | MIDI Expression Engine `voice_chord()` | Same, extend with spread voicings | music21 (built-in) |
-| Arpeggiation (up/down/updown/trance) | MIDI Expression Engine `arpeggiate()` | isobar `PArpeggiator` for complex patterns | Built-in + isobar |
+| Arpeggiation (up/down/updown/trance/CONVERGE/DIVERGE) | MIDI Expression Engine `arpeggiate()` (4 modes) | isobar `PArpeggiator` for 6 modes | Built-in + isobar |
 | Velocity (by chord-tone role, beat, phrase) | MIDI Expression Engine `compute_velocity()` | Add Gaussian humanization jitter | Built-in + numpy |
 | Full arrangement (bass + chords) | MIDI Expression Engine `build_arrangement()` | Multi-track Timeline with drums + melody | Built-in + isobar |
 | MIDI file export | pretty_midi via MIDI Export Engine | Same, add multi-track + metadata | pretty_midi (built-in) |
@@ -420,12 +424,12 @@ The project already has substantial MIDI generation capability built in Topics 1
 ## References
 
 1. ideoforms. *isobar: A Python library for creating and manipulating musical patterns.* GitHub. https://github.com/ideoforms/isobar
-2. isobar documentation. *Pattern library reference.* https://ideoforms.github.io/isobar/patterns/
+2. isobar documentation. *Pattern library reference.* https://ideoforms.github.io/isobar/patterns/ — PArpeggiator modes: https://ideoforms.github.io/isobar/patterns/sequence/parpeggiator/
 3. Toussaint, G. (2005). *The Euclidean Algorithm Generates Traditional Musical Rhythms.* Proc. BRIDGES.
 4. erwald. *midihum: MIDI humanisation with machine learning.* GitHub. https://github.com/erwald/midihum
 5. L0wl. *midi-humanizer: GUI tool for adding random variations to MIDI.* GitHub. https://github.com/L0wl/midi-humanizer
 6. music-bassline-generator. PyPI. https://pypi.org/project/music-bassline-generator/
-7. MaxHilsdorf. *Walking-Bass-Generator.* GitHub. https://github.com/MaxHilsdorf/Walking-Bass-Generator
+7. MaxHilsdorf. *Walking-Bass-Generator — algorithmic composition of walking bass lines.* Jupyter Notebook. https://github.com/MaxHilsdorf/Walking-Bass-Generator
 8. Dias, R. & Guedes, C. (2013). *A Contour-based Jazz Walking Bass Generator.* ICMC 2013.
 9. Li, W. et al. (2021). *Generating Walking Bass Lines with HMM.* ResearchGate.
 10. kkojwang. *euclidean_rhythm_generator.* GitHub. https://github.com/kkojwang/euclidean_rhythm_generator
