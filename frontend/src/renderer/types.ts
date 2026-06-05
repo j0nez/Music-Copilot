@@ -56,10 +56,27 @@ export interface TheoryProgression {
 
 export interface SavedProgression {
   id: number;
+  project_id: number | null;
+  type: string;
+  name: string;
+  data: ProgressionChord[];  // same as old `chords`
   key: string;
   mood: string | null;
   genre: string | null;
-  chords: ProgressionChord[];
+  bpm: number | null;
+  created_at: string;
+}
+
+export interface Idea {
+  id: number;
+  project_id: number | null;
+  type: 'progression' | 'melody' | 'bassline' | 'drum_pattern' | 'arpeggio' | 'phrase';
+  name: string;
+  data: ProgressionChord[];
+  key: string | null;
+  mood: string | null;
+  genre: string | null;
+  bpm: number | null;
   created_at: string;
 }
 

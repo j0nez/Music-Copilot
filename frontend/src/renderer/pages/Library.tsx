@@ -5,21 +5,31 @@ import type { SavedProgression } from '../types';
 type SortField = 'key' | 'mood' | 'genre' | 'created_at';
 type SortDir = 'ASC' | 'DESC';
 
+const TYPE_TABS = [
+  { label: 'All', value: null },
+  { label: 'Progressions', value: 'progression' },
+  { label: 'Melodies', value: 'melody' },
+  { label: 'Basslines', value: 'bassline' },
+  { label: 'Drums', value: 'drum_pattern' },
+  { label: 'Arpeggios', value: 'arpeggio' },
+] as const;
+
 export default function Library() {
-  const [progressions, setProgressions] = useState<SavedProgression[]>([]);
+  const [items, setItems] = useState<SavedProgression[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortBy, setSortBy] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('DESC');
+  const [typeFilter, setTypeFilter] = useState<string | null>('progression');
   const [deleting, setDeleting] = useState<number | null>(null);
 
-  async function fetchProgressions() {
+  async function fetchItems() {
     setLoading(true);
     setError('');
     try {
-      const res = await listProgressions(sortBy, sortDir);
+      const res = await listProgressions(sortBy, sortDir, typeFilter);
       if (res.success && res.data) {
-        setProgressions(res.data.progressions);
+        setItems(res.data.progressions);
       } else {
         setError(res.error?.message ?? 'Failed to load');
       }
@@ -31,14 +41,14 @@ export default function Library() {
   }
 
   useEffect(() => {
-    fetchProgressions();
-  }, [sortBy, sortDir]);
+    fetchItems();
+  }, [sortBy, sortDir, typeFilter]);
 
   async function handleDelete(id: number) {
     setDeleting(id);
     try {
       await deleteProgression(id);
-      setProgressions((prev) => prev.filter((p) => p.id !== id));
+      setItems((prev) => prev.filter((p) => p.id !== id));
     } catch {
       setError('Failed to delete');
     } finally {
@@ -62,18 +72,34 @@ export default function Library() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Progression Library</h2>
+      <h2 className="text-2xl font-bold mb-4">Library</h2>
       <p className="text-sm text-gray-400 mb-6">
-        Saved chord progressions from Music Theory and AI generation.
+        Saved ideas — progressions, melodies, basslines, and more.
       </p>
 
       {error && <p className="mb-4 text-red-300 text-sm">{error}</p>}
 
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {TYPE_TABS.map((tab) => (
+          <button
+            key={tab.value ?? 'all'}
+            onClick={() => setTypeFilter(tab.value)}
+            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+              typeFilter === tab.value
+                ? 'bg-accent-500/20 text-accent-300 border border-accent-500/40'
+                : 'bg-surface-700 text-gray-400 hover:text-white border border-surface-600'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <p className="text-gray-400">Loading...</p>
-      ) : progressions.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
-          <p className="text-lg mb-2">No progressions saved yet</p>
+          <p className="text-lg mb-2">No ideas saved yet</p>
           <p className="text-sm">Generate a progression in Music Theory and click Save.</p>
         </div>
       ) : (
@@ -81,6 +107,13 @@ export default function Library() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-surface-700 text-left text-gray-400">
+                <th className="pb-3 pr-4 text-xs uppercase tracking-wider">Type</th>
+                <th
+                  className="pb-3 pr-4 cursor-pointer hover:text-white transition-colors"
+                  onClick={() => toggleSort('name')}
+                >
+                  Name{sortArrow('name')}
+                </th>
                 <th
                   className="pb-3 pr-4 cursor-pointer hover:text-white transition-colors"
                   onClick={() => toggleSort('key')}
@@ -111,14 +144,20 @@ export default function Library() {
               </tr>
             </thead>
             <tbody>
-              {progressions.map((p) => (
+              {items.map((p) => (
                 <tr key={p.id} className="border-b border-surface-800 hover:bg-surface-800/50 transition-colors">
+                  <td className="py-3 pr-4">
+                    <span className="px-2 py-0.5 rounded text-xs bg-surface-700 text-gray-300 capitalize">
+                      {p.type}
+                    </span>
+                  </td>
+                  <td className="py-3 pr-4 font-medium">{p.name || '—'}</td>
                   <td className="py-3 pr-4 font-medium">{p.key}</td>
                   <td className="py-3 pr-4 capitalize text-gray-300">{p.mood ?? '—'}</td>
                   <td className="py-3 pr-4 text-gray-300">{p.genre ?? '—'}</td>
                   <td className="py-3 pr-4">
                     <div className="flex flex-wrap gap-1">
-                      {p.chords.map((c, i) => (
+                      {p.data.map((c, i) => (
                         <span key={i}
                           className="px-2 py-0.5 rounded bg-purple-800/30 text-purple-200 text-xs border border-purple-700/40"
                         >

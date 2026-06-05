@@ -60,15 +60,19 @@ export async function saveProgression(
   mood: string | null,
   genre: string | null,
   chords: ProgressionChord[],
+  opts?: { project_id?: number; name?: string },
 ): Promise<ApiResponse<{ id: number }>> {
-  return post<{ id: number }>('/progressions/', { key, mood, genre, chords });
+  return post<{ id: number }>('/progressions/', { key, mood, genre, chords, ...opts });
 }
 
 export async function listProgressions(
   sortBy = 'created_at',
   sortOrder = 'DESC',
+  type: string | null = 'progression',
 ): Promise<ApiResponse<{ progressions: SavedProgression[] }>> {
-  const res = await fetch(`http://localhost:8000/api/progressions/?sort_by=${sortBy}&sort_order=${sortOrder}`);
+  const params = new URLSearchParams({ sort_by: sortBy, sort_order: sortOrder });
+  if (type !== null) params.set('type', type);
+  const res = await fetch(`http://localhost:8000/api/progressions/?${params}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

@@ -1,13 +1,14 @@
 import json
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
 
 from backend.app.core.exceptions import InputValidationError, DatabaseError
 from backend.app.db.database import get_connection
 from backend.app.db.progressions import (
     delete_progression,
+    get_progression,
     list_progressions,
     save_progression,
 )
@@ -31,9 +32,11 @@ async def create_progression(payload: dict):
 
     mood = payload.get("mood")
     genre = payload.get("genre")
+    project_id = payload.get("project_id")
+    name = payload.get("name")
 
     try:
-        row_id = save_progression(key, mood, genre, chords)
+        row_id = save_progression(key, mood, genre, chords, project_id=project_id, name=name)
     except Exception as exc:
         raise DatabaseError(f"Failed to save progression: {exc}") from exc
 
@@ -41,13 +44,34 @@ async def create_progression(payload: dict):
 
 
 @router.get("/")
-async def get_progressions(sort_by: str = "created_at", sort_order: str = "DESC"):
+async def get_progressions(
+    sort_by: str = "created_at",
+    sort_order: str = "DESC",
+    type: str | None = Query(default="progression", alias="type"),
+):
     try:
-        items = list_progressions(sort_by=sort_by, sort_order=sort_order)
+        items = list_progressions(sort_by=sort_by, sort_order=sort_order, idea_type=type)
     except Exception as exc:
         raise DatabaseError(f"Failed to list progressions: {exc}") from exc
 
     return ApiResponse(success=True, data={"progressions": items})
+
+
+@router.get("/{progression_id}")
+async def api_get_progression(progression_id: int):
+    try:
+        item = get_progression(progression_id)
+    except Exception as exc:
+        raise DatabaseError(f"Failed to get progression: {exc}") from exc
+
+    if item is None:
+        return ApiResponse(
+            success=False,
+            data=None,
+            error=ErrorDetail(code="NOT_FOUND", message=f"Progression {progression_id} not found"),
+        )
+
+    return ApiResponse(success=True, data={"progression": item})
 
 
 @router.delete("/{progression_id}")
@@ -70,11 +94,7 @@ async def remove_progression(progression_id: int):
 @router.get("/{progression_id}/midi")
 async def download_progression_midi(progression_id: int, bpm: int = 120):
     try:
-        conn = get_connection()
-        row = conn.execute(
-            "SELECT key, chords FROM progressions WHERE id = ?", (progression_id,)
-        ).fetchone()
-        conn.close()
+        row = get_progression(progression_id)
     except Exception as exc:
         raise DatabaseError(f"Failed to read progression: {exc}") from exc
 
@@ -85,6 +105,6 @@ async def download_progression_midi(progression_id: int, bpm: int = 120):
             error=ErrorDetail(code="NOT_FOUND", message=f"Progression {progression_id} not found"),
         )
 
-    chords = json.loads(row["chords"])
+    chords = row["data"]
     dest = generate_midi(row["key"], chords, bpm=bpm)
     return FileResponse(str(dest), media_type="audio/midi", filename=dest.name)
