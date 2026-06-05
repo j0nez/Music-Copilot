@@ -34,8 +34,8 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - **Errors**: custom exception hierarchy → HTTPException with detail.
 
 ## Active Context
-- **Phase**: v0.1 MVP Foundation (Plan → Build)
-- **Current Focus**: Implementation ready. Full plan in `plan-v0.1-review.md`. First task: Project concept (A1).
+- **Phase**: v0.1 MVP Foundation (Build)
+- **Current Focus**: Phase A complete (Project concept, Ideas migration, state management). Next: Phase B — Sample Analyzer Upgrade.
 - **Recent Decisions**: 2026-06-05 — Full codebase audit + v0.1 forward plan written (`plan-v0.1-review.md`). 5 phases, 23 tasks, ~2,700 lines. AI Studio moved to last (Phase E). Sample Analyzer upgrade added: 4-algorithm key ensemble (zero new deps), confidence scores, edge-case robustness, "Apply to Project" button. Basic-Pitch (Apache-2.0, ONNX, ~50MB) identified as Phase 2 unlock for actual chord detection from audio. musicnn/CREMA/Omnizart deferred to Phase 3+.
 - **Recent Decisions**: 2026-06-05 — FL Studio integration research completed (docs/research/fl-studio-integration.md). Splice Bridge case study added as section 10 — reverse-engineered VST3/AU plugin architecture, 3 generations (Bridge 2021, native DAW integrations 2025-2026, Sounds Plugin 2026 beta), comparison to Music Copilot's proposed VST3 bridge. Key finding: keep skip-Tier-4 strategy; if built, use JUCE + named pipes, thin plugin. 29 references.
 - **Recent Decisions**: 2026-06-05 — Model Recommendations research completed (docs/research/model-recommendations.md). Evaluated 20+ tools across 5 categories. Confirmed deeprhythm + music21 as SOTA offline BPM/key. Recommended Groq (free tier) as primary LLM provider. ACE-Step 1.5 (Apache-2.0) best for AI music generation. Procedural (music21 + arvo) preferred over ML for Phase 1-3. Essentia flagged for AGPL license issue. 20 references.
@@ -128,7 +128,7 @@ See `plan-v0.1-review.md` for full details:
 - [x] Projects API (POST/GET/PUT/DELETE + /last session persistence + arrangements auto-create)
 - [x] Library page (sortable table with delete)
 - [x] Save button wired in Music Theory page
-- [x] Backend tests (97 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects)
+- [x] Backend tests (101 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas)
 - [x] Research Topic 1 — Project-based tool patterns
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)
@@ -145,9 +145,9 @@ See `plan-v0.1-review.md` for full details:
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Project concept (projects table, API, session persistence) — Phase A1
-2. Idea Library migration (progressions → ideas table) — Phase A2
-3. Frontend state management (projectContext.tsx + useApi hook) — Phase A3
+1. ~~Project concept (projects table, API, session persistence) — Phase A1 ✅~~
+2. ~~Idea Library migration (progressions → ideas table) — Phase A2 ✅~~
+3. ~~Frontend state management (projectContext.tsx + useApi hook) — Phase A3 ✅~~
 4. Sample Analyzer upgrade (multi-algo key, confidence, edge cases) — Phase B
 5. Dashboard implementation (bento grid layout, Project Anchor, Chord Pads) — Phase C
 6. Global search (Ctrl+K overlay) — Phase D1-D2

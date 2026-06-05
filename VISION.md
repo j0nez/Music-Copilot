@@ -62,8 +62,8 @@ Ship useful software immediately.
 - [x] MIDI Export Engine — chords, melody, bassline, arpeggio → .mid files
 - [x] Progression & Melody Library — save, browse, sort, search, preview, drag-and-drop MIDI into FL Studio
 - [ ] **Single-Screen Bento Dashboard** — replace 4-page nav with co-hero bento grid. All features on one screen. Project Anchor, Music Theory panel, Chord Pads, Sample Analysis, expanded Co-Producer Chat. See `docs/design/new-dashboard.md`.
-- [ ] **Project Concept** — user-declared project (name, BPM, key, scale). New `projects` SQLite table. Session persistence. DAW sync stubbed until Phase 7.
-- [ ] **Idea Library Expansion** — migrate `progressions` table to polymorphic `ideas` table. Supports progression, melody, bassline, drum_pattern, arpeggio, phrase. Backward-compatible migration.
+- [x] **Project Concept** — user-declared project (name, BPM, key, scale). New `projects` SQLite table. Session persistence. DAW sync stubbed until Phase 7.
+- [x] **Idea Library Expansion** — migrate `progressions` table to polymorphic `ideas` table. Supports progression, melody, bassline, drum_pattern, arpeggio, phrase. Backward-compatible migration.
 - [ ] **Global Search** — `Ctrl+K` search overlay across Library, samples, and plugins.
 - [ ] Producer Chat — ask production questions via AI layer
 - [ ] Why Does This Sound Good? — AI explains tension, resolution, harmony
