@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { chordGenerator as apiChordGenerator, exportMidi as apiExportMidi, saveProgression as apiSaveProgression, theoryEngine } from '../api';
-import type { MidiExportResult, TheoryChord, TheoryInterval, TheoryProgression, ProgressionChord, TheoryScale } from '../types';
+import type { TheoryChord, TheoryInterval, TheoryProgression, ProgressionChord, TheoryScale } from '../types';
 
 const tabs = ['Scale Generator', 'Chord Builder', 'Interval Analyzer', 'Chord Progressions', 'Chord Generator'] as const;
 type Tab = (typeof tabs)[number];

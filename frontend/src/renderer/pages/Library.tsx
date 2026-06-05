@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { deleteProgression, downloadMidiUrl, listProgressions } from '../api';
 import type { SavedProgression } from '../types';
 
-type SortField = 'key' | 'mood' | 'genre' | 'created_at';
+type SortField = 'key' | 'mood' | 'genre' | 'name' | 'created_at';
 type SortDir = 'ASC' | 'DESC';
 
 const TYPE_TABS = [

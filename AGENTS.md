@@ -88,6 +88,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-05 | Full codebase audit + v0.1 forward plan | Done — plan-v0.1-review.md written with 5 phases, 23 tasks, ~2,700 lines. AI Studio moved to last. Sample Analyzer upgrade added.
 | 2026-06-05 | Phase A1 — Project concept (projects table, CRUD API, session persistence) | Done — new `projects` + `arrangements` tables in database.py, DAO with CRUD + session, API router with POST/GET/PUT/DELETE + /last endpoint, registered in main.py. Frontend: Project type + 6 API functions in types.ts/api.ts. 15 new tests, 97 total.
 | 2026-06-05 | Phase A2 — Ideas migration (progressions → polymorphic ideas table) | Done — new `ideas` table in database.py with type CHECK constraint (progression/melody/bassline/drum_pattern/arpeggio/phrase), auto-migration from progressions on init, DAO+API re-targeted to ideas table with type filter + project_id support, frontend Library updated with type filter tabs (All/Progressions/Melodies/Basslines/Drums/Arpeggios), Idea + updated SavedProgression types. 4 new tests (type filter, project_id, get, nonexistent), 101 total.
+| 2026-06-05 | Phase A3 — Frontend state management (projectContext.tsx + useApi hook) | Done — `hooks/useApi.ts` with loading/error/data states and execute/reset methods. `store/projectContext.tsx` with React Context: loads last project on mount, optimistic debounced saves (500ms), createProject/updateProject/refreshProject actions. `App.tsx` wrapped in `ProjectProvider`. `SortField` extended with `name`. Unused `MidiExportResult` import removed.
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)
@@ -100,7 +101,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 
 ## v0.1 Build Plan (5 phases, 23 tasks)
 See `plan-v0.1-review.md` for full details:
-- **Phase A** — Foundation: Project concept ✅, Ideas migration ✅, state management
+- **Phase A** — Foundation: Project concept ✅, Ideas migration ✅, state management ✅
 - **Phase B** — Sample Analyzer Upgrade: Multi-algo key, confidence, edge cases
 - **Phase C** — Dashboard: Bento grid, Project Anchor, Chord Pads, absorb panels
 - **Phase D** — Search & Voice Leading: Ctrl+K, voice-leading scoring, polish
