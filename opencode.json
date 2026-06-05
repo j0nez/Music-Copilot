@@ -5,15 +5,15 @@
   "mcp": {
     "tavily": {
       "type": "remote",
-      "url": "https://mcp.tavily.com/mcp/?tavilyApiKey=PASTE_YOUR_TAVILY_API_KEY_HERE",
-      "enabled": false
+      "url": "https://mcp.tavily.com/mcp/?tavilyApiKey=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",
+      "enabled": true
     },
     "firecrawl": {
       "type": "remote",
-      "url": "https://mcp.firecrawl.dev/v2/mcpp",
-      "enabled": false,
+      "url": "https://mcp.firecrawl.dev/mcp",
+      "enabled": true,
       "headers": {
-        "Authorization": "Bearer PASTE_YOUR_FIRECRAWL_API_KEY_HERE"
+        "Authorization": "Bearer fc-357664869bf04a1cbae6ddd1437054fd"
       }
     },
     "open-websearch": {

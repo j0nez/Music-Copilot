@@ -19,7 +19,7 @@ Built with Electron + React + FastAPI + SQLite.
 When performing web searches, always try sources in this order. Skip to the next if rate-limited or unavailable:
 1. **built-in `websearch`** (Exa AI) — fast, free, but rate-limited at ~10 concurrent calls with >7min cooldown
 2. **Tavily MCP** (`tavily` server, if enabled) — AI-optimized results, 1,000 credits/month, best quality
-3. **Firecrawl MCP** (`firecrawl` server, if enabled) — JS rendering support, 1,000 pages/month
+3. **Firecrawl MCP** (`firecrawl` server, if enabled) — JS rendering support, 1,000 pages/month. Remote endpoint: `https://mcp.firecrawl.dev/mcp`
 4. **Open-WebSearch MCP** (`open-websearch` server) — multi-engine: duckduckgo, bing, brave, exa, startpage
 5. **DuckDuckGo MCP** (`duckduckgo` server) — lightweight Python fallback
 6. **built-in `webfetch`** — no rate limit, but only for known URLs
@@ -34,8 +34,9 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - **Errors**: custom exception hierarchy → HTTPException with detail.
 
 ## Active Context
-- **Phase**: v0.1 MVP Foundation (Design / Research)
-- **Current Focus**: Research phase — 7/7 topics complete. All research documented. Next: implement dashboard + Project concept + Ideas table migration + Global search + AI Studio.
+- **Phase**: v0.1 MVP Foundation (Plan → Build)
+- **Current Focus**: Implementation ready. Full plan in `plan-v0.1-review.md`. First task: Project concept (A1).
+- **Recent Decisions**: 2026-06-05 — Full codebase audit + v0.1 forward plan written (`plan-v0.1-review.md`). 5 phases, 23 tasks, ~2,700 lines. AI Studio moved to last (Phase E). Sample Analyzer upgrade added: 4-algorithm key ensemble (zero new deps), confidence scores, edge-case robustness, "Apply to Project" button. Basic-Pitch (Apache-2.0, ONNX, ~50MB) identified as Phase 2 unlock for actual chord detection from audio. musicnn/CREMA/Omnizart deferred to Phase 3+.
 - **Recent Decisions**: 2026-06-05 — FL Studio integration research completed (docs/research/fl-studio-integration.md). Splice Bridge case study added as section 10 — reverse-engineered VST3/AU plugin architecture, 3 generations (Bridge 2021, native DAW integrations 2025-2026, Sounds Plugin 2026 beta), comparison to Music Copilot's proposed VST3 bridge. Key finding: keep skip-Tier-4 strategy; if built, use JUCE + named pipes, thin plugin. 29 references.
 - **Recent Decisions**: 2026-06-05 — Model Recommendations research completed (docs/research/model-recommendations.md). Evaluated 20+ tools across 5 categories. Confirmed deeprhythm + music21 as SOTA offline BPM/key. Recommended Groq (free tier) as primary LLM provider. ACE-Step 1.5 (Apache-2.0) best for AI music generation. Procedural (music21 + arvo) preferred over ML for Phase 1-3. Essentia flagged for AGPL license issue. 20 references.
 - **Recent Decisions**: 2026-06-05 — Music Theory & Algorithms research completed (docs/research/music-theory-algorithms.md). 12 references across 6 topics: music21 voice leading (VoiceLeadingQuartet with 6 motion types), Roman numeral analysis (functionalityScore, secondary dominants), cadence detection (cadence-detector + CADET GNN vs music21-based approach), key modulation (5 algorithms via WindowedAnalysis), algorithmic composition (isobar 426 stars for Phase 3 melodies, arvo for procedural/counter-melody), post-tonal set theory. Key finding: all Phase 1-2 features need zero new dependencies — music21 already provides everything. isobar recommended for Phase 3 Melody/Bassline Generator.
@@ -53,6 +54,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - **Recent Decisions**: 2026-06-04 — Tempo-doubling heuristic removed (fragile — autocorrelation couldn't reliably distinguish half-time from full-time). Replaced with user-selectable BPM range dropdown (Auto / 50–150 / 100–200 / 150–250). Backend: `SampleAnalyzerInput` has `min_bpm`/`max_bpm` fields — if detected BPM is outside range and doubling/halving fits, applies correction. Frontend: `<select>` dropdown above drop zone. Zero false positives since user opts in. All 17 tests pass.
 - **Recent Decisions**: 2026-06-05 — Overall Musical Understanding research completed (docs/research/overall-musical-understanding.md). 9 sections covering: Omnizart (MIT, 1.9k ★, v0.6.3 May 2026 — full polyphonic AMT with 6 transcription modes), MSAF (MIT, 555 ★ — section boundary detection), energy/tension curves from librosa, genre/mood via musicnn (ISC, 704 ★), audio-to-MIDI comparison table, music similarity (Gaia reference + custom librosa approach), MIRFLEX unified extraction framework, 3-layer analysis pipeline architecture, phase-based recommendations. 26 references. Key finding: Omnizart is the biggest Phase 3+ unlock — single `pip install omnizart` gives chord/drum/beat/music/vocal transcription.
 - **Recent Decisions**: 2026-06-05 — Search fallback chain implemented in opencode.json with 4 MCP servers. Order: websearch → Tavily (1k/mo) → Firecrawl (1k/mo) → Open-WebSearch (9 engines) → DuckDuckGo → webfetch. Tavily and Firecrawl use API keys (no CC, configured in opencode.json). Open-WebSearch and DuckDuckGo are zero-config. AGENTS.md now documents the fallback chain as agent instructions.
+- **Recent Decisions**: 2026-06-05 — Search chain verified end-to-end. All 6 tiers confirmed working: (1) websearch delivers results, (2) Tavily remote MCP responds with 5 tools (search, extract, crawl, map, research), (3) Firecrawl remote MCP responds with 13 tools at `/mcp` (corrected from `/v2/mcpp`), (4) Open-WebSearch starts with 9 engines, (5) DuckDuckGo MCP v0.1.1 installed and starts, (6) webfetch fetches URLs. Firecrawl endpoint fixed from `/v2/mcpp` to `/mcp` in opencode.json.
 - **Blockers**: None
 
 ## Task History
@@ -82,6 +84,8 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-05 | Research Topic 7 — Overall Musical Understanding | Done — docs/research/overall-musical-understanding.md with 9 sections (Omnizart AMT, MSAF structure analysis, energy/tension curves, genre/mood/instrumentation, audio-to-MIDI comparison, music similarity, MIRFLEX, 3-layer pipeline architecture, phase recommendations). 26 references. Key finding: Omnizart (MIT, v0.6.3, May 2026) is the biggest Phase 3+ unlock. |
 | 2026-06-05 | docs/research/RULES.md — rotation strategy | Done — updated with alternation pattern: websearch (≤3) → webfetch → websearch. |
 | 2026-06-05 | Search chain MCP servers (Tavily, Firecrawl, Open-WebSearch, DuckDuckGo) | Done — 4 MCP servers configured in opencode.json, fallback chain documented in AGENTS.md, DuckDuckGo MCP installed via pip.
+| 2026-06-05 | Search chain end-to-end verification | Done — all 6 tiers tested and confirmed working. Firecrawl URL corrected from /v2/mcpp to /mcp.
+| 2026-06-05 | Full codebase audit + v0.1 forward plan | Done — plan-v0.1-review.md written with 5 phases, 23 tasks, ~2,700 lines. AI Studio moved to last. Sample Analyzer upgrade added.
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)
@@ -90,6 +94,14 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - [x] MIDI Export Engine
 - [x] Progression & Melody Library (save, browse, sort — MIDI drag-and-drop stubbed)
 - [ ] AI Studio (chat + analysis + composition assistant)
+
+## v0.1 Build Plan (5 phases, 23 tasks)
+See `plan-v0.1-review.md` for full details:
+- **Phase A** — Foundation: Project concept, Ideas migration, state management
+- **Phase B** — Sample Analyzer Upgrade: Multi-algo key, confidence, edge cases
+- **Phase C** — Dashboard: Bento grid, Project Anchor, Chord Pads, absorb panels
+- **Phase D** — Search & Voice Leading: Ctrl+K, voice-leading scoring, polish
+- **Phase E** — AI Studio: Groq provider, chat endpoint, wire UI (last)
 
 ## Infrastructure Status
 - [x] Backend scaffold (FastAPI + lifespan + config)
@@ -128,8 +140,11 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Dashboard implementation (bento grid layout, Project Anchor, Music Theory panel, Chord Pads)
-2. Project concept (projects table, API, session persistence)
-3. Idea Library migration (progressions → ideas table)
-4. Global search (Ctrl+K overlay)
-5. AI Studio integration (Producer Chat, Why Does This Sound Good?, Finish My Idea)
+1. Project concept (projects table, API, session persistence) — Phase A1
+2. Idea Library migration (progressions → ideas table) — Phase A2
+3. Frontend state management (projectContext.tsx + useApi hook) — Phase A3
+4. Sample Analyzer upgrade (multi-algo key, confidence, edge cases) — Phase B
+5. Dashboard implementation (bento grid layout, Project Anchor, Chord Pads) — Phase C
+6. Global search (Ctrl+K overlay) — Phase D1-D2
+7. Voice-leading scoring — Phase D3
+8. AI Studio integration — Phase E (last)

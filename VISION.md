@@ -117,19 +117,21 @@ Ship useful software immediately.
 
 ## v0.1 Release Scope
 
-Build only these for the first release:
+Build only these for the first release (5 phases, 23 tasks):
 
 1. Sample Analyzer
 2. Theory Engine
 3. Chord Progression Generator
 4. MIDI Export Engine
 5. Progression & Melody Library (save, browse, sort, preview, drag-and-drop MIDI)
-6. **Single-Screen Bento Dashboard** — replaces 4-page navigation
-7. **Project Concept** — name, BPM, key, scale, session persistence
-8. **Idea Library Expansion** — polymorphic `ideas` table
-9. **Global Search** — `Ctrl+K` overlay
-10. Producer Chat
-11. Why Does This Sound Good?
-12. Finish My Idea (basic)
+6. **Project Concept** — name, BPM, key, scale, session persistence
+7. **Idea Library Expansion** — polymorphic `ideas` table
+8. **Sample Analyzer Upgrade** — 4-algorithm key ensemble, confidence scores, edge-case robustness, "Apply to Project" button
+9. **Single-Screen Bento Dashboard** — replaces 4-page navigation. Project Anchor, Music Theory panel, Chord Pads, Sample Analysis
+10. **Global Search** — `Ctrl+K` overlay across Library, samples, and plugins
+11. **Voice-Leading Scoring** — music21 VoiceLeadingQuartet for progression quality
+12. **Producer Chat** — AI chat via Groq provider (Phase E — last)
+
+Deferred to Phase 2+: Why Does This Sound Good?, Finish My Idea, Basic-Pitch note transcription, musicnn genre tagging.
 
 This alone is a genuinely useful tool for FL Studio producers and creates the foundation for every future feature without architectural rewrites.
