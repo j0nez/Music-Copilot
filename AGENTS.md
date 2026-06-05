@@ -89,20 +89,22 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-05 | Phase A1 — Project concept (projects table, CRUD API, session persistence) | Done — new `projects` + `arrangements` tables in database.py, DAO with CRUD + session, API router with POST/GET/PUT/DELETE + /last endpoint, registered in main.py. Frontend: Project type + 6 API functions in types.ts/api.ts. 15 new tests, 97 total.
 | 2026-06-05 | Phase A2 — Ideas migration (progressions → polymorphic ideas table) | Done — new `ideas` table in database.py with type CHECK constraint (progression/melody/bassline/drum_pattern/arpeggio/phrase), auto-migration from progressions on init, DAO+API re-targeted to ideas table with type filter + project_id support, frontend Library updated with type filter tabs (All/Progressions/Melodies/Basslines/Drums/Arpeggios), Idea + updated SavedProgression types. 4 new tests (type filter, project_id, get, nonexistent), 101 total.
 | 2026-06-05 | Phase A3 — Frontend state management (projectContext.tsx + useApi hook) | Done — `hooks/useApi.ts` with loading/error/data states and execute/reset methods. `store/projectContext.tsx` with React Context: loads last project on mount, optimistic debounced saves (500ms), createProject/updateProject/refreshProject actions. `App.tsx` wrapped in `ProjectProvider`. `SortField` extended with `name`. Unused `MidiExportResult` import removed.
+| 2026-06-06 | Phase B — Sample Analyzer Upgrade | Done — Fixed broken `music21.key` import path (was `key.KrumhanslSchmuckler`, now `from music21.analysis.discrete import ...`). 5-algorithm ensemble (KrumhanslSchmuckler, AardenEssen, BellmanBudge, TemperleyKostkaPayne, KrumhanslKessler) with voting confidence. Edge cases already existed (silence/short/noise). "Apply to Project" frontend button already wired. Test `_generate_click_track` fixed to produce louder tones (was too quiet for RMS check). 107 tests (+6).
 
 ## Feature Status (v0.1)
-- [x] Samples (analyze BPM, key, scale)
+- [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**
 - [x] Theory Engine (scales, chords, intervals)
 - [x] Chord Progression Generator
 - [x] MIDI Export Engine
 - [x] Progression & Melody Library (save, browse, sort — MIDI drag-and-drop stubbed)
 - [x] **Project Concept** — projects table + arrangements table + CRUD API + session persistence
+- [x] **Sample Analyzer Upgrade** — multi-algo key ensemble, confidence, edge cases, Apply button
 - [ ] AI Studio (chat + analysis + composition assistant)
 
 ## v0.1 Build Plan (5 phases, 23 tasks)
 See `plan-v0.1-review.md` for full details:
 - **Phase A** — Foundation: Project concept ✅, Ideas migration ✅, state management ✅
-- **Phase B** — Sample Analyzer Upgrade: Multi-algo key, confidence, edge cases
+- **Phase B** — Sample Analyzer Upgrade: Multi-algo key, confidence, edge cases ✅
 - **Phase C** — Dashboard: Bento grid, Project Anchor, Chord Pads, absorb panels
 - **Phase D** — Search & Voice Leading: Ctrl+K, voice-leading scoring, polish
 - **Phase E** — AI Studio: Groq provider, chat endpoint, wire UI (last)
@@ -120,15 +122,15 @@ See `plan-v0.1-review.md` for full details:
 - [x] Error handling (exception hierarchy + rotating file logger + global handlers)
 - [x] Frontend scaffold (Electron + React + TypeScript + Vite + Tailwind)
 - [x] File upload endpoint (POST /api/upload with extension/mimetype validation)
-- [x] Sample Analyzer plugin (BPM, key, scale, duration via librosa + music21 K-S)
+- [x] **Sample Analyzer plugin** (5-algo key ensemble via music21.analysis.discrete, DeepRhythm BPM, silence/short/noise edge cases)
 - [x] Event emission (sample.analyzed) with async event_bus.emit()
 - [x] Frontend api.ts (thin fetch wrapper) + types.ts (shared result types)
-- [x] Samples page (drag-and-drop upload + result cards UI)
+- [x] Samples page (drag-and-drop upload + BPM range + result cards + Apply to Project button + algorithm details)
 - [x] Progression Library API (POST/GET/DELETE + DAO)
 - [x] Projects API (POST/GET/PUT/DELETE + /last session persistence + arrangements auto-create)
 - [x] Library page (sortable table with delete)
 - [x] Save button wired in Music Theory page
-- [x] Backend tests (101 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas)
+- [x] Backend tests (107 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas)
 - [x] Research Topic 1 — Project-based tool patterns
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)
@@ -148,7 +150,7 @@ See `plan-v0.1-review.md` for full details:
 1. ~~Project concept (projects table, API, session persistence) — Phase A1 ✅~~
 2. ~~Idea Library migration (progressions → ideas table) — Phase A2 ✅~~
 3. ~~Frontend state management (projectContext.tsx + useApi hook) — Phase A3 ✅~~
-4. Sample Analyzer upgrade (multi-algo key, confidence, edge cases) — Phase B
+4. ~~Sample Analyzer upgrade (multi-algo key, confidence, edge cases) — Phase B ✅~~
 5. Dashboard implementation (bento grid layout, Project Anchor, Chord Pads) — Phase C
 6. Global search (Ctrl+K overlay) — Phase D1-D2
 7. Voice-leading scoring — Phase D3

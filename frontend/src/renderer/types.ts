@@ -1,9 +1,20 @@
+export interface KeyAlgorithmResult {
+  algorithm: string;
+  tonic: string;
+  mode: string;
+}
+
 export interface SampleAnalysisResult {
   bpm: number | null;
   key: string | null;
   scale: string | null;
   length_seconds: number | null;
   format: string | null;
+  bpm_confidence: number | null;
+  bpm_range_applied: boolean | null;
+  key_confidence: string | null;
+  key_algorithms: KeyAlgorithmResult[] | null;
+  warning: string | null;
 }
 
 export interface UploadResult {
