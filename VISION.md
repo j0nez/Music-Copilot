@@ -25,13 +25,29 @@ These must never be violated without a project-wide discussion:
 4. **Provider-agnostic AI.** Switch providers (OpenAI, Groq, GLM, OpenRouter) via config — no code changes.
 5. **Modular, expandable indefinitely.** No hard dependencies between features. Plugins auto-discover.
 
+## Design Philosophy — Unified Project Flow
+
+Music Copilot is a single creative environment, not a collection of separate tools. Every feature feeds into and reads from the same project state.
+
+**One container, many entry points.**
+A project is always the starting point (name, BPM, key, scale). From there you can type data manually, import a sample to auto-fill parameters, generate progressions from the Theory Engine — or any combination, in any order. There are no modes or branching paths. You are always in the same project; what you choose to feed into it is up to you.
+
+**Everything is overridable at any time.**
+If a sample analysis detects 128 BPM but you want 130, change it. If the Theory Engine suggests a mood you disagree with, override it. No field is locked. Every auto-detected value is a suggestion, not a commitment. Full creative freedom.
+
+**Deterministic core, optional AI.**
+Analysis (BPM, key, scale) works offline with signal processing and music theory — no AI required. The Co-Producer Chat is the only AI-powered feature. It answers questions, explains theory, and suggests completions based on your project state. AI is a plug-in layer, not the foundation.
+
+**Everything saves to the project.**
+Analyzed samples, generated progressions, chord pads, mood selections — all stored in the project's SQLite record. The Library and Ideas are cross-project collections; the dashboard always reflects the current project.
+
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React + TypeScript + Electron + Tailwind |
 | Backend | Python + FastAPI + SQLite |
-| Audio Analysis | librosa, essentia, aubio |
+| Audio Analysis | librosa, deeprhythm, music21 |
 | MIDI | pretty_midi, mido, music21 |
 | AI | Provider abstraction (OpenAI, Groq, GLM, OpenRouter) |
 
@@ -45,6 +61,10 @@ Ship useful software immediately.
 - [x] Chord Progression Generator — key + mood + genre → progressions
 - [x] MIDI Export Engine — chords, melody, bassline, arpeggio → .mid files
 - [x] Progression & Melody Library — save, browse, sort, search, preview, drag-and-drop MIDI into FL Studio
+- [ ] **Single-Screen Bento Dashboard** — replace 4-page nav with co-hero bento grid. All features on one screen. Project Anchor, Music Theory panel, Chord Pads, Sample Analysis, expanded Co-Producer Chat. See `docs/design/new-dashboard.md`.
+- [ ] **Project Concept** — user-declared project (name, BPM, key, scale). New `projects` SQLite table. Session persistence. DAW sync stubbed until Phase 7.
+- [ ] **Idea Library Expansion** — migrate `progressions` table to polymorphic `ideas` table. Supports progression, melody, bassline, drum_pattern, arpeggio, phrase. Backward-compatible migration.
+- [ ] **Global Search** — `Ctrl+K` search overlay across Library, samples, and plugins.
 - [ ] Producer Chat — ask production questions via AI layer
 - [ ] Why Does This Sound Good? — AI explains tension, resolution, harmony
 - [ ] Finish My Idea (basic) — analyze loop/MIDI, suggest structure
@@ -104,8 +124,12 @@ Build only these for the first release:
 3. Chord Progression Generator
 4. MIDI Export Engine
 5. Progression & Melody Library (save, browse, sort, preview, drag-and-drop MIDI)
-6. Producer Chat
-7. Why Does This Sound Good?
-8. Finish My Idea (basic)
+6. **Single-Screen Bento Dashboard** — replaces 4-page navigation
+7. **Project Concept** — name, BPM, key, scale, session persistence
+8. **Idea Library Expansion** — polymorphic `ideas` table
+9. **Global Search** — `Ctrl+K` overlay
+10. Producer Chat
+11. Why Does This Sound Good?
+12. Finish My Idea (basic)
 
 This alone is a genuinely useful tool for FL Studio producers and creates the foundation for every future feature without architectural rewrites.
