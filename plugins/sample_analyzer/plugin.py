@@ -9,8 +9,8 @@ from music21 import note, stream
 from music21.analysis.discrete import (
     AardenEssen,
     BellmanBudge,
-    KrumhanslKessler,
     KrumhanslSchmuckler,
+    SimpleWeights,
     TemperleyKostkaPayne,
 )
 from pydantic import BaseModel
@@ -36,7 +36,7 @@ KEY_ALGORITHMS = [
     ("Aarden-Essen", AardenEssen),
     ("Bellman-Budge", BellmanBudge),
     ("Temperley-Kostka-Payne", TemperleyKostkaPayne),
-    ("Krumhansl-Kessler", KrumhanslKessler),
+    ("Simple-Weights", SimpleWeights),
 ]
 
 SILENCE_RMS_THRESHOLD = 0.01

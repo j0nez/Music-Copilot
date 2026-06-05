@@ -87,8 +87,9 @@ async def test_sample_analyzer_key_ensemble_runs_all_algorithms(tmp_path):
 
     assert result.success
     algos = {a["algorithm"] for a in result.data["key_algorithms"]}
-    expected = {"Krumhansl-Schmuckler", "Aarden-Essen", "Bellman-Budge", "Temperley-Kostka-Payne", "Krumhansl-Kessler"}
+    expected = {"Krumhansl-Schmuckler", "Aarden-Essen", "Bellman-Budge", "Temperley-Kostka-Payne", "Simple-Weights"}
     assert algos == expected, f"Missing algorithms: {expected - algos}"
+    assert len(algos) == 5
 
 
 async def test_sample_analyzer_key_confidence_not_none(tmp_path):
@@ -207,3 +208,23 @@ async def test_sample_analyzer_bpm_range_applied_flag(tmp_path):
 
     assert result.success
     assert "bpm_range_applied" in result.data
+
+
+async def test_sample_analyzer_warning_none_for_clean_tone(tmp_path):
+    """Clean tonal audio should not produce a high-noise warning."""
+    discover_plugins()
+    file_path = _generate_test_tone(tmp_path)
+    result = await execute_plugin("sample_analyzer", file_path=file_path)
+    assert result.success
+    assert result.data.get("warning") is None
+
+
+async def test_sample_analyzer_handles_corrupt_audio(tmp_path):
+    """Corrupt/invalid audio file should be handled gracefully, not crash."""
+    discover_plugins()
+    dest = tmp_path / "corrupt.wav"
+    dest.write_bytes(b"\x00\x01\x02" * 1000)  # garbage bytes, not valid WAV
+
+    result = await execute_plugin("sample_analyzer", file_path=str(dest))
+    assert not result.success
+    assert result.error is not None

@@ -218,15 +218,15 @@ for result in wa.analyze(s):
 
 This creates a time-series of key estimates — spikes or shifts indicate modulation points.
 
-**Available key analysis algorithms (5 algorithms total):**
+**Available key analysis algorithms (5 algorithms total):** — The Sample Analyzer plugin uses all 5 in an ensemble with confidence voting.
 
 | Algorithm | Best For | Notes |
 |-----------|----------|-------|
-| **KrumhanslSchmuckler** | General key detection | Current default. Strong tendency to identify dominant as tonic. |
+| **KrumhanslSchmuckler** | General key detection | Strong tendency to identify dominant as tonic. The canonical K-S algorithm. |
 | **AardenEssen** | Major keys | Weak tendency to identify subdominant as tonic. |
 | **BellmanBudge** | Balanced | No particular tendencies for confusions. |
 | **TemperleyKostkaPayne** | Major keys | Strong tendency to identify relative major in minor keys. |
-| **SimpleWeights** | Large regions | Performs most consistently with large regions; noisier with small. |
+| **SimpleWeights** | Large regions | Simpler weight profiles; noisier with small regions but provides independent diversity to the ensemble. |
 
 **Modulation detection strategy:** Compare key profiles between overlapping windows. A significant change in the top-1 key suggests a modulation.
 
