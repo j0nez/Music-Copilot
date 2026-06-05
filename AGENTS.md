@@ -24,9 +24,10 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation (Design / Research)
-- **Current Focus**: Research phase — 4/7 topics complete (project-based-tools, note-chord-recognition, fl-studio-integration, model-recommendations). Remaining: music theory & algorithms, advanced MIDI generation, overall musical understanding. Next: implement dashboard + Project concept + Ideas table migration after research is done.
+- **Current Focus**: Research phase — 5/7 topics complete. Remaining: advanced MIDI generation, overall musical understanding. Next: implement dashboard + Project concept + Ideas table migration after research is done.
 - **Recent Decisions**: 2026-06-05 — FL Studio integration research completed (docs/research/fl-studio-integration.md). Splice Bridge case study added as section 10 — reverse-engineered VST3/AU plugin architecture, 3 generations (Bridge 2021, native DAW integrations 2025-2026, Sounds Plugin 2026 beta), comparison to Music Copilot's proposed VST3 bridge. Key finding: keep skip-Tier-4 strategy; if built, use JUCE + named pipes, thin plugin. 29 references.
 - **Recent Decisions**: 2026-06-05 — Model Recommendations research completed (docs/research/model-recommendations.md). Evaluated 20+ tools across 5 categories. Confirmed deeprhythm + music21 as SOTA offline BPM/key. Recommended Groq (free tier) as primary LLM provider. ACE-Step 1.5 (Apache-2.0) best for AI music generation. Procedural (music21 + arvo) preferred over ML for Phase 1-3. Essentia flagged for AGPL license issue. 20 references.
+- **Recent Decisions**: 2026-06-05 — Music Theory & Algorithms research completed (docs/research/music-theory-algorithms.md). 12 references across 6 topics: music21 voice leading (VoiceLeadingQuartet with 6 motion types), Roman numeral analysis (functionalityScore, secondary dominants), cadence detection (cadence-detector + CADET GNN vs music21-based approach), key modulation (5 algorithms via WindowedAnalysis), algorithmic composition (isobar 426 stars for Phase 3 melodies, arvo for procedural/counter-melody), post-tonal set theory. Key finding: all Phase 1-2 features need zero new dependencies — music21 already provides everything. isobar recommended for Phase 3 Melody/Bassline Generator.
 - **Recent Decisions**: 2026-06-04 — New dashboard design (co-hero bento grid) replaces 4-page layout. All features on one screen. Design doc at `docs/design/new-dashboard.md`. Project concept and Idea Library expansion added to VISION.md.
 - **Recent Decisions**: 2026-06-04 — Unified project flow: project is the container (always first). No branching UX — manual input, sample import, and theory generation converge into the same editable project state. Everything is overridable. Deterministic analysis core; AI limited to chat only. Documented in VISION.md (Design Philosophy) and dashboard design doc (Data Flow).
 - **Recent Decisions**: 2026-06-04 — MIDI Expression Engine: added music theory-based velocity (by chord tone role, beat position, phrase arc, genre conventions, mood modifier), voicing (close/open/drop2), articulation gate length, arpeggiation (up/down/updown/trance), and full arrangement (bass + chords). Data models (`models.py`), expression rules (`theory.py`), pattern builders (`patterns.py`). Plugin schema extended with style/voicing/articulation/genre/mood/arpeggio_pattern/base_velocity fields. Frontend adds MIDI Style + Voicing dropdowns in Chord Progressions and Chord Generator tabs. 22 new tests, 82 total.
@@ -98,6 +99,7 @@ Built with Electron + React + FastAPI + SQLite.
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)
 - [x] Research Topic 4 — Model recommendations (20+ tools)
+- [x] Research Topic 5 — Music theory & algorithms (12 references)
 
 ## Git Workflow
 - `git add -A && git commit -m "scope: message"` after every meaningful change.
