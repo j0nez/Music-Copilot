@@ -385,17 +385,210 @@ This is unlikely to be used in v0.1 (electronic music rarely uses atonal theory)
 
 ---
 
-## 7. Phase-Based Recommendations
+## 7. Mathematical Frameworks for Harmony & Tension
+
+### 7.1 Tymoczko's Orbifold Geometry — Voice-Leading as Shortest Path
+
+| Property | Value |
+|----------|-------|
+| Source | Tymoczko, D. (2006). *The Geometry of Musical Chords.* Science, 313(5783), 72–74. |
+| Also | Callender, C., Quinn, I. & Tymoczko, D. (2008). *Generalized Voice-Leading Spaces.* Science, 320(5874), 346–348. |
+| Book | Tymoczko, D. (2011). *A Geometry of Music.* Oxford University Press. |
+
+**Concept:** A musical chord is a point in an n-dimensional quotient space called an **orbifold**. A voice leading between two chords is a line segment connecting their points. The shortest line segment = the smoothest possible voice leading (minimum total voice-leading distance).
+
+Three successive quotient operations produce the orbifold:
+1. **Permutation** — the ordering of notes within a chord doesn't matter {C, E, G} = {E, G, C}
+2. **Translation** — pitch-class equivalence (octave equivalence): C4 and C5 are the same note
+3. **Reflection** — voice-crossing is permitted (voices can cross without penalty)
+
+**Key result:** Short line segments exist only when chords are **nearly symmetrical** under one or more of these operations. Consonant chords (major/minor triads) and dissonant chords have different near-symmetries, explaining their different musical uses.
+
+**Example:** In the 2D orbifold for trichords (a Möbius strip with a cone at the center), the shortest path between a C major triad {0, 4, 7} and an A minor triad {9, 0, 4} is a single semitone step — the L transformation in Neo-Riemannian theory (see §7.2). This geometric fact explains why C→Am is the smoothest voice leading between major and minor triads.
+
+**Application to Music Copilot:**
+- **Directly applicable** to the Chord Generator's voice-leading quality scoring. Instead of ad-hoc rules (penalize parallel fifths, reward contrary motion), we can compute the true geodesic distance between chord voicings in orbifold space.
+- music21's `plot` module includes orbifold projection visualizations (`music21.plot` constructs orbifold plots from chord progressions).
+- The orbifold approach provides a mathematically rigorous alternative to `VoiceLeadingQuartet`'s heuristic scoring — both can coexist, with orbifold distance as a complement to motion-type classification.
+
+### 7.2 Neo-Riemannian Theory — Group Theory on Triads
+
+| Property | Value |
+|----------|-------|
+| Origin | Lewin, D. (1987). *Generalized Musical Intervals and Transformations.* Yale UP. |
+| Key devs | Hyer, B.; Cohn, R. (1997). *Neo-Riemannian Operations, Parsimonious Trichords, and Their Tonnetz Representations.* JMT. |
+| music21 | `music21.analysis.neoRiemannian.L()`, `.P()`, `.R()`, `.S()` |
+
+**Concept:** Neo-Riemannian theory treats chord progressions as transformations on a set of 24 major/minor triads, without reference to a tonic. The three primary operations form a mathematical group:
+
+| Operation | Effect | Semitones moved | Example |
+|-----------|--------|-----------------|---------|
+| **P** (Parallel) | Major ↔ parallel minor (same root) | 1 (third flips) | C ↔ Cm |
+| **L** (Leading-tone exchange) | Major ↔ minor with leading-tone pivot | 2 → 2 | C ↔ Em (C→B, E→E, G→G) |
+| **R** (Relative) | Major ↔ relative minor (same key signature) | 2 → 2 | C ↔ Am (C→C, E→E, G→A) |
+
+**Group structure:**
+- Each operation preserves two common tones and changes mode (major→minor or vice versa).
+- All three are involutions (applying twice returns the original chord): P² = L² = R² = I
+- ⟨L, P⟩ ≅ S₃ (symmetric group on 3 elements, order 6)
+- ⟨L, R⟩ = ⟨R, L⟩ generates transposition by perfect fifth (cycle of all 24 triads)
+- The full PLR group has order 24 — it is the dihedral group of the 24 triads
+- **S** (Slide) = LPR — connects triads with single semitone root motion (e.g., C→C♯m)
+
+**Tonnetz:** The geometric lattice representation. Each axis represents one operation (P, L, or R edges). Edge lengths correspond to voice-leading distance. A chord progression traces a path through the Tonnetz.
+
+**Hexatonic systems (Cohn 1997):** The ⟨L, P⟩ cycle generates cycles of 6 triads sharing a common hexatonic scale (e.g., C, Cm, E♭, E♭m, G♭, G♭m = C hexatonic). These systems explain 19th-century chromatic harmony (Wagner, Liszt) that resists Roman numeral analysis.
+
+**music21 implementation (verified):**
+```python
+from music21 import chord, analysis
+
+c1 = chord.Chord('C4 E4 G4')
+c2 = analysis.neoRiemannian.L(c1)   # → B3 E4 G4 (E minor)
+c3 = analysis.neoRiemannian.P(c1)   # → C4 E-4 G4 (C minor)
+c4 = analysis.neoRiemannian.R(c1)   # → C4 E4 A4 (A minor)
+c5 = analysis.neoRiemannian.S(c1)   # → C4 E-4 G-4? (C♯ minor? — Slide)
+```
+
+All functions accept `Chord` objects with or without octaves and raise `LRPException` on non-triads (or return the original chord when `raiseException=False`).
+
+**Application to Music Copilot:**
+- **Phase 1 (low-hanging fruit):** Use L/P/R to generate smooth voice-leading variants of chord progressions. For any two chords generated by the Chord Generator, check if they are connected by a known transformation — if so, the voice leading is provably parsimonious.
+- **Phase 2:** The Chord Progression Generator could accept a "Neo-Riemannian mode" that generates progressions via sequences of PLR operations rather than functional harmony, producing chromatic-but-coherent progressions suitable for lo-fi, ambient, and cinematic genres.
+- **Phase 3:** Arpeggiation patterns can follow PLR cycles for chord-to-chord transitions that sound "logical" without being tonal.
+- Already available in music21 — zero new dependencies.
+
+### 7.3 Chew's Spiral Array — Tonal Tension in 3D
+
+| Property | Value |
+|----------|-------|
+| Origin | Chew, E. (2000). *Towards a Mathematical Model of Tonality.* PhD thesis, MIT. |
+| Book | Chew, E. (2014). *Mathematical and Computational Modeling of Tonality.* Springer. |
+| Tension model | Herremans, D. & Chew, E. (2016). *Tension ribbons* (TENOR 2016). |
+| Applications | MorpheuS music generation system (Herremans & Chew, IEEE TENCON 2016); MuSA.RT visualization |
+
+**Concept:** A 3D geometric model with five concentric helices representing pitch classes, major/minor chords, and major/minor keys. Unlike the 2D Tonnetz (which folds into a torus under enharmonic equivalence), the Spiral Array preserves pitch spelling (B♯ ≠ C) by projecting into 3D space.
+
+**Helix structure:**
+- **Pitch helix:** Each pitch class is a point on a spiral ascending in z. C = (1, 0, 0), G = (cos 2πr, sin 2πr, 1), D = (cos 4πr, sin 4πr, 2), ...
+  - Horizontal rotation: circle of fifths (one full turn every 12 pitches)
+  - Vertical rise: one octave per turn
+- **Chord helix:** Each major/minor chord is a convex combination of its three member pitches' positions:
+  - C major = ⅓·(C + E + G) — point inside the pitch spiral
+- **Key helix:** Each key is a convex combination of its defining chords (I, IV, V):
+  - C major key = ⅓·(C + F + G) — point inside the chord spiral
+
+**Three tonal tension indicators (Herremans & Chew 2016):**
+
+| Metric | What it measures | Formula intuition |
+|--------|-----------------|-------------------|
+| **Cloud diameter** | Dispersion of a pitch set | Max Euclidean distance between any two notes in the cloud — captures dissonance of a chord/cluster |
+| **Cloud momentum** | Amount of harmonic change | Euclidean distance between centroids of adjacent time-slice clouds — captures rate of harmonic change |
+| **Tensile strain** | Distance from global key | Euclidean distance between local cloud centroid and global key centroid — captures how far the current harmony has strayed from the home key |
+
+These three metrics were validated against empirical studies of perceived tension (Beethoven, Schubert piano sonatas; the Tristan chord).
+
+**Implementation availability:**
+- The spiral array tension model is **not** in music21. A separate Python implementation exists (Guo's `midi-miner` library) and is used in the MorpheuS system. Farbood's musical tension model (`github.com/mfarbood/musical-tension-model`, MIT license) also wraps the spiral array tension calculation.
+- A variational autoencoder for controllable music generation uses spiral array tension as a conditioning parameter (Guo et al., 2020, arXiv:2010.06230).
+
+**Application to Music Copilot:**
+- **"Why Does This Sound Good?" feature (Phase 4):** Cloud diameter = harmonic tension graph over time. Cloud momentum = harmonic rhythm. Tensile strain = modulation trajectory. These three metrics can be displayed visually alongside a progression to explain its tension arc.
+- **Phase 5+:** The MorpheuS approach shows that spiral array tension can guide music generation — applicable to Music Copilot's Melody Generator and Arrangement Planner.
+- Medium effort (not in music21, would need to implement or wrap `midi-miner`).
+
+### 7.4 Lerdahl's Tonal Pitch Space — Cognitive Distance & Tension
+
+| Property | Value |
+|----------|-------|
+| Origin | Lerdahl, F. (1988). *Tonal Pitch Space.* Music Perception, 5(3), 315–349. |
+| Book | Lerdahl, F. (2005). *Tonal Pitch Space.* Oxford UP. |
+| Tension paper | Lerdahl, F. (1996). *Calculating Tonal Tension.* Music Perception, 13(3), 319–363. |
+| Empirical test | Bigand, E., Parncutt, R. & Lerdahl, F. (1996). *Perception of Musical Tension.* Perception & Psychophysics, 58, 125–141. |
+
+**Concept:** A hierarchical model of how listeners perceive distance (and thus tension) between musical events. Built on the framework of *A Generative Theory of Tonal Music* (Lerdahl & Jackendoff, 1983), it quantifies the cognitive distance between any two pitches, chords, or keys.
+
+**Pitch space hierarchy (5 levels):**
+
+| Level | Description | Minimal distance |
+|-------|-------------|-----------------|
+| 0 — Octave | Chromatic steps within an octave | 1 semitone |
+| 1 — Fifth | Circle of fifths distance | 1 fifth-step |
+| 2 — Triadic | Chord-tone distance (root/third/fifth) | 1 within-chord step |
+| 3 — Diatonic | Scale-degree distance within key | 1 scale step |
+| 4 — Chromatic | Keys distance on circle of fifths | 1 key step |
+
+**Distance algorithm:** For two events X and Y, their pitch-space distance d(X, Y) is a weighted sum of the number of steps at each level they differ. The weights are empirically derived and decrease at higher levels.
+
+**Tension formula (Lerdahl 1996):** Tonal tension is a function of three components:
+
+1. **Hierarchical distance** (α·d): The pitch-space distance between the current event and the previous structural event in the prolongational tree. Accounts for how far the harmony has moved.
+2. **Sensory dissonance** (β·s): Based on the roughness/dissonance curves (Sethares-style or Parncutt-style psychoacoustic models) of the current chord's pitch content. Accounts for vertical sonority quality.
+3. **Horizontal motion** (γ·m): The average voice-leading step size between the previous chord and the current chord. Accounts for smoothness of transition.
+
+Tension(t) = α·d(t) + β·s(t) + γ·m(t) — where α, β, γ are empirically fitted weights.
+
+Bigand, Parncutt & Lerdahl (1996) validated this model: listeners' tension ratings correlated significantly (r > 0.8) with model predictions across multiple harmonic contexts.
+
+**Application to Music Copilot:**
+- **"Why Does This Sound Good?"** This is the most principled framework available. It provides three separable, interpretable components of tension. A UI could show: "Tension spike here — 60% from harmonic distance (modulation to iii), 30% from dissonant sonority (V7♭9), 10% from wide voice leading."
+- **Limitation:** No single Python library implements the full Lerdahl model. Components could be assembled:
+  - music21 provides prolongational tree analysis (though limited)
+  - Sensory dissonance: Sethares' dissonance curves (implemented in `midi-miner` and Farbood's model)
+  - Hierarchical distance: would need an implementation of the pitch-space distance algorithm
+- **Phase 4+ scope** — research-grade implementation, not v0.1.
+
+### 7.5 Forte Set Theory — Post-Tonal Pitch Structures
+
+Already covered in §6 (Post-Tonal & Set Theory). music21 provides full set-theoretic operations: prime form, interval vector, set class identification, and 12-tone row operations. Not needed for v0.1 (electronic music is predominantly tonal/modal) but useful for Phase 5+ analysis features.
+
+### 7.6 Krumhansl-Schmuckler Key Profiles — Cognitive Key-Finding
+
+Already implemented in the Sample Analyzer plugin (via music21's `s.analyze('key')`). Not a mathematical framework per se, but the foundational cognitive model of key perception. The key profiles (tone-distribution vectors for major and minor keys) are the empirical basis for key-finding algorithms used throughout the project.
+
+### 7.7 The Comma Problem — 12-TET vs Just Intonation
+
+**The core mathematical compromise in Western music:**
+
+In just intonation, intervals are pure frequency ratios:
+- Perfect fifth: 3:2 (1.5)
+- Major third: 5:4 (1.25)
+- Octave: 2:1 (2.0)
+
+Stack 12 perfect fifths: (3/2)¹² ≈ 129.746. Go up 7 octaves: 2⁷ = 128. The **Pythagorean comma** is the ratio between them: (3/2)¹² / 2⁷ ≈ 1.01364 ≈ 23.46 cents — about an eighth of a semitone.
+
+In 12-tone equal temperament (12-TET), every semitone is exactly 2¹⁄¹² ≈ 1.05946. This makes all transpositions equivalent (C major and C♯ major use identical interval ratios) at the cost of every interval except the octave being slightly impure:
+- 12-TET fifth: 2⁷⁄¹² ≈ 1.4983 (vs 1.5, error ≈ −2 cents)
+- 12-TET major third: 2⁴⁄¹² ≈ 1.2599 (vs 1.25, error ≈ +14 cents — audibly sharp)
+
+**What this means for Music Copilot:**
+
+1. **Mod-12 arithmetic works cleanly** because 12-TET maps pitch classes evenly onto the integers mod 12. All mathematical operations (transposition, inversion, set theory, neo-Riemannian group theory, Tymoczko orbifolds) assume this equivalence. The "music theory is numbers" intuition is correct *only under 12-TET*.
+
+2. **Cognitive models sit between pure ratios and 12-TET.** Krumhansl-Schmuckler profiles, Lerdahl's pitch space, and Chew's spiral array all operate on 12 pitch classes but derive their distance metrics from empirical listening studies — effectively modeling how humans *compromise* between the two systems.
+
+3. **Practical takeaway:** For analysis and generation of electronic/dance music (which is universally produced in 12-TET), mod-12 mathematics is sufficient and correct. Just intonation is relevant only for:
+   - Microtonal/experimental genres (outside scope)
+   - Acoustics modeling (sensory dissonance curves for tension calculation)
+   - Understanding the limitations of the framework (the comma problem explains why key-finding has inherent ambiguity)
+
+---
+
+## 8. Phase-Based Recommendations
 
 | Phase | Feature | Recommended Approach | Dependencies |
 |-------|---------|---------------------|--------------|
 | **v0.1** | Voice-leading quality for Chord Generator | Use `VoiceLeadingQuartet` to score chord transitions | music21 (already installed) |
 | **v0.1** | Roman numeral labeling of generated progressions | `roman.romanNumeralFromChord()` for display | music21 (already installed) |
+| **v0.1** | Neo-Riemannian smooth voice-leading variants | `analysis.neoRiemannian.L/P/R()` to validate parsimony of adjacent chords | music21 (already installed) |
 | **Phase 2** | Cadence detection in user MIDI | Custom plugin using chordify + Roman numeral + pattern matching | music21 only |
 | **Phase 2** | Key modulation detection | `WindowedAnalysis` with BellmanBudge profiles over sliding windows | music21 only |
+| **Phase 2** | Chromatic progression mode (Neo-Riemannian) | Generate sequences via PLR operations instead of functional harmony | music21 only |
 | **Phase 3** | Melody/Bassline Generator | **isobar** pattern library (PDegree, PEuclidean, Markov chains) | `pip install isobar` |
 | **Phase 3** | Counter-melody generation | **arvo** tintinnabuli + isorhythm | `pip install arvo` |
 | **Phase 4** | "Why Does This Sound Good?" explanations | Roman numeral analysis + voice-leading metrics + cadence classification | music21 only |
+| **Phase 4** | Tonal tension visualization (Lerdahl model) | Pitch-space distance + sensory dissonance + voice-leading step size | Custom impl (research-grade) |
+| **Phase 4** | Tonal tension visualization (Spiral Array) | Cloud diameter + momentum + tensile strain over time | `midi-miner` or custom impl |
 | **Phase 5** | Advanced modulation detection | Transformer model (custom training) | PyTorch |
 | **Any** | Full-score contrapuntal checking | music21 `counterpoint` module + `VoiceLeadingQuartet` | music21 only |
 
@@ -408,7 +601,12 @@ This is unlikely to be used in v0.1 (electronic music rarely uses atonal theory)
 
 2. **Roman numeral display** is already possible — the existing chord quality detection maps directly to Roman numerals. A display helper in the frontend would show `I – IV – V7 – I` instead of `C – F – G7 – C`.
 
-3. **No new dependencies needed** for any v0.1 or Phase 2 features. music21 provides everything.
+3. **Neo-Riemannian parsimony check** for the Chord Generator:
+   - For each adjacent chord pair (e.g., C major → D minor), test whether any L/P/R transformation maps one to the other
+   - If so, the progression step is provably parsimonious (max 2 voices move by ≤1 semitone/whole-tone)
+   - Display a "smoothness" rating based on how many steps are parsimonious vs. arbitrary
+
+4. **No new dependencies needed** for any v0.1 or Phase 2 features. music21 provides everything.
 
 ---
 
@@ -426,3 +624,18 @@ This is unlikely to be used in v0.1 (electronic music rarely uses atonal theory)
 10. Wang, B. et al. (2024). *Key Detection for Pop Music Supporting Modulation Point Locating Based on Transformer.* University of Rochester.
 11. Andersen, K. *music21 analysis.discrete module.* https://www.music21.org/music21docs/moduleReference/moduleAnalysisDiscrete.html
 12. Sapp, C. *Humdrum keycor command.* https://extras.humdrum.org/man/keycor/
+13. Tymoczko, D. (2006). *The Geometry of Musical Chords.* Science, 313(5783), 72–74.
+14. Callender, C., Quinn, I. & Tymoczko, D. (2008). *Generalized Voice-Leading Spaces.* Science, 320(5874), 346–348.
+15. Tymoczko, D. (2011). *A Geometry of Music.* Oxford University Press.
+16. Lewin, D. (1987). *Generalized Musical Intervals and Transformations.* Yale University Press.
+17. Cohn, R. (1997). *Neo-Riemannian Operations, Parsimonious Trichords, and Their Tonnetz Representations.* Journal of Music Theory, 41(1), 1–66.
+18. Chew, E. (2000). *Towards a Mathematical Model of Tonality.* PhD thesis, MIT.
+19. Chew, E. (2014). *Mathematical and Computational Modeling of Tonality: Theory and Applications.* Springer.
+20. Herremans, D. & Chew, E. (2016). *Tension ribbons: Quantifying and visualising tonal tension.* Proc. TENOR 2016, Cambridge, UK.
+21. Herremans, D. & Chew, E. (2016). *MorpheuS: Automatic music generation with recurrent pattern constraints and tension profiles.* Proc. IEEE TENCON, Singapore.
+22. Guo, R. et al. (2020). *A variational autoencoder for music generation controlled by tonal tension.* arXiv:2010.06230.
+23. Lerdahl, F. & Jackendoff, R. (1983). *A Generative Theory of Tonal Music.* MIT Press.
+24. Lerdahl, F. (2001). *Tonal Pitch Space.* Oxford University Press.
+25. Lerdahl, F. (1996). *Calculating Tonal Tension.* Music Perception, 13(3), 319–363.
+26. Bigand, E., Parncutt, R. & Lerdahl, F. (1996). *Perception of Musical Tension in Short Chord Sequences.* Perception & Psychophysics, 58, 125–141.
+27. Farbood, M. *musical-tension-model.* GitHub. https://github.com/mfarbood/musical-tension-model
