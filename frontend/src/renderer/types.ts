@@ -70,4 +70,14 @@ export interface MidiExportResult {
   length_bars: number;
 }
 
+export interface Project {
+  id: number;
+  name: string;
+  bpm: number;
+  key: string;
+  scale: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export type TheoryResult = TheoryScale | TheoryChord | TheoryInterval | TheoryProgression;

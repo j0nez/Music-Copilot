@@ -2,6 +2,7 @@ import type {
   ApiResponse,
   MidiExportResult,
   ProgressionChord,
+  Project,
   SampleAnalysisResult,
   SavedProgression,
   TheoryProgression,
@@ -110,6 +111,48 @@ export async function exportMidi(
 
 export function downloadMidiUrl(progressionId: number, bpm = 120): string {
   return `http://localhost:8000/api/progressions/${progressionId}/midi?bpm=${bpm}`;
+}
+
+export async function createProject(
+  name: string,
+  bpm = 120,
+  key = 'C',
+  scale = 'Major',
+): Promise<ApiResponse<{ id: number }>> {
+  return post<{ id: number }>('/projects/', { name, bpm, key, scale });
+}
+
+export async function listProjects(): Promise<ApiResponse<{ projects: Project[] }>> {
+  const res = await fetch('http://localhost:8000/api/projects/');
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getProject(id: number): Promise<ApiResponse<{ project: Project }>> {
+  const res = await fetch(`http://localhost:8000/api/projects/${id}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getLastProject(): Promise<ApiResponse<{ project: Project | null }>> {
+  const res = await fetch('http://localhost:8000/api/projects/last');
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function updateProject(
+  id: number,
+  updates: Partial<Pick<Project, 'name' | 'bpm' | 'key' | 'scale'>>,
+): Promise<ApiResponse<{ project: Project }>> {
+  return post<{ project: Project }>(`/projects/${id}`, updates);
+}
+
+export async function deleteProject(id: number): Promise<ApiResponse<{ deleted: boolean }>> {
+  const res = await fetch(`http://localhost:8000/api/projects/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
 }
 
 export async function chordGenerator(

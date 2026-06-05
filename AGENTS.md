@@ -86,6 +86,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-05 | Search chain MCP servers (Tavily, Firecrawl, Open-WebSearch, DuckDuckGo) | Done — 4 MCP servers configured in opencode.json, fallback chain documented in AGENTS.md, DuckDuckGo MCP installed via pip.
 | 2026-06-05 | Search chain end-to-end verification | Done — all 6 tiers tested and confirmed working. Firecrawl URL corrected from /v2/mcpp to /mcp.
 | 2026-06-05 | Full codebase audit + v0.1 forward plan | Done — plan-v0.1-review.md written with 5 phases, 23 tasks, ~2,700 lines. AI Studio moved to last. Sample Analyzer upgrade added.
+| 2026-06-05 | Phase A1 — Project concept (projects table, CRUD API, session persistence) | Done — new `projects` + `arrangements` tables in database.py, DAO with CRUD + session, API router with POST/GET/PUT/DELETE + /last endpoint, registered in main.py. Frontend: Project type + 6 API functions in types.ts/api.ts. 15 new tests, 97 total.
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)
@@ -93,11 +94,12 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - [x] Chord Progression Generator
 - [x] MIDI Export Engine
 - [x] Progression & Melody Library (save, browse, sort — MIDI drag-and-drop stubbed)
+- [x] **Project Concept** — projects table + arrangements table + CRUD API + session persistence
 - [ ] AI Studio (chat + analysis + composition assistant)
 
 ## v0.1 Build Plan (5 phases, 23 tasks)
 See `plan-v0.1-review.md` for full details:
-- **Phase A** — Foundation: Project concept, Ideas migration, state management
+- **Phase A** — Foundation: Project concept ✅, Ideas migration, state management
 - **Phase B** — Sample Analyzer Upgrade: Multi-algo key, confidence, edge cases
 - **Phase C** — Dashboard: Bento grid, Project Anchor, Chord Pads, absorb panels
 - **Phase D** — Search & Voice Leading: Ctrl+K, voice-leading scoring, polish
@@ -105,7 +107,7 @@ See `plan-v0.1-review.md` for full details:
 
 ## Infrastructure Status
 - [x] Backend scaffold (FastAPI + lifespan + config)
-- [x] SQLite database (6 tables + init + connection)
+- [x] SQLite database (8 tables + init + connection)
 - [x] Plugin ABC with input_schema + auto-discovery
 - [x] EventBus (on/off/emit with auto-wiring)
 - [x] Data contracts (shared/types.py)
@@ -121,9 +123,10 @@ See `plan-v0.1-review.md` for full details:
 - [x] Frontend api.ts (thin fetch wrapper) + types.ts (shared result types)
 - [x] Samples page (drag-and-drop upload + result cards UI)
 - [x] Progression Library API (POST/GET/DELETE + DAO)
+- [x] Projects API (POST/GET/PUT/DELETE + /last session persistence + arrangements auto-create)
 - [x] Library page (sortable table with delete)
 - [x] Save button wired in Music Theory page
-- [x] Backend tests (60 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator)
+- [x] Backend tests (97 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects)
 - [x] Research Topic 1 — Project-based tool patterns
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)
