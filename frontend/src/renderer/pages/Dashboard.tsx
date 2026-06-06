@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { useProject } from "../store/projectContext";
+import MusicTheoryPanel from "../components/MusicTheoryPanel";
+import ChordPads from "../components/ChordPads";
+import SampleAnalysisPanel from "../components/SampleAnalysisPanel";
+import type { ProgressionChord } from "../types";
 
 const NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
@@ -12,6 +16,15 @@ const SCALE_TYPES = [
 export default function Dashboard() {
   const { project, createProject, updateProject } = useProject();
   const [showNewProject, setShowNewProject] = useState(false);
+  const [chordPads, setChordPads] = useState<ProgressionChord[]>([]);
+
+  const handleProgressionGenerated = (progression: { chords: ProgressionChord[] }) => {
+    setChordPads(progression.chords);
+  };
+
+  const handleChordPadsReorder = (chords: ProgressionChord[]) => {
+    setChordPads(chords);
+  };
 
   return (
     <div className="h-full flex flex-col gap-4">
@@ -32,11 +45,17 @@ export default function Dashboard() {
             onCreateProject={createProject}
             updateProject={updateProject}
           />
-          <Panel title="Music Theory" className="flex-1 min-h-0">
-            <p className="text-gray-500 text-sm text-center mt-8">
-              Scales &middot; Chords &middot; Intervals &middot; Progressions &middot; Generator
-            </p>
-          </Panel>
+          {project ? (
+            <Panel title="Music Theory" className="flex-1 min-h-0">
+              <MusicTheoryPanel onProgressionGenerated={handleProgressionGenerated} />
+            </Panel>
+          ) : (
+            <Panel title="Music Theory" className="flex-1 min-h-0">
+              <div className="flex items-center justify-center h-full text-gray-600 text-xs">
+                Create a project first
+              </div>
+            </Panel>
+          )}
         </div>
 
         {/* Right column: Co-Producer Chat (hero) */}
@@ -58,13 +77,22 @@ export default function Dashboard() {
       {/* Bottom row: 3 equal columns */}
       <div className="h-44 flex gap-4 shrink-0">
         <Panel title="Chord Pads" className="flex-1">
-          <p className="text-gray-500 text-sm text-center mt-6">Generate a progression to see pads here</p>
+          <ChordPads
+            progression={chordPads}
+            onReorder={handleChordPadsReorder}
+            onClear={() => setChordPads([])}
+          />
         </Panel>
         <Panel title="Sample Analysis" className="flex-1">
-          <p className="text-gray-500 text-sm text-center mt-6">Drop audio to analyze BPM, key, scale</p>
+          <SampleAnalysisPanel />
         </Panel>
         <Panel title="Session Notes" className="flex-1">
-          <p className="text-gray-500 text-sm text-center mt-6">Quick ideas and notes</p>
+          <div className="flex flex-col h-full p-2">
+            <textarea
+              placeholder="Jot down ideas, notes, or reminders..."
+              className="flex-1 bg-transparent text-xs text-gray-400 placeholder-gray-600 resize-none outline-none"
+            />
+          </div>
         </Panel>
       </div>
     </div>
@@ -246,10 +274,7 @@ function EditableName({
       value={name}
       onSave={onSave}
       renderDisplay={(val, startEdit) => (
-        <div
-          onClick={startEdit}
-          className="group flex items-center gap-2 cursor-pointer"
-        >
+        <div onClick={startEdit} className="group flex items-center gap-2 cursor-pointer">
           <p className="text-sm font-medium text-gray-200 truncate">{val}</p>
           <span className="text-gray-600 group-hover:text-gray-400 transition-colors text-xs">✎</span>
         </div>
@@ -342,12 +367,11 @@ function EditableKey({
           <select
             autoFocus
             value={val}
-            onChange={(e) => {
-              setVal(e.target.value);
-            }}
-            onBlur={commit}
+            onChange={(e) => setVal(e.target.value)}
+            onBlur={() => commit()}
             onKeyDown={(e) => {
               if (e.key === "Escape") cancel();
+              if (e.key === "Enter") commit();
             }}
             className="bg-transparent font-mono font-semibold text-accent-300 outline-none"
           >
@@ -386,12 +410,11 @@ function EditableScale({
           <select
             autoFocus
             value={val}
-            onChange={(e) => {
-              setVal(e.target.value);
-            }}
-            onBlur={commit}
+            onChange={(e) => setVal(e.target.value)}
+            onBlur={() => commit()}
             onKeyDown={(e) => {
               if (e.key === "Escape") cancel();
+              if (e.key === "Enter") commit();
             }}
             className="bg-transparent font-mono font-semibold text-accent-300 outline-none"
           >
