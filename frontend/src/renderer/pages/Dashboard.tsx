@@ -155,13 +155,26 @@ function NewProjectForm({
   onCancel: () => void;
 }) {
   const [name, setName] = useState("");
-  const [bpm, setBpm] = useState(NEW_BPM_DEFAULT);
+  const [bpmStr, setBpmStr] = useState(String(NEW_BPM_DEFAULT));
   const [key, setKey] = useState(NEW_KEY_DEFAULT);
   const [scale, setScale] = useState(NEW_SCALE_DEFAULT);
+  const [creating, setCreating] = useState(false);
 
-  const handleCreate = () => {
-    if (!name.trim()) return;
-    onCreate(name.trim(), bpm, key, scale);
+  const parseBpm = (s: string): number => {
+    const n = parseInt(s, 10);
+    if (isNaN(n) || n < 20) return 20;
+    if (n > 300) return 300;
+    return n;
+  };
+
+  const handleCreate = async () => {
+    if (!name.trim() || creating) return;
+    setCreating(true);
+    try {
+      await onCreate(name.trim(), parseBpm(bpmStr), key, scale);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -181,12 +194,13 @@ function NewProjectForm({
         <div>
           <label className="text-xs text-gray-500 block mb-1">BPM</label>
           <input
-            type="number"
-            min={20}
-            max={300}
-            value={bpm}
-            onChange={(e) => setBpm(Math.max(20, Math.min(300, +e.target.value || 20)))}
-            className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm font-mono text-gray-200 focus:outline-none focus:border-accent-500/50"
+            type="text"
+            inputMode="numeric"
+            placeholder="120"
+            value={bpmStr}
+            onChange={(e) => setBpmStr(e.target.value)}
+            onBlur={() => setBpmStr(String(parseBpm(bpmStr)))}
+            className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm font-mono text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent-500/50"
           />
         </div>
         <div>
@@ -213,10 +227,10 @@ function NewProjectForm({
       <div className="flex gap-2">
         <button
           onClick={handleCreate}
-          disabled={!name.trim()}
+          disabled={!name.trim() || creating}
           className="text-xs bg-accent-500/20 text-accent-300 px-3 py-1.5 rounded border border-accent-500/30 hover:bg-accent-500/30 transition-colors disabled:opacity-50"
         >
-          Create
+          {creating ? "Creating..." : "Create"}
         </button>
         <button
           onClick={onCancel}
@@ -462,8 +476,8 @@ function ProjectAnchor({
       <Panel title="Project">
         {showNewProject ? (
           <NewProjectForm
-            onCreate={(name, bpm, key, scale) => {
-              onCreateProject(name, bpm, key, scale);
+            onCreate={async (name, bpm, key, scale) => {
+              await onCreateProject(name, bpm, key, scale);
               setShowNewProject(false);
             }}
             onCancel={() => setShowNewProject(false)}
