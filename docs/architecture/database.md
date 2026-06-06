@@ -19,15 +19,8 @@ CREATE TABLE samples (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Cached chord progressions
-CREATE TABLE progressions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    key TEXT NOT NULL,
-    mood TEXT,                      -- emotional, dark, uplifting
-    genre TEXT,                     -- techno, house, trance
-    chords TEXT NOT NULL,           -- JSON array: ["Fm", "Db", "Ab", "Eb"]
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- ~~DEPRECATED: Legacy progressions table (migrated to ideas in Phase A2)~~
+-- Kept for backward compatibility during transition, then dropped.
 
 -- MIDI export history
 CREATE TABLE midi_exports (
@@ -65,6 +58,47 @@ CREATE TABLE chat_history (
     provider TEXT,                  -- which AI provider was used
     model TEXT,                     -- which model
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Projects (Phase A1)
+CREATE TABLE projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL DEFAULT 'Untitled Project',
+    bpm INTEGER DEFAULT 120,
+    key TEXT DEFAULT 'C',
+    scale TEXT DEFAULT 'Major',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Arrangements per project
+CREATE TABLE arrangements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name TEXT NOT NULL DEFAULT 'Arrangement 1',
+    bpm INTEGER,
+    mood TEXT,
+    genre TEXT,
+    data TEXT NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Ideas (Phase A2) — polymorphic replacement for progressions table
+CREATE TABLE ideas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+    type TEXT NOT NULL DEFAULT 'progression' CHECK(type IN (
+        'progression', 'melody', 'bassline', 'drum_pattern', 'arpeggio', 'phrase'
+    )),
+    name TEXT,
+    data TEXT NOT NULL DEFAULT '{}',
+    key TEXT,
+    mood TEXT,
+    genre TEXT,
+    bpm INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 

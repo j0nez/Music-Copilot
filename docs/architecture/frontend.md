@@ -23,7 +23,7 @@ The frontend is an Electron application with a React renderer, TypeScript throug
 └─────────────────────────────────────┘
 ```
 
-In dev mode (`npm run dev:electron`), Electron loads `http://localhost:5173` from the Vite dev server. In production, it loads the built files from `dist/index.html`.
+In dev mode, Electron loads `http://localhost:5173` from the Vite dev server. In production, it loads the built files from `dist/index.html`.
 
 ## File Structure
 
@@ -32,134 +32,75 @@ frontend/
 ├── package.json              # Dependencies + scripts
 ├── vite.config.ts            # Vite config, React plugin, path aliases
 ├── tsconfig.json             # Renderer TypeScript config
-├── tsconfig.node.json        # Vite config TypeScript
-├── tailwind.config.js        # Tailwind theme + colors
-├── postcss.config.js         # PostCSS with Tailwind + autoprefixer
+├── tailwind.config.js        # Tailwind theme + colors (Neon Mint palette)
 ├── index.html                # Entry HTML (CSP headers included)
 ├── src/
 │   ├── main/main.js          # Electron main process (plain JS)
 │   ├── preload/preload.js    # Electron preload (contextBridge)
 │   └── renderer/
-│       ├── main.tsx          # React entry (createRoot + HashRouter)
-│       ├── App.tsx           # Route definitions
+│       ├── main.tsx          # React entry (no router — single screen)
+│       ├── App.tsx           # Single route: /
 │       ├── index.css         # Tailwind directives + global styles
+│       ├── types.ts          # TypeScript interfaces for all data models
+│       ├── api.ts            # HTTP client (fetchJson, post, put, get, del)
+│       ├── store/
+│       │   └── projectContext.tsx  # React Context for project state
+│       ├── hooks/
+│       │   └── useApi.ts    # Generic API hook (loading/error/data)
 │       ├── components/
-│       │   └── Layout.tsx    # Sidebar + main content area
+│       │   ├── Layout.tsx         # App shell (no sidebar — full screen)
+│       │   ├── MusicTheoryPanel.tsx   # Inline music theory (4 tabs)
+│       │   ├── ChordPads.tsx      # Web Audio playback, drag reorder
+│       │   ├── SampleAnalysisPanel.tsx  # Drop zone + results cards
+│       │   ├── LibraryModal.tsx   # Library overlay with sort/filter
+│       │   ├── SearchOverlay.tsx  # Ctrl+K global search overlay
+│       │   ├── LoadingSkeleton.tsx # Animated pulse placeholder
+│       │   └── RetryButton.tsx    # Small retry ↻ button
 │       └── pages/
-│           ├── Dashboard.tsx
-│           ├── SampleAnalyzer.tsx
-│           ├── TheoryEngine.tsx
-│           ├── ChordGenerator.tsx
-│           ├── ProducerChat.tsx
-│           ├── WhyDoesThisSoundGood.tsx
-│           └── FinishMyIdea.tsx
+│           └── Dashboard.tsx  # Co-hero bento grid (the only page)
 └── dist/                     # Production build output
 ```
 
 ## Component Tree (v0.1)
 
 ```
-App
-├── Layout
-│   ├── Sidebar (4 nav items: Dashboard, Music Theory, AI Studio, Samples)
-│   └── MainContent
-│
-├── Pages
-│   ├── Dashboard
-│   ├── MusicTheory
-│   │   ├── ScaleGenerator (tab)
-│   │   ├── ChordBuilder (tab)
-│   │   ├── IntervalAnalyzer (tab)
-│   │   └── ChordProgressions (tab)
-│   ├── AiStudio
-│   │   ├── ChatArea (message history + input)
-│   │   ├── ContextPanel (right sidebar)
-│   │   │   ├── ActiveFile
-│   │   │   ├── AnalysisResult
-│   │   │   └── Suggestions
-│   │   └── FileDropZone (drag-and-drop into chat)
-│   └── Samples
-│       └── FileUpload
-│
-└── Shared Components (future)
-    ├── Button
-    ├── Input
-    ├── Select
-    └── Spinner
+App (wrapped in ProjectProvider)
+└── Dashboard
+    ├── SearchOverlay (modal, Ctrl+K)
+    ├── LibraryModal (overlay)
+    ├── TopBar (logo, Ctrl+K btn, Library btn, New/Switch Project)
+    ├── Left Column
+    │   ├── ProjectAnchor (compact: name, BPM, key, scale, FL Studio badge)
+    │   └── MusicTheoryPanel (collapsible, 4 tabs)
+    │       ├── ScaleGenerator
+    │       ├── ChordBuilder
+    │       ├── IntervalAnalyzer
+    │       └── Progressions (generator + voice-leading badge)
+    ├── Right Column (Co-Producer Chat — placeholder)
+    └── Bottom Row
+        ├── ChordPads (Web Audio playback, drag reorder, MIDI export)
+        ├── SampleAnalysisPanel (drop zone, BPM range, results, Apply)
+        └── Session Notes (textarea)
 ```
 
 ## State Management
 
-v0.1 uses React's built-in `useState` + `useEffect` in custom hooks. No external state library needed at this scale.
+React Context (`ProjectProvider`) for project state with optimistic debounced saves (500ms):
 
 ```typescript
-// Example: hook that calls the plugin API
-const API_BASE = "http://localhost:8000/api";
-
-function usePluginExecute(name: string) {
-  const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const execute = async (payload: Record<string, unknown> = {}) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/plugins/${name}/execute`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setResult(data.data);
-      } else {
-        setError(data.error?.message ?? "Unknown error");
-      }
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { result, loading, error, execute };
-}
+const { project, createProject, updateProject, refreshProject } = useProject();
 ```
+
+Individual panels use local `useState` (no global store for UI state). The project is the only shared state.
 
 ## Routing
 
-Hash-based routing via `react-router-dom` with `HashRouter` (required for Electron's file:// protocol in production):
-
-```typescript
-// src/renderer/main.tsx
-import { HashRouter } from "react-router-dom";
-
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <HashRouter>
-      <App />
-    </HashRouter>
-  </StrictMode>,
-);
-```
-
-Routes are defined declaratively:
-
-```typescript
-<Routes>
-  <Route element={<Layout />}>
-    <Route path="/" element={<Dashboard />} />
-    <Route path="/theory" element={<MusicTheory />} />
-    <Route path="/ai-studio" element={<AiStudio />} />
-    <Route path="/samples" element={<Samples />} />
-  </Route>
-</Routes>
-```
+No route-based navigation. The dashboard is the only screen. Library opens as a modal overlay. All old pages (Music Theory, Samples, AI Studio) are absorbed as inline panels.
 
 ## Key Conventions
 
 - No `any` types — strict TypeScript everywhere.
 - Functional components only, no class components.
-- Custom hooks encapsulate all API communication.
-- Components receive data via props, never access APIs directly.
+- Components receive data via props; API calls happen in `api.ts` via `fetchJson()` helper.
 - Tailwind for styling, no CSS modules or styled-components.
+- Every API function returns `ApiResponse<T>` — no thrown exceptions for HTTP errors.

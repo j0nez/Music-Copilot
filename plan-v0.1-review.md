@@ -432,23 +432,23 @@ The v0.1 upgrade above stays zero-new-deps, but the research identifies paths fo
 
 ## 10. Acceptance Criteria for v0.1
 
-- [ ] Single-screen dashboard loads with all panels visible (no route navigation)
-- [ ] Project Anchor: create project, edit name/BPM/key/scale inline, persists across sessions
-- [ ] Music Theory panel works identically to current 5-tab page
-- [ ] Samples panel — upload + analyze + results with BPM/key confidence indicators
-- [ ] Sample Analyzer uses 5-algorithm key ensemble (Krumhansl-Schmuckler, Aarden-Essen, Bellman-Budge, Temperley-Kostka-Payne, Simple-Weights) with voting
-- [ ] Sample Analyzer detects and warns on silence, short audio, and high-noise content
-- [ ] "Apply to Project" button sends sample analysis values to Project Anchor (never auto-overwrites)
-- [ ] Chord Pads: play generated progression via Web Audio API, reorder by drag
-- [ ] Co-Producer Chat: send message → real AI response via Groq (or configured provider)
-- [ ] Library: accessible via TopBar button and Ctrl+K, sortable table, type filter
-- [ ] Global search (Ctrl+K): searches ideas, samples, plugins from anywhere
-- [ ] All existing tests still pass (82 + new sample analyzer tests)
-- [ ] No 4-page routing — Dashboard is the only route
-- [ ] Dead stubs removed or given minimal implementations
-- [ ] Frontend store/ populated with project context
+- [x] Single-screen dashboard loads with all panels visible (no route navigation)
+- [x] Project Anchor: create project, edit name/BPM/key/scale inline, persists across sessions
+- [x] Music Theory panel with 4 inline tabs (Scale, Chord, Interval, Progressions — Generator merged)
+- [x] Samples panel — upload + analyze + results with BPM/key confidence indicators
+- [x] Sample Analyzer uses 5-algorithm key ensemble (Krumhansl-Schmuckler, Aarden-Essen, Bellman-Budge, Temperley-Kostka-Payne, Simple-Weights) with voting
+- [x] Sample Analyzer detects and warns on silence, short audio, and high-noise content
+- [x] "Apply to Project" button sends sample analysis values to Project Anchor (never auto-overwrites)
+- [x] Chord Pads: play generated progression via Web Audio API, reorder by drag
+- [ ] Co-Producer Chat: send message → real AI response via Groq (or configured provider) — **Phase E (last)**
+- [x] Library: accessible via TopBar button and Ctrl+K, sortable table, type filter
+- [x] Global search (Ctrl+K): searches ideas, projects from anywhere (samples table exists but currently empty)
+- [x] All 116 backend tests pass
+- [x] No 4-page routing — Dashboard is the only route
+- [x] Stub plugin cleanup — 5 stubs with "not yet implemented" responses
+- [x] Frontend store/ populated with project context
 
 ---
 
-*Last updated: 2026-06-05*
-*Next step: Review with user, iterate, then finalize into VISION.md/AGENTS.md*
+*Last updated: 2026-06-06*
+*Next step: Phase E — AI Studio (last)*

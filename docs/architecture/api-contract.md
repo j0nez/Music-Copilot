@@ -41,33 +41,42 @@ On failure:
 | `INVALID_INPUT` | 422 | Validation failure |
 | `PLUGIN_ERROR` | 500 | Plugin execution failed |
 | `AI_ERROR` | 502 | AI provider returned an error |
-| `RATE_LIMITED` | 429 | Too many requests |
+| `DATABASE_ERROR` | 500 | Database operation failed |
+| `FILE_VALIDATION_ERROR` | 422 | File rejected (bad extension or mime) |
+| `NETWORK_ERROR` | — | Frontend network error (never sent by server) |
+| `INTERNAL_ERROR` | 500 | Unhandled exception fallback |
 
 ## Endpoint Naming
 
 ```
-GET    /api/plugins                          # List plugins
+# Plugin system
+GET    /api/plugins                          # List plugins (9 total)
 POST   /api/plugins/{name}/execute           # Execute a plugin
+GET    /api/plugins/{name}/schema            # Get plugin input schema
 
-POST   /api/analyze/sample                   # Sample Analyzer
-POST   /api/theory/scales                    # Theory: scale generation
-POST   /api/theory/chords                    # Theory: chord construction
-POST   /api/theory/intervals                 # Theory: interval analysis
+# Upload
+POST   /api/upload/                          # Upload audio file
 
-POST   /api/generate/chords                  # Chord progression
-POST   /api/generate/melody                  # Melody generation
-POST   /api/generate/bassline                # Bassline generation
-POST   /api/generate/arpeggio                # Arpeggiator
-POST   /api/generate/midi                    # MIDI file export
+# Progressions / Ideas
+POST   /api/progressions/                    # Save idea (progression)
+GET    /api/progressions/                    # List ideas (with type filter, sort)
+GET    /api/progressions/{id}                # Get single idea
+DELETE /api/progressions/{id}                # Delete idea
+GET    /api/progressions/{id}/midi           # Download as MIDI
 
-POST   /api/analyze/reference                # Reference track analysis
-POST   /api/analyze/structure                # Arrangement breakdown
+# Projects
+POST   /api/projects/                        # Create project
+GET    /api/projects/                        # List projects
+GET    /api/projects/last                    # Get most recent project
+GET    /api/projects/{id}                    # Get project by ID
+PUT    /api/projects/{id}                    # Update project metadata
+DELETE /api/projects/{id}                    # Delete project
 
-POST   /api/chat                             # Producer Chat
-POST   /api/analyze/sound-good               # "Why Does This Sound Good?"
+# Search
+GET    /api/search/?q={query}               # Global search (ideas, projects)
 
-POST   /api/finish/analyze                   # Finish My Idea: analyze input
-POST   /api/finish/suggest                   # Finish My Idea: get suggestions
+# Health
+GET    /api/health                           # Health check
 ```
 
 ## File Uploads

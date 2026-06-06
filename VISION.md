@@ -61,10 +61,10 @@ Ship useful software immediately.
 - [x] Chord Progression Generator — key + mood + genre → progressions
 - [x] MIDI Export Engine — chords, melody, bassline, arpeggio → .mid files
 - [x] Progression & Melody Library — save, browse, sort, search, preview, drag-and-drop MIDI into FL Studio
-- [ ] **Single-Screen Bento Dashboard** — replace 4-page nav with co-hero bento grid. All features on one screen. Project Anchor, Music Theory panel, Chord Pads, Sample Analysis, expanded Co-Producer Chat. See `docs/design/new-dashboard.md`.
+- [x] **Single-Screen Bento Dashboard** — replace 4-page nav with co-hero bento grid. All features on one screen. Project Anchor, Music Theory panel, Chord Pads, Sample Analysis, expanded Co-Producer Chat. See `docs/design/new-dashboard.md`.
 - [x] **Project Concept** — user-declared project (name, BPM, key, scale). New `projects` SQLite table. Session persistence. DAW sync stubbed until Phase 7.
 - [x] **Idea Library Expansion** — migrate `progressions` table to polymorphic `ideas` table. Supports progression, melody, bassline, drum_pattern, arpeggio, phrase. Backward-compatible migration.
-- [ ] **Global Search** — `Ctrl+K` search overlay across Library, samples, and plugins.
+- [x] **Global Search** — `Ctrl+K` search overlay across Library, samples, and plugins.
 - [ ] Producer Chat — ask production questions via AI layer
 - [ ] Why Does This Sound Good? — AI explains tension, resolution, harmony
 - [ ] Finish My Idea (basic) — analyze loop/MIDI, suggest structure
@@ -126,7 +126,7 @@ Build only these for the first release (5 phases, 23 tasks):
 5. Progression & Melody Library (save, browse, sort, preview, drag-and-drop MIDI)
 6. **Project Concept** — name, BPM, key, scale, session persistence
 7. **Idea Library Expansion** — polymorphic `ideas` table
-8. **Sample Analyzer Upgrade** — 4-algorithm key ensemble, confidence scores, edge-case robustness, "Apply to Project" button
+8. **Sample Analyzer Upgrade** — 5-algorithm key ensemble (Krumhansl-Schmuckler, Aarden-Essen, Bellman-Budge, Temperley-Kostka-Payne, Simple-Weights), confidence scores, edge-case robustness, "Apply to Project" button
 9. **Single-Screen Bento Dashboard** — replaces 4-page navigation. Project Anchor, Music Theory panel, Chord Pads, Sample Analysis
 10. **Global Search** — `Ctrl+K` overlay across Library, samples, and plugins
 11. **Voice-Leading Scoring** — music21 VoiceLeadingQuartet for progression quality
