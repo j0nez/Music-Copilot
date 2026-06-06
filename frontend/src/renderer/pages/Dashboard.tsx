@@ -1,15 +1,25 @@
 import { useState } from "react";
 import { useProject } from "../store/projectContext";
 
+const NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+
+const SCALE_TYPES = [
+  "Major", "Natural Minor", "Harmonic Minor", "Melodic Minor",
+  "Dorian", "Phrygian", "Lydian", "Mixolydian", "Locrian",
+  "Pentatonic Major", "Pentatonic Minor",
+];
+
 export default function Dashboard() {
-  const { project, createProject } = useProject();
+  const { project, createProject, updateProject } = useProject();
   const [showNewProject, setShowNewProject] = useState(false);
-  const [newName, setNewName] = useState("");
 
   return (
     <div className="h-full flex flex-col gap-4">
       {/* TopBar */}
-      <TopBar project={project} onNewProject={() => setShowNewProject(true)} />
+      <TopBar
+        projectName={project?.name ?? null}
+        onNewProject={() => setShowNewProject(true)}
+      />
 
       {/* Main area: left 40% | right 60% */}
       <div className="flex-1 flex gap-4 min-h-0">
@@ -19,9 +29,8 @@ export default function Dashboard() {
             project={project}
             showNewProject={showNewProject}
             setShowNewProject={setShowNewProject}
-            newName={newName}
-            setNewName={setNewName}
             onCreateProject={createProject}
+            updateProject={updateProject}
           />
           <Panel title="Music Theory" className="flex-1 min-h-0">
             <p className="text-gray-500 text-sm text-center mt-8">
@@ -65,10 +74,10 @@ export default function Dashboard() {
 /* ── TopBar ─────────────────────── */
 
 function TopBar({
-  project,
+  projectName,
   onNewProject,
 }: {
-  project: { name: string } | null;
+  projectName: string | null;
   onNewProject: () => void;
 }) {
   return (
@@ -91,9 +100,315 @@ function TopBar({
         onClick={onNewProject}
         className="text-xs bg-accent-500/20 text-accent-300 px-3 py-1.5 rounded-lg border border-accent-500/30 hover:bg-accent-500/30 transition-colors"
       >
-        {project ? "Switch Project" : "New Project"}
+        {projectName ? "Switch Project" : "New Project"}
       </button>
     </div>
+  );
+}
+
+/* ── Project Anchor ─────────────── */
+
+const NEW_BPM_DEFAULT = 120;
+const NEW_KEY_DEFAULT = "C";
+const NEW_SCALE_DEFAULT = "Major";
+
+function NewProjectForm({
+  onCreate,
+  onCancel,
+}: {
+  onCreate: (name: string, bpm: number, key: string, scale: string) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [bpm, setBpm] = useState(NEW_BPM_DEFAULT);
+  const [key, setKey] = useState(NEW_KEY_DEFAULT);
+  const [scale, setScale] = useState(NEW_SCALE_DEFAULT);
+
+  const handleCreate = () => {
+    if (!name.trim()) return;
+    onCreate(name.trim(), bpm, key, scale);
+  };
+
+  return (
+    <div className="p-3 space-y-3">
+      <input
+        autoFocus
+        placeholder="Project name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleCreate();
+          if (e.key === "Escape") onCancel();
+        }}
+        className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent-500/50"
+      />
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">BPM</label>
+          <input
+            type="number"
+            min={20}
+            max={300}
+            value={bpm}
+            onChange={(e) => setBpm(Math.max(20, Math.min(300, +e.target.value || 20)))}
+            className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm font-mono text-gray-200 focus:outline-none focus:border-accent-500/50"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">Key</label>
+          <select
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-accent-500/50"
+          >
+            {NOTES.map((n) => <option key={n}>{n}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">Scale</label>
+          <select
+            value={scale}
+            onChange={(e) => setScale(e.target.value)}
+            className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-accent-500/50"
+          >
+            {SCALE_TYPES.map((s) => <option key={s}>{s}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={handleCreate}
+          disabled={!name.trim()}
+          className="text-xs bg-accent-500/20 text-accent-300 px-3 py-1.5 rounded border border-accent-500/30 hover:bg-accent-500/30 transition-colors disabled:opacity-50"
+        >
+          Create
+        </button>
+        <button
+          onClick={onCancel}
+          className="text-xs text-gray-500 hover:text-gray-300 px-3 py-1.5 rounded border border-surface-700/50 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Inline editable fields ───── */
+
+function InlineEdit({
+  value,
+  onSave,
+  renderDisplay,
+  renderInput,
+}: {
+  value: string;
+  onSave: (val: string) => void;
+  renderDisplay: (val: string, startEdit: () => void) => React.ReactNode;
+  renderInput: (val: string, onValChange: (v: string) => void, onCommit: () => void, onCancel: () => void) => React.ReactNode;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  const startEdit = () => {
+    setDraft(value);
+    setEditing(true);
+  };
+
+  const commit = () => {
+    if (draft.trim() && draft !== value) {
+      onSave(draft.trim());
+    }
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setDraft(value);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return <>{renderInput(draft, setDraft, commit, cancel)}</>;
+  }
+
+  return <>{renderDisplay(value, startEdit)}</>;
+}
+
+function EditableName({
+  name,
+  onSave,
+}: {
+  name: string;
+  onSave: (v: string) => void;
+}) {
+  return (
+    <InlineEdit
+      value={name}
+      onSave={onSave}
+      renderDisplay={(val, startEdit) => (
+        <div
+          onClick={startEdit}
+          className="group flex items-center gap-2 cursor-pointer"
+        >
+          <p className="text-sm font-medium text-gray-200 truncate">{val}</p>
+          <span className="text-gray-600 group-hover:text-gray-400 transition-colors text-xs">✎</span>
+        </div>
+      )}
+      renderInput={(val, setVal, commit, cancel) => (
+        <input
+          autoFocus
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") cancel();
+          }}
+          onBlur={commit}
+          className="w-full rounded bg-surface-900 border border-accent-500/50 px-2 py-1 text-sm text-gray-200 focus:outline-none"
+        />
+      )}
+    />
+  );
+}
+
+function EditableBpm({
+  bpm,
+  onSave,
+}: {
+  bpm: number;
+  onSave: (v: string) => void;
+}) {
+  return (
+    <InlineEdit
+      value={String(bpm)}
+      onSave={onSave}
+      renderDisplay={(val, startEdit) => (
+        <span
+          onClick={startEdit}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs cursor-pointer hover:border-accent-500/50 transition-colors"
+        >
+          <span className="text-gray-500">BPM</span>
+          <span className="font-mono font-semibold text-accent-300">{val}</span>
+          <span className="text-gray-600 text-[10px]">✎</span>
+        </span>
+      )}
+      renderInput={(val, setVal, commit, cancel) => (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-accent-500/50 text-xs">
+          <span className="text-gray-500">BPM</span>
+          <input
+            autoFocus
+            type="number"
+            min={20}
+            max={300}
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit();
+              if (e.key === "Escape") cancel();
+            }}
+            onBlur={commit}
+            className="w-14 bg-transparent font-mono font-semibold text-accent-300 outline-none"
+          />
+        </span>
+      )}
+    />
+  );
+}
+
+function EditableKey({
+  keyVal,
+  onSave,
+}: {
+  keyVal: string;
+  onSave: (v: string) => void;
+}) {
+  return (
+    <InlineEdit
+      value={keyVal}
+      onSave={onSave}
+      renderDisplay={(val, startEdit) => (
+        <span
+          onClick={startEdit}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs cursor-pointer hover:border-accent-500/50 transition-colors"
+        >
+          <span className="text-gray-500">Key</span>
+          <span className="font-mono font-semibold text-accent-300">{val}</span>
+          <span className="text-gray-600 text-[10px]">✎</span>
+        </span>
+      )}
+      renderInput={(val, setVal, commit, cancel) => (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-accent-500/50 text-xs">
+          <span className="text-gray-500">Key</span>
+          <select
+            autoFocus
+            value={val}
+            onChange={(e) => {
+              setVal(e.target.value);
+            }}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") cancel();
+            }}
+            className="bg-transparent font-mono font-semibold text-accent-300 outline-none"
+          >
+            {NOTES.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </span>
+      )}
+    />
+  );
+}
+
+function EditableScale({
+  scale,
+  onSave,
+}: {
+  scale: string;
+  onSave: (v: string) => void;
+}) {
+  return (
+    <InlineEdit
+      value={scale}
+      onSave={onSave}
+      renderDisplay={(val, startEdit) => (
+        <span
+          onClick={startEdit}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs cursor-pointer hover:border-accent-500/50 transition-colors"
+        >
+          <span className="text-gray-500">Scale</span>
+          <span className="font-mono font-semibold text-accent-300">{val}</span>
+          <span className="text-gray-600 text-[10px]">✎</span>
+        </span>
+      )}
+      renderInput={(val, setVal, commit, cancel) => (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-accent-500/50 text-xs">
+          <span className="text-gray-500">Scale</span>
+          <select
+            autoFocus
+            value={val}
+            onChange={(e) => {
+              setVal(e.target.value);
+            }}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") cancel();
+            }}
+            className="bg-transparent font-mono font-semibold text-accent-300 outline-none"
+          >
+            {SCALE_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </span>
+      )}
+    />
+  );
+}
+
+function FlStudioBadge() {
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-accent-500/10 border border-accent-500/20 text-[10px] text-accent-400/70">
+      <span className="w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse" />
+      FL Studio &middot; Live Sync (Phase 7)
+    </span>
   );
 }
 
@@ -103,60 +418,30 @@ function ProjectAnchor({
   project,
   showNewProject,
   setShowNewProject,
-  newName,
-  setNewName,
   onCreateProject,
+  updateProject,
 }: {
   project: { id: number; name: string; bpm: number; key: string; scale: string } | null;
   showNewProject: boolean;
   setShowNewProject: (v: boolean) => void;
-  newName: string;
-  setNewName: (v: string) => void;
   onCreateProject: (name: string, bpm?: number, key?: string, scale?: string) => Promise<unknown>;
+  updateProject: (updates: Partial<{ name: string; bpm: number; key: string; scale: string }>) => Promise<void>;
 }) {
   if (!project) {
     return (
       <Panel title="Project">
         {showNewProject ? (
-          <div className="p-3 space-y-3">
-            <input
-              autoFocus
-              placeholder="Project name"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={async (e) => {
-                if (e.key === "Enter" && newName.trim()) {
-                  await onCreateProject(newName.trim());
-                  setShowNewProject(false);
-                  setNewName("");
-                }
-              }}
-              className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent-500/50"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={async () => {
-                  if (newName.trim()) {
-                    await onCreateProject(newName.trim());
-                    setShowNewProject(false);
-                    setNewName("");
-                  }
-                }}
-                className="text-xs bg-accent-500/20 text-accent-300 px-3 py-1.5 rounded border border-accent-500/30 hover:bg-accent-500/30 transition-colors"
-              >
-                Create
-              </button>
-              <button
-                onClick={() => setShowNewProject(false)}
-                className="text-xs text-gray-500 hover:text-gray-300 px-3 py-1.5 rounded border border-surface-700/50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+          <NewProjectForm
+            onCreate={(name, bpm, key, scale) => {
+              onCreateProject(name, bpm, key, scale);
+              setShowNewProject(false);
+            }}
+            onCancel={() => setShowNewProject(false)}
+          />
         ) : (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 text-sm">No project loaded</p>
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-500 py-8">
+            <p className="text-sm">No project loaded</p>
+            <p className="text-xs text-gray-600">Click <span className="text-accent-400/80">New Project</span> in the top bar</p>
           </div>
         )}
       </Panel>
@@ -166,11 +451,24 @@ function ProjectAnchor({
   return (
     <Panel title="Project">
       <div className="p-3 space-y-2">
-        <p className="text-sm font-medium text-gray-200 truncate">{project.name}</p>
-        <div className="flex gap-2 flex-wrap">
-          <MetaChip label="BPM" value={String(project.bpm)} />
-          <MetaChip label="Key" value={project.key} />
-          <MetaChip label="Scale" value={project.scale} />
+        <EditableName
+          name={project.name}
+          onSave={(v) => updateProject({ name: v })}
+        />
+        <FlStudioBadge />
+        <div className="flex gap-2 flex-wrap items-center">
+          <EditableBpm
+            bpm={project.bpm}
+            onSave={(v) => updateProject({ bpm: parseInt(v, 10) || 120 })}
+          />
+          <EditableKey
+            keyVal={project.key}
+            onSave={(v) => updateProject({ key: v })}
+          />
+          <EditableScale
+            scale={project.scale}
+            onSave={(v) => updateProject({ scale: v })}
+          />
         </div>
       </div>
     </Panel>
@@ -188,15 +486,6 @@ function Panel({ title, className, children }: { title: string; className?: stri
       </div>
       <div className="flex-1 overflow-y-auto">{children}</div>
     </div>
-  );
-}
-
-function MetaChip({ label, value }: { label: string; value: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-mono font-semibold text-accent-300">{value}</span>
-    </span>
   );
 }
 
