@@ -387,6 +387,17 @@ function Progressions({ onGenerated }: {
           <div className="flex items-center gap-3 mb-2 flex-wrap">
             <p className="text-sm font-semibold text-gray-200">{result.key} — {result.mood}</p>
             <span className="text-xs text-gray-500">{result.chords.length} chords</span>
+            {result.voice_leading && (
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                result.voice_leading.score >= 70
+                  ? "bg-green-900/40 text-green-300"
+                  : result.voice_leading.score >= 40
+                    ? "bg-yellow-900/40 text-yellow-300"
+                    : "bg-red-900/40 text-red-300"
+              }`}>
+                VL {result.voice_leading.score}/100
+              </span>
+            )}
             <span className="text-xs text-gray-500">MIDI:</span>
             <select value={midiStyle} onChange={(e) => setMidiStyle(e.target.value)}
               className="bg-surface-800 rounded px-1.5 py-0.5 text-xs outline-none focus:ring-1 focus:ring-accent-500/50">

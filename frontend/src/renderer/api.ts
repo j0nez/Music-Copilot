@@ -5,6 +5,7 @@ import type {
   Project,
   SampleAnalysisResult,
   SavedProgression,
+  SearchResult,
   TheoryProgression,
   TheoryResult,
   UploadResult,
@@ -165,6 +166,16 @@ export async function deleteProject(id: number): Promise<ApiResponse<{ deleted: 
   const res = await fetch(`http://localhost:8000/api/projects/${id}`, {
     method: 'DELETE',
   });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function searchAll(
+  q: string,
+  limit = 20,
+): Promise<ApiResponse<{ results: SearchResult[] }>> {
+  const params = new URLSearchParams({ q, limit: String(limit) });
+  const res = await fetch(`http://localhost:8000/api/search/?${params}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

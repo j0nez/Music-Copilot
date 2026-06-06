@@ -363,14 +363,14 @@ The v0.1 upgrade above stays zero-new-deps, but the research identifies paths fo
 | C6 | Remove old route files + sidebar nav | C1–C5 | ~50 lines (cleanup) |
 
 ### Phase D — Search & Voice Leading (Week 3)
-| # | Task | Depends On | Effort |
-|---|------|-----------|--------|
-| D1 | Global search endpoint `GET /api/search/` | A2 (ideas table) | ~100 lines |
-| D2 | Ctrl+K SearchOverlay component | D1 | ~200 lines |
-| D3 | Voice-leading scoring (music21) | None | ~80 lines |
-| D4 | Frontend error handling improvements | None | ~100 lines |
-| D5 | Frontend tests (Vitest) | None | ~50 lines |
-| D6 | Stub plugin cleanup | None | ~50 lines |
+| # | Task | Depends On | Effort | Status |
+|---|------|-----------|--------|--------|
+| D1 | Global search endpoint `GET /api/search/` | A2 (ideas table) | ~100 lines | ✅ Done |
+| D2 | Ctrl+K SearchOverlay component | D1 | ~200 lines | ✅ Done |
+| D3 | Voice-leading scoring (music21) | None | ~80 lines | ✅ Done |
+| D4 | Frontend error handling improvements | None | ~100 lines | ⬜ Remaining |
+| D5 | Frontend tests (Vitest) | None | ~50 lines | ⬜ Remaining |
+| D6 | Stub plugin cleanup | None | ~50 lines | ⬜ Remaining |
 
 ### Phase E — AI Studio (Week 4 — Last)
 | # | Task | Depends On | Effort |

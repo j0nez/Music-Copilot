@@ -105,6 +105,61 @@ class ChordGeneratorPlugin(Plugin):
         _, mode = self._parse_key(key)
         return mode
 
+    def _note_name_to_midi(self, note_name: str, octave: int = 4) -> int:
+        raw = note_name.rstrip("0123456789")
+        raw = raw.replace("-", "b")
+        return self._note_to_semitone(raw) + (octave + 1) * 12
+
+    def _score_voice_leading(self, chords: list[dict]) -> dict:
+        from music21 import voiceLeading, note as m21note
+        total_score = 0
+        max_score = 0
+        issues: list[str] = []
+
+        for i in range(1, len(chords)):
+            prev = chords[i - 1]
+            curr = chords[i]
+            prev_notes = sorted(prev.get("notes", []), key=lambda n: self._note_name_to_midi(n, 4))
+            curr_notes = sorted(curr.get("notes", []), key=lambda n: self._note_name_to_midi(n, 4))
+            pairs = min(len(prev_notes), len(curr_notes))
+            if pairs < 2:
+                continue
+            max_score += 2
+
+            has_parallel_fifth = False
+            has_parallel_octave = False
+            has_contrary = False
+
+            for v in range(pairs - 1):
+                try:
+                    vlq = voiceLeading.VoiceLeadingQuartet(
+                        m21note.Note(prev_notes[v + 1] + "4"),
+                        m21note.Note(curr_notes[v + 1] + "4"),
+                        m21note.Note(prev_notes[v] + "3"),
+                        m21note.Note(curr_notes[v] + "3"),
+                    )
+                    if vlq.parallelFifth():
+                        has_parallel_fifth = True
+                        issues.append(f"{prev.get('roman', '?')}→{curr.get('roman', '?')}: parallel 5th")
+                    if vlq.parallelOctave():
+                        has_parallel_octave = True
+                        issues.append(f"{prev.get('roman', '?')}→{curr.get('roman', '?')}: parallel octave")
+                    mt = vlq.motionType()
+                    if str(mt) in ("MotionType.contrary", "contrary"):
+                        has_contrary = True
+                except Exception:
+                    continue
+
+            if has_contrary and not has_parallel_fifth and not has_parallel_octave:
+                total_score += 2
+            elif has_contrary:
+                total_score += 1
+            if has_parallel_fifth or has_parallel_octave:
+                total_score -= 1
+
+        normalized = max(0, min(100, int((total_score / max(1, max_score)) * 100))) if max_score else 50
+        return {"score": normalized, "issues": issues}
+
     async def execute(self, **kwargs) -> PluginResult:
         try:
             key = kwargs.get("key", "C Major")
@@ -212,6 +267,7 @@ class ChordGeneratorPlugin(Plugin):
                 else:
                     chords.append({"roman": roman, "name": "?", "notes": [], "quality": ""})
 
+            vl = self._score_voice_leading(chords)
             return PluginResult(
                 success=True,
                 data={
@@ -220,6 +276,7 @@ class ChordGeneratorPlugin(Plugin):
                     "mood": mood.lower(),
                     "genre": genre,
                     "length": len(chords),
+                    "voice_leading": vl,
                 },
             )
         except Exception as e:

@@ -58,11 +58,17 @@ export interface ProgressionChord {
   quality: string;
 }
 
+export interface VoiceLeading {
+  score: number;
+  issues: string[];
+}
+
 export interface TheoryProgression {
   key: string;
   chords: ProgressionChord[];
   mood: string;
   genre: string;
+  voice_leading?: VoiceLeading;
 }
 
 export interface SavedProgression {
@@ -109,3 +115,14 @@ export interface Project {
 }
 
 export type TheoryResult = TheoryScale | TheoryChord | TheoryInterval | TheoryProgression;
+
+export interface SearchResult {
+  id: number;
+  source_type: 'idea' | 'sample' | 'project';
+  subtype: string;
+  name: string;
+  key: string | null;
+  mood: string | null;
+  genre: string | null;
+  created_at: string;
+}

@@ -95,6 +95,8 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-06 | Phase C2 — Project Anchor inline editing | Done — Inline editing for project name, BPM, key, scale via click-to-edit with InlineEdit generic pattern. FL Studio Live Sync stub badge. New Project dialog now includes BPM/key/scale fields. Committed (9ee71b4).
 | 2026-06-06 | Phase C3-5 — Chord Pads, Music Theory panel, Sample Analysis panel | Done — ChordPads with Web Audio API playback (triangle osc), drag-to-reorder via pointer events, Save/MIDI/Clear buttons. MusicTheoryPanel with 5 compact tabs (Scale, Chord, Interval, Progressions, Generator), onProgressionGenerated callback feeds ChordPads. SampleAnalysisPanel with drag-drop upload, BPM range, result cards, Apply to Project. Dashboard wired with progression state flow. 109 backend tests pass. Committed (bc23f42).
 | 2026-06-06 | Phase C6 — Library modal, old routing removed, cleanup | Done — LibraryModal as overlay (triggered from TopBar). Old page files deleted (MusicTheory.tsx, Samples.tsx, Library.tsx, AiStudio.tsx, __init__.ts). Layout.tsx stripped of sidebar — dashboard is the only route. App.tsx reduced to single route. Frontend builds clean. Committed.
+| 2026-06-06 | Phase D1-D2 — Global Search (Ctrl+K) | Done — `GET /api/search/` endpoint in `backend/app/api/search.py` + `backend/app/db/search.py`. Searches ideas (name, key, mood, genre, data), projects (name, key). Frontend SearchOverlay component with Ctrl+K/Cmd+K keyboard listener, 300ms debounced input, grouped results by source type, arrow key navigation, Enter/click to select. 7 new tests (116 total). Committed.
+| 2026-06-06 | Phase D3 — Voice-Leading Scoring | Done — `_score_voice_leading()` method in `plugins/chord_generator/plugin.py`. Uses music21 `VoiceLeadingQuartet` to evaluate adjacent chord transitions: penalizes parallel 5ths/octaves (-1 each), rewards contrary motion (+1-2). Normalized to 0-100 score. Added `voice_leading` field to chord generator output. Frontend displays VL badge on generated progressions (green ≥70, yellow ≥40, red <40). All 116 tests pass.
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**
@@ -105,6 +107,8 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - [x] **Project Concept** — projects table + arrangements table + CRUD API + session persistence
 - [x] **Sample Analyzer Upgrade** — multi-algo key ensemble, confidence, edge cases, Apply button
 - [x] **Dashboard (bento grid)** — full implementation: Project Anchor inline editing, Music Theory panel, Chord Pads (Web Audio + drag), Sample Analysis panel, Library modal, Co-Producer Chat stub
+- [x] **Global Search** — `GET /api/search/` endpoint + Ctrl+K SearchOverlay with keyboard navigation
+- [x] **Voice-Leading Scoring** — music21 VoiceLeadingQuartet scoring on generated progressions
 - [ ] AI Studio (chat + analysis + composition assistant)
 
 ## v0.1 Build Plan (5 phases, 23 tasks)
@@ -112,7 +116,7 @@ See `plan-v0.1-review.md` for full details:
 - **Phase A** — Foundation: Project concept ✅, Ideas migration ✅, state management ✅
 - **Phase B** — Sample Analyzer Upgrade: Multi-algo key, confidence, edge cases ✅
 - **Phase C** — Dashboard: Bento grid scaffold ✅, C2-C6 all done ✅
-- **Phase D** — Search & Voice Leading: Ctrl+K, voice-leading scoring, polish
+- **Phase D** — Search & Voice Leading: Global search endpoint + Ctrl+K overlay ✅, voice-leading scoring ✅, (D4-D6: error handling, frontend tests, stub cleanup — remaining)
 - **Phase E** — AI Studio: Groq provider, chat endpoint, wire UI (last)
 
 ## Infrastructure Status
@@ -136,7 +140,7 @@ See `plan-v0.1-review.md` for full details:
 - [x] Projects API (POST/GET/PUT/DELETE + /last session persistence + arrangements auto-create)
 - [x] Library page (sortable table with delete)
 - [x] Save button wired in Music Theory page
-- [x] Backend tests (109 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas)
+- [x] Backend tests (116 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas, search)
 - [x] Research Topic 1 — Project-based tool patterns
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)
@@ -153,12 +157,13 @@ See `plan-v0.1-review.md` for full details:
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. ~~Project concept (projects table, API, session persistence) — Phase A1 ✅~~
-2. ~~Idea Library migration (progressions → ideas table) — Phase A2 ✅~~
-3. ~~Frontend state management (projectContext.tsx + useApi hook) — Phase A3 ✅~~
-4. ~~Sample Analyzer upgrade (multi-algo key, confidence, edge cases) — Phase B ✅~~
-5. ~~Dashboard implementation (bento grid, Project Anchor, Chord Pads) — Phase C1 ✅~~
-6. ~~Project Anchor inline editing, Chord Pads Web Audio, absorb Music Theory + Samples, remove old routes — Phase C2-C6 ✅~~
-7. Global search (Ctrl+K overlay) — Phase D1-D2
-8. Voice-leading scoring — Phase D3
-9. AI Studio integration — Phase E (last)
+1. ~~Project concept — Phase A1 ✅~~
+2. ~~Ideas migration — Phase A2 ✅~~
+3. ~~Frontend state — Phase A3 ✅~~
+4. ~~Sample Analyzer upgrade — Phase B ✅~~
+5. ~~Dashboard scaffold — Phase C1 ✅~~
+6. ~~Project Anchor + Chord Pads + Music Theory + Samples + Library — Phase C2-C6 ✅~~
+7. ~~Search tab removal + sequential playback ✅~~
+8. ~~Global Search (Ctrl+K) — Phase D1-D2 ✅~~
+9. ~~Voice-Leading Scoring — Phase D3 ✅~~
+10. AI Studio integration — Phase E (last)

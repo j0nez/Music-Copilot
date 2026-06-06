@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProject } from "../store/projectContext";
 import MusicTheoryPanel from "../components/MusicTheoryPanel";
 import ChordPads from "../components/ChordPads";
 import SampleAnalysisPanel from "../components/SampleAnalysisPanel";
 import LibraryModal from "../components/LibraryModal";
+import SearchOverlay from "../components/SearchOverlay";
 import type { ProgressionChord } from "../types";
 
 const NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const [showNewProject, setShowNewProject] = useState(false);
   const [chordPads, setChordPads] = useState<ProgressionChord[]>([]);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const handleProgressionGenerated = (progression: { chords: ProgressionChord[] }) => {
     setChordPads(progression.chords);
@@ -28,8 +30,25 @@ export default function Dashboard() {
     setChordPads(chords);
   };
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   return (
     <div className="h-full flex flex-col gap-4">
+      {searchOpen && (
+        <SearchOverlay
+          onClose={() => setSearchOpen(false)}
+          onSelectIdea={() => setLibraryOpen(true)}
+        />
+      )}
       {libraryOpen && <LibraryModal onClose={() => setLibraryOpen(false)} />}
 
       {/* TopBar */}
@@ -37,6 +56,7 @@ export default function Dashboard() {
         projectName={project?.name ?? null}
         onNewProject={() => setShowNewProject(true)}
         onOpenLibrary={() => setLibraryOpen(true)}
+        onSearchOpen={() => setSearchOpen(true)}
       />
 
       {/* Main area: left 40% | right 60% */}
@@ -110,10 +130,12 @@ function TopBar({
   projectName,
   onNewProject,
   onOpenLibrary,
+  onSearchOpen,
 }: {
   projectName: string | null;
   onNewProject: () => void;
   onOpenLibrary: () => void;
+  onSearchOpen: () => void;
 }) {
   return (
     <div className="flex items-center gap-4 px-4 py-3 bg-surface-800/50 rounded-xl border border-surface-700/50 shrink-0">
@@ -125,7 +147,7 @@ function TopBar({
 
       <div className="flex-1" />
 
-      <button className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-surface-700/50">
+      <button onClick={onSearchOpen} className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-surface-700/50">
         Ctrl+K Search
       </button>
       <button onClick={onOpenLibrary} className="text-xs text-gray-400 hover:text-white transition-colors px-3 py-1 rounded border border-surface-700/50 hover:border-surface-600">
