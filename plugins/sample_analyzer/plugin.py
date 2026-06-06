@@ -2,7 +2,7 @@ import logging
 from collections import Counter
 from pathlib import Path
 
-import librosa.feature.rhythm
+import librosa
 import numpy as np
 from deeprhythm import DeepRhythmPredictor
 from music21 import note, stream

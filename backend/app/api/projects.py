@@ -19,9 +19,6 @@ logger = logging.getLogger("music_copilot.projects_api")
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-CREATE_FIELDS = {"name", "bpm", "key", "scale"}
-
-
 @router.post("/")
 async def api_create_project(payload: dict):
     name = str(payload.get("name", "Untitled Project"))

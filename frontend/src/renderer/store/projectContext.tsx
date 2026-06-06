@@ -71,7 +71,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           setProject(res.data.project);
         }
       } catch {
-        // Revert on failure? For now, silently keep optimistic update.
+        // Revert optimistic update on save failure
+        lastSavedRef.current = '';
+        refreshProject();
       }
     }, 500);
   }, [project]);

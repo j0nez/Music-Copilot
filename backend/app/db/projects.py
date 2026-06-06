@@ -1,4 +1,3 @@
-import json
 import logging
 
 from backend.app.db.database import get_connection

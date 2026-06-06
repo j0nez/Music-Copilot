@@ -373,14 +373,19 @@ The v0.1 upgrade above stays zero-new-deps, but the research identifies paths fo
 | D6 | Stub plugin cleanup | None | ~50 lines | ✅ Done |
 
 ### Phase E — AI Studio (Week 4 — Last)
+
+**ToolBridge architecture:** Every plugin's `input_schema` (Pydantic model) maps to LLM tool-calling JSON schema — no plugin rewrites needed. The AI reads project state as system context and calls plugins as tools via `ToolBridge`. Three new state-mutation endpoints enable the AI to modify project settings and MIDI Player state.
+
 | # | Task | Depends On | Effort |
 |---|------|-----------|--------|
 | E1 | Groq provider configuration + verification | None | ~15 min |
 | E2 | `POST /api/chat` route with project context injection | E1 | ~80 lines |
-| E3 | Wire AI Studio chat UI to real backend | E2 | ~40 lines |
-| E4 | Absorb AI Studio → Co-Producer Chat panel in dashboard | E3 + C1 | ~30 lines |
+| E3 | Build `ToolBridge`: expose plugin `execute()` + `input_schema` as LLM-callable functions | E2 | ~120 lines |
+| E4 | Add `POST /api/project/settings`, `POST /api/player/set-part`, `POST /api/player/clear-part` endpoints | C1 + projects state | ~60 lines |
+| E5 | Wire AI Studio chat UI to real backend + tool calls | E3 + E4 | ~60 lines |
+| E6 | Absorb AI Studio → Co-Producer Chat panel in dashboard, Project Summary collapses to header | E5 + C1 | ~30 lines |
 
-### Total v0.1 Remaining Effort: ~2,700 lines across ~23 tasks
+### Total v0.1 Remaining Effort: ~2,880 lines across ~25 tasks
 
 ---
 

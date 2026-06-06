@@ -100,6 +100,8 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-06 | Phase D4 — Frontend error handling | Done — api.ts refactored with `fetchJson()` helper: all API calls return `ApiResponse` on non-2xx (no throw). `get`, `del` helpers added. Network errors captured as structured `{code, message}`. LoadingSkeleton + RetryButton components created. Frontend builds clean.
 | 2026-06-06 | Phase D5 — Frontend tests | Done — vitest + testing-library setup, 3 test files (api.ts mock fetch, Dashboard smoke test, MusicTheoryPanel tab switching), 13 tests. Added test scripts to package.json. Frontend builds clean.
 | 2026-06-06 | Phase D6 — Stub plugin cleanup | Done — 5 stub plugins added (finish_my_idea, melody_generator, producer_coach, reference_analyzer, splice_library). Each returns a structured "not yet implemented" error with planned phase. All 9 plugins now discoverable via `GET /api/plugins/`. 116 tests pass.
+| 2026-06-06 | Melody/Bassline Generator Plan (v2) | Done — `plan-melody-bassline.md` written with revised layout (45/55 split, Project Summary right column, Preset Chips, Auto defaults, Expression Engine pipeline, swing/humanization, arrangement export endpoint). UI/UX review incorporated. Plan audited against research docs, cross-referenced with codebase. |
+| 2026-06-06 | Batch 1 — Prerequisites | Done — isobar installed (no-deps, pure Python), `requirements.txt` updated. Unused imports removed (4 files). `import librosa` fixed in sample_analyzer. config.py migrated to Pydantic v2 `model_config`. projectContext.tsx revert-on-failure fixed. All 116 tests pass. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**
@@ -148,6 +150,14 @@ See `plan-v0.1-review.md` for full details:
 - [x] Save button wired in Music Theory page
 - [x] Backend tests (116 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas, search)
 - [x] Frontend tests (vitest, 3 files, 13 tests)
+- [x] Melody/Bassline Generator Plan — `plan-melody-bassline.md` written, approved, in implementation
+- [ ] Melody Generator plugin (isobar-based)
+- [ ] Bassline Generator plugin (isobar-based)
+- [ ] Generate Panel (Preset Chips, Auto defaults, loading spinners)
+- [ ] MIDI Player (playhead, per-part regenerate, history, swing slider)
+- [ ] Generation Hub (large overlay, NoteGrid preview, Peek toggle)
+- [ ] Project Summary (right column, Download All MIDI)
+- [ ] Arrangement export endpoint
 - [x] Research Topic 1 — Project-based tool patterns
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)
@@ -164,15 +174,11 @@ See `plan-v0.1-review.md` for full details:
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. ~~Project concept — Phase A1 ✅~~
-2. ~~Ideas migration — Phase A2 ✅~~
-3. ~~Frontend state — Phase A3 ✅~~
-4. ~~Sample Analyzer upgrade — Phase B ✅~~
-5. ~~Dashboard scaffold — Phase C1 ✅~~
-6. ~~Project Anchor + Chord Pads + Music Theory + Samples + Library — Phase C2-C6 ✅~~
-7. ~~Search tab removal + sequential playback ✅~~
-8. ~~Global Search (Ctrl+K) — Phase D1-D2 ✅~~
-9. ~~Voice-Leading Scoring — Phase D3 ✅~~
-10. ~~Voice-Leading Scoring — Phase D3 ✅~~
-11. ~~Frontend Tests — Phase D5 ✅~~
-12. AI Studio integration — Phase E (last)
+1. ✅ Batch 1 — Prerequisites (isobar, bug fixes, imports, Pydantic v2, revert-on-failure)
+2. ⬜ Batch 2 — Backend Plugins (swing, bassline_generator, melody_generator, arrangement endpoint)
+3. ⬜ Batch 3 — Backend Tests
+4. ⬜ Batch 4 — Frontend Components (NoteGrid, GeneratePanel, MIDIPlayer, GenerationHub, etc.)
+5. ⬜ Batch 5 — Dashboard Wiring (45/55 layout, component tree)
+6. ⬜ Batch 6 — Frontend Tests
+7. ⬜ Batch 7 — Documentation
+8. ⬜ Phase E — AI Studio (last)
