@@ -1,68 +1,131 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useProject } from "../store/projectContext";
-import MusicTheoryPanel from "../components/MusicTheoryPanel";
-import ChordPads from "../components/ChordPads";
+import GeneratePanel from "../components/GeneratePanel";
 import SampleAnalysisPanel from "../components/SampleAnalysisPanel";
+import ProjectSummary from "../components/ProjectSummary";
+import MIDIPlayer from "../components/MIDIPlayer";
+import GenerationHub from "../components/GenerationHub";
 import LibraryModal from "../components/LibraryModal";
 import SearchOverlay from "../components/SearchOverlay";
-import type { ProgressionChord } from "../types";
+import ReferencePopover from "../components/ReferencePopover";
+import type { Note, GeneratorSettings, ProgressionChord } from "../types";
+import { exportArrangement, saveProgression } from "../api";
 
-const NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
-
-const SCALE_TYPES = [
-  "Major", "Natural Minor", "Harmonic Minor", "Melodic Minor",
-  "Dorian", "Phrygian", "Lydian", "Mixolydian", "Locrian",
-  "Pentatonic Major", "Pentatonic Minor",
-];
+const DEFAULT_SETTINGS: GeneratorSettings = {
+  key: "Auto", scale: "major", mood: "Auto", genre: "Auto",
+  length: 8, complexity: "Auto",
+};
 
 export default function Dashboard() {
   const { project, createProject, updateProject } = useProject();
   const [showNewProject, setShowNewProject] = useState(false);
-  const [chordPads, setChordPads] = useState<ProgressionChord[]>([]);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [hubOpen, setHubOpen] = useState(false);
 
-  const handleProgressionGenerated = (progression: { chords: ProgressionChord[] }) => {
-    setChordPads(progression.chords);
-  };
+  const [settings, setSettings] = useState<GeneratorSettings>(DEFAULT_SETTINGS);
+  const [chords, setChords] = useState<Note[]>([]);
+  const [melody, setMelody] = useState<Note[]>([]);
+  const [bassline, setBassline] = useState<Note[]>([]);
+  const [swing, setSwing] = useState(0);
 
-  const handleChordPadsReorder = (chords: ProgressionChord[]) => {
-    setChordPads(chords);
-  };
+  const bars = settings.length;
+  const hasChords = chords.length > 0;
+  const hasMelody = melody.length > 0;
+  const hasBassline = bassline.length > 0;
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+  const handleGenerateChords = useCallback((_progChords: ProgressionChord[], notes: Note[], _vl?: number) => {
+    setChords(notes);
   }, []);
 
+  const handleGenerateMelody = useCallback((notes: Note[]) => {
+    setMelody(notes);
+  }, []);
+
+  const handleGenerateBassline = useCallback((notes: Note[]) => {
+    setBassline(notes);
+  }, []);
+
+  const handleRegenerate = useCallback((type: 'chords' | 'melody' | 'bassline') => {
+    if (type === 'chords') { setChords([]); }
+    if (type === 'melody') { setMelody([]); }
+    if (type === 'bassline') { setBassline([]); }
+  }, []);
+
+  const handleExportMidi = useCallback(async () => {
+    if (!project) return;
+    const res = await exportArrangement(chords, melody, bassline, project.bpm, {
+      chords: true, melody: true, bassline: true,
+    });
+    if (res.success && res.data) {
+      window.open(res.data.download_url, '_blank');
+    }
+  }, [chords, melody, bassline, project]);
+
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault(); setSearchOpen(true); return;
+      }
+      if (e.key === "Escape") {
+        if (hubOpen) { setHubOpen(false); return; }
+        if (searchOpen) { setSearchOpen(false); return; }
+        if (libraryOpen) { setLibraryOpen(false); return; }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (!hasChords) {
+          (document.querySelector('[data-gen="chords"]') as HTMLButtonElement)?.click();
+        } else if (!hasMelody) {
+          (document.querySelector('[data-gen="melody"]') as HTMLButtonElement)?.click();
+        } else if (!hasBassline) {
+          (document.querySelector('[data-gen="bassline"]') as HTMLButtonElement)?.click();
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "M") {
+        e.preventDefault(); handleExportMidi();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        if (hasChords) {
+          const name = `Chords - ${project?.key ?? '?'} - ${settings.mood} - ${bars} bars`;
+          saveProgression(
+            project?.key ?? 'C', settings.mood !== 'Auto' ? settings.mood : null,
+            settings.genre !== 'Auto' ? settings.genre : null,
+            [],
+            { project_id: project?.id, name },
+          );
+        }
+      }
+    }
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [hubOpen, searchOpen, libraryOpen, hasChords, hasMelody, hasBassline, handleExportMidi, project, settings, bars]);
+
   return (
-    <div className="h-full flex flex-col gap-4">
-      {searchOpen && (
-        <SearchOverlay
-          onClose={() => setSearchOpen(false)}
-          onSelectIdea={() => setLibraryOpen(true)}
+    <div className="h-full flex flex-col gap-3 p-3">
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onSelectIdea={() => setLibraryOpen(true)} />}
+      {libraryOpen && <LibraryModal onClose={() => setLibraryOpen(false)} />}
+      {hubOpen && (
+        <GenerationHub
+          chords={chords} melody={melody} bassline={bassline}
+          bpm={project?.bpm ?? 120} bars={bars}
+          open={hubOpen} onClose={() => setHubOpen(false)}
         />
       )}
-      {libraryOpen && <LibraryModal onClose={() => setLibraryOpen(false)} />}
 
-      {/* TopBar */}
       <TopBar
         projectName={project?.name ?? null}
         onNewProject={() => setShowNewProject(true)}
         onOpenLibrary={() => setLibraryOpen(true)}
         onSearchOpen={() => setSearchOpen(true)}
+        onHubOpen={() => setHubOpen(true)}
+        hasAny={hasChords || hasMelody || hasBassline}
       />
 
-      {/* Main area: left 40% | right 60% */}
-      <div className="flex-1 flex gap-4 min-h-0">
-        {/* Left column: Project Anchor + Music Theory */}
-        <div className="w-2/5 flex flex-col gap-4 min-h-0">
+      <div className="flex-1 flex gap-3 min-h-0">
+        {/* Left column 45% */}
+        <div className="w-[45%] flex flex-col gap-3 min-h-0 overflow-y-auto">
           <ProjectAnchor
             project={project}
             showNewProject={showNewProject}
@@ -71,45 +134,52 @@ export default function Dashboard() {
             updateProject={updateProject}
           />
           {project ? (
-            <Panel title="Music Theory" className="flex-1 min-h-0">
-              <MusicTheoryPanel onProgressionGenerated={handleProgressionGenerated} />
+            <Panel title="Generate">
+              <div className="p-3">
+                <GeneratePanel
+                  settings={settings}
+                  onChange={setSettings}
+                  onGenerateChords={handleGenerateChords}
+                  onGenerateMelody={handleGenerateMelody}
+                  onGenerateBassline={handleGenerateBassline}
+                  onPushHistory={() => {}}
+                  disabled={false}
+                />
+              </div>
             </Panel>
           ) : (
-            <Panel title="Music Theory" className="flex-1 min-h-0">
-              <div className="flex items-center justify-center h-full text-gray-600 text-xs">
+            <Panel title="Generate">
+              <div className="flex items-center justify-center h-20 text-gray-600 text-xs">
                 Create a project first
               </div>
             </Panel>
           )}
+          <Panel title="Sample Analysis">
+            <SampleAnalysisPanel />
+          </Panel>
         </div>
 
-        {/* Right column: Co-Producer Chat (hero) */}
-        <div className="flex-1 min-h-0">
-          <Panel title="Co-Producer" className="h-full">
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-500">
-              <span className="text-3xl">💬</span>
-              <p className="text-sm">Coming soon &mdash; AI-powered production assistant</p>
-              <div className="flex gap-2 mt-2">
-                <Chip label="Producer Chat" />
-                <Chip label="Why Does This Sound Good?" />
-                <Chip label="Finish My Idea" />
-              </div>
-            </div>
+        {/* Right column 55% */}
+        <div className="w-[55%] min-h-0">
+          <Panel title="Project Summary" className="h-full">
+            <ProjectSummary
+              project={project}
+              chords={chords} melody={melody} bassline={bassline}
+              solo={{ chords: true, melody: true, bassline: true }}
+              swing={swing} onSwingChange={setSwing}
+            />
           </Panel>
         </div>
       </div>
 
-      {/* Bottom row: 3 equal columns */}
-      <div className="h-44 flex gap-4 shrink-0">
-        <Panel title="Chord Pads" className="flex-1">
-          <ChordPads
-            progression={chordPads}
-            onReorder={handleChordPadsReorder}
-            onClear={() => setChordPads([])}
+      {/* Bottom row */}
+      <div className="h-52 flex gap-3 shrink-0">
+        <Panel title="MIDI Player" className="flex-1">
+          <MIDIPlayer
+            chords={chords} melody={melody} bassline={bassline}
+            bpm={project?.bpm ?? 120} bars={bars}
+            onRegenerate={handleRegenerate}
           />
-        </Panel>
-        <Panel title="Sample Analysis" className="flex-1">
-          <SampleAnalysisPanel />
         </Panel>
         <Panel title="Session Notes" className="flex-1">
           <div className="flex flex-col h-full p-2">
@@ -126,16 +196,10 @@ export default function Dashboard() {
 
 /* ── TopBar ─────────────────────── */
 
-function TopBar({
-  projectName,
-  onNewProject,
-  onOpenLibrary,
-  onSearchOpen,
-}: {
+function TopBar({ projectName, onNewProject, onOpenLibrary, onSearchOpen, onHubOpen, hasAny }: {
   projectName: string | null;
-  onNewProject: () => void;
-  onOpenLibrary: () => void;
-  onSearchOpen: () => void;
+  onNewProject: () => void; onOpenLibrary: () => void; onSearchOpen: () => void;
+  onHubOpen: () => void; hasAny: boolean;
 }) {
   return (
     <div className="flex items-center gap-4 px-4 py-3 bg-surface-800/50 rounded-xl border border-surface-700/50 shrink-0">
@@ -145,18 +209,26 @@ function TopBar({
       </div>
       <span className="text-xs text-gray-600">v0.1.0</span>
 
+      <div className="flex items-center gap-1 ml-2">
+        <ReferencePopover type="scale" />
+        <ReferencePopover type="chord" />
+        <ReferencePopover type="interval" />
+      </div>
+
       <div className="flex-1" />
 
+      {hasAny && (
+        <button onClick={onHubOpen} className="text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded border border-surface-700/50">
+          Overview
+        </button>
+      )}
       <button onClick={onSearchOpen} className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-surface-700/50">
         Ctrl+K Search
       </button>
       <button onClick={onOpenLibrary} className="text-xs text-gray-400 hover:text-white transition-colors px-3 py-1 rounded border border-surface-700/50 hover:border-surface-600">
         Library
       </button>
-      <button
-        onClick={onNewProject}
-        className="text-xs bg-accent-500/20 text-accent-300 px-3 py-1.5 rounded-lg border border-accent-500/30 hover:bg-accent-500/30 transition-colors"
-      >
+      <button onClick={onNewProject} className="text-xs bg-accent-500/20 text-accent-300 px-3 py-1.5 rounded-lg border border-accent-500/30 hover:bg-accent-500/30 transition-colors">
         {projectName ? "Switch Project" : "New Project"}
       </button>
     </div>
@@ -165,16 +237,19 @@ function TopBar({
 
 /* ── Project Anchor ─────────────── */
 
+const NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+const SCALE_TYPES = [
+  "Major", "Natural Minor", "Harmonic Minor", "Melodic Minor",
+  "Dorian", "Phrygian", "Lydian", "Mixolydian", "Locrian",
+  "Pentatonic Major", "Pentatonic Minor",
+];
+
 const NEW_BPM_DEFAULT = 120;
 const NEW_KEY_DEFAULT = "C";
 const NEW_SCALE_DEFAULT = "Major";
 
-function NewProjectForm({
-  onCreate,
-  onCancel,
-}: {
-  onCreate: (name: string, bpm: number, key: string, scale: string) => void;
-  onCancel: () => void;
+function NewProjectForm({ onCreate, onCancel }: {
+  onCreate: (name: string, bpm: number, key: string, scale: string) => void; onCancel: () => void;
 }) {
   const [name, setName] = useState("");
   const [bpmStr, setBpmStr] = useState(String(NEW_BPM_DEFAULT));
@@ -192,130 +267,67 @@ function NewProjectForm({
   const handleCreate = async () => {
     if (!name.trim() || creating) return;
     setCreating(true);
-    try {
-      await onCreate(name.trim(), parseBpm(bpmStr), key, scale);
-    } finally {
-      setCreating(false);
-    }
+    try { await onCreate(name.trim(), parseBpm(bpmStr), key, scale); }
+    finally { setCreating(false); }
   };
 
   return (
     <div className="p-3 space-y-3">
-      <input
-        autoFocus
-        placeholder="Project name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") handleCreate();
-          if (e.key === "Escape") onCancel();
-        }}
+      <input autoFocus placeholder="Project name" value={name}
+        onChange={e => setName(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") onCancel(); }}
         className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent-500/50"
       />
       <div className="grid grid-cols-3 gap-2">
         <div>
           <label className="text-xs text-gray-500 block mb-1">BPM</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="120"
-            value={bpmStr}
-            onChange={(e) => setBpmStr(e.target.value)}
-            onBlur={() => setBpmStr(String(parseBpm(bpmStr)))}
+          <input type="text" inputMode="numeric" placeholder="120" value={bpmStr}
+            onChange={e => setBpmStr(e.target.value)} onBlur={() => setBpmStr(String(parseBpm(bpmStr)))}
             className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm font-mono text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent-500/50"
           />
         </div>
         <div>
           <label className="text-xs text-gray-500 block mb-1">Key</label>
-          <select
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
+          <select value={key} onChange={e => setKey(e.target.value)}
             className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-accent-500/50"
-          >
-            {NOTES.map((n) => <option key={n}>{n}</option>)}
-          </select>
+          >{NOTES.map(n => <option key={n}>{n}</option>)}</select>
         </div>
         <div>
           <label className="text-xs text-gray-500 block mb-1">Scale</label>
-          <select
-            value={scale}
-            onChange={(e) => setScale(e.target.value)}
+          <select value={scale} onChange={e => setScale(e.target.value)}
             className="w-full rounded bg-surface-900 border border-surface-700 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-accent-500/50"
-          >
-            {SCALE_TYPES.map((s) => <option key={s}>{s}</option>)}
-          </select>
+          >{SCALE_TYPES.map(s => <option key={s}>{s}</option>)}</select>
         </div>
       </div>
       <div className="flex gap-2">
-        <button
-          onClick={handleCreate}
-          disabled={!name.trim() || creating}
+        <button onClick={handleCreate} disabled={!name.trim() || creating}
           className="text-xs bg-accent-500/20 text-accent-300 px-3 py-1.5 rounded border border-accent-500/30 hover:bg-accent-500/30 transition-colors disabled:opacity-50"
-        >
-          {creating ? "Creating..." : "Create"}
-        </button>
-        <button
-          onClick={onCancel}
-          className="text-xs text-gray-500 hover:text-gray-300 px-3 py-1.5 rounded border border-surface-700/50 transition-colors"
-        >
-          Cancel
-        </button>
+        >{creating ? "Creating..." : "Create"}</button>
+        <button onClick={onCancel} className="text-xs text-gray-500 hover:text-gray-300 px-3 py-1.5 rounded border border-surface-700/50 transition-colors">Cancel</button>
       </div>
     </div>
   );
 }
 
-/* ── Inline editable fields ───── */
+/* ── Inline edit ── */
 
-function InlineEdit({
-  value,
-  onSave,
-  renderDisplay,
-  renderInput,
-}: {
-  value: string;
-  onSave: (val: string) => void;
+function InlineEdit({ value, onSave, renderDisplay, renderInput }: {
+  value: string; onSave: (val: string) => void;
   renderDisplay: (val: string, startEdit: () => void) => React.ReactNode;
   renderInput: (val: string, onValChange: (v: string) => void, onCommit: () => void, onCancel: () => void) => React.ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-
-  const startEdit = () => {
-    setDraft(value);
-    setEditing(true);
-  };
-
-  const commit = () => {
-    if (draft.trim() && draft !== value) {
-      onSave(draft.trim());
-    }
-    setEditing(false);
-  };
-
-  const cancel = () => {
-    setDraft(value);
-    setEditing(false);
-  };
-
-  if (editing) {
-    return <>{renderInput(draft, setDraft, commit, cancel)}</>;
-  }
-
+  const startEdit = () => { setDraft(value); setEditing(true); };
+  const commit = () => { if (draft.trim() && draft !== value) onSave(draft.trim()); setEditing(false); };
+  const cancel = () => { setDraft(value); setEditing(false); };
+  if (editing) return <>{renderInput(draft, setDraft, commit, cancel)}</>;
   return <>{renderDisplay(value, startEdit)}</>;
 }
 
-function EditableName({
-  name,
-  onSave,
-}: {
-  name: string;
-  onSave: (v: string) => void;
-}) {
+function EditableName({ name, onSave }: { name: string; onSave: (v: string) => void }) {
   return (
-    <InlineEdit
-      value={name}
-      onSave={onSave}
+    <InlineEdit value={name} onSave={onSave}
       renderDisplay={(val, startEdit) => (
         <div onClick={startEdit} className="group flex items-center gap-2 cursor-pointer">
           <p className="text-sm font-medium text-gray-200 truncate">{val}</p>
@@ -323,14 +335,8 @@ function EditableName({
         </div>
       )}
       renderInput={(val, setVal, commit, cancel) => (
-        <input
-          autoFocus
-          value={val}
-          onChange={(e) => setVal(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commit();
-            if (e.key === "Escape") cancel();
-          }}
+        <input autoFocus value={val} onChange={e => setVal(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") cancel(); }}
           onBlur={commit}
           className="w-full rounded bg-surface-900 border border-accent-500/50 px-2 py-1 text-sm text-gray-200 focus:outline-none"
         />
@@ -339,22 +345,11 @@ function EditableName({
   );
 }
 
-function EditableBpm({
-  bpm,
-  onSave,
-}: {
-  bpm: number;
-  onSave: (v: string) => void;
-}) {
+function EditableBpm({ bpm, onSave }: { bpm: number; onSave: (v: string) => void }) {
   return (
-    <InlineEdit
-      value={String(bpm)}
-      onSave={onSave}
+    <InlineEdit value={String(bpm)} onSave={onSave}
       renderDisplay={(val, startEdit) => (
-        <span
-          onClick={startEdit}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs cursor-pointer hover:border-accent-500/50 transition-colors"
-        >
+        <span onClick={startEdit} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs cursor-pointer hover:border-accent-500/50 transition-colors">
           <span className="text-gray-500">BPM</span>
           <span className="font-mono font-semibold text-accent-300">{val}</span>
           <span className="text-gray-600 text-[10px]">✎</span>
@@ -363,19 +358,10 @@ function EditableBpm({
       renderInput={(val, setVal, commit, cancel) => (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-accent-500/50 text-xs">
           <span className="text-gray-500">BPM</span>
-          <input
-            autoFocus
-            type="number"
-            min={20}
-            max={300}
-            value={val}
-            onChange={(e) => setVal(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commit();
-              if (e.key === "Escape") cancel();
-            }}
-            onBlur={commit}
-            className="w-14 bg-transparent font-mono font-semibold text-accent-300 outline-none"
+          <input autoFocus type="number" min={20} max={300} value={val}
+            onChange={e => setVal(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") cancel(); }}
+            onBlur={commit} className="w-14 bg-transparent font-mono font-semibold text-accent-300 outline-none"
           />
         </span>
       )}
@@ -383,22 +369,11 @@ function EditableBpm({
   );
 }
 
-function EditableKey({
-  keyVal,
-  onSave,
-}: {
-  keyVal: string;
-  onSave: (v: string) => void;
-}) {
+function EditableKey({ keyVal, onSave }: { keyVal: string; onSave: (v: string) => void }) {
   return (
-    <InlineEdit
-      value={keyVal}
-      onSave={onSave}
+    <InlineEdit value={keyVal} onSave={onSave}
       renderDisplay={(val, startEdit) => (
-        <span
-          onClick={startEdit}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs cursor-pointer hover:border-accent-500/50 transition-colors"
-        >
+        <span onClick={startEdit} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs cursor-pointer hover:border-accent-500/50 transition-colors">
           <span className="text-gray-500">Key</span>
           <span className="font-mono font-semibold text-accent-300">{val}</span>
           <span className="text-gray-600 text-[10px]">✎</span>
@@ -407,41 +382,21 @@ function EditableKey({
       renderInput={(val, setVal, commit, cancel) => (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-accent-500/50 text-xs">
           <span className="text-gray-500">Key</span>
-          <select
-            autoFocus
-            value={val}
-            onChange={(e) => setVal(e.target.value)}
-            onBlur={() => commit()}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") cancel();
-              if (e.key === "Enter") commit();
-            }}
+          <select autoFocus value={val} onChange={e => setVal(e.target.value)} onBlur={() => commit()}
+            onKeyDown={e => { if (e.key === "Escape") cancel(); if (e.key === "Enter") commit(); }}
             className="bg-transparent font-mono font-semibold text-accent-300 outline-none"
-          >
-            {NOTES.map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
+          >{NOTES.map(n => <option key={n} value={n}>{n}</option>)}</select>
         </span>
       )}
     />
   );
 }
 
-function EditableScale({
-  scale,
-  onSave,
-}: {
-  scale: string;
-  onSave: (v: string) => void;
-}) {
+function EditableScale({ scale, onSave }: { scale: string; onSave: (v: string) => void }) {
   return (
-    <InlineEdit
-      value={scale}
-      onSave={onSave}
+    <InlineEdit value={scale} onSave={onSave}
       renderDisplay={(val, startEdit) => (
-        <span
-          onClick={startEdit}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs cursor-pointer hover:border-accent-500/50 transition-colors"
-        >
+        <span onClick={startEdit} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-surface-700/50 text-xs cursor-pointer hover:border-accent-500/50 transition-colors">
           <span className="text-gray-500">Scale</span>
           <span className="font-mono font-semibold text-accent-300">{val}</span>
           <span className="text-gray-600 text-[10px]">✎</span>
@@ -450,19 +405,10 @@ function EditableScale({
       renderInput={(val, setVal, commit, cancel) => (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-900/80 border border-accent-500/50 text-xs">
           <span className="text-gray-500">Scale</span>
-          <select
-            autoFocus
-            value={val}
-            onChange={(e) => setVal(e.target.value)}
-            onBlur={() => commit()}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") cancel();
-              if (e.key === "Enter") commit();
-            }}
+          <select autoFocus value={val} onChange={e => setVal(e.target.value)} onBlur={() => commit()}
+            onKeyDown={e => { if (e.key === "Escape") cancel(); if (e.key === "Enter") commit(); }}
             className="bg-transparent font-mono font-semibold text-accent-300 outline-none"
-          >
-            {SCALE_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          >{SCALE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}</select>
         </span>
       )}
     />
@@ -478,18 +424,9 @@ function FlStudioBadge() {
   );
 }
 
-/* ── Project Anchor ─────────────── */
-
-function ProjectAnchor({
-  project,
-  showNewProject,
-  setShowNewProject,
-  onCreateProject,
-  updateProject,
-}: {
+function ProjectAnchor({ project, showNewProject, setShowNewProject, onCreateProject, updateProject }: {
   project: { id: number; name: string; bpm: number; key: string; scale: string } | null;
-  showNewProject: boolean;
-  setShowNewProject: (v: boolean) => void;
+  showNewProject: boolean; setShowNewProject: (v: boolean) => void;
   onCreateProject: (name: string, bpm?: number, key?: string, scale?: string) => Promise<unknown>;
   updateProject: (updates: Partial<{ name: string; bpm: number; key: string; scale: string }>) => Promise<void>;
 }) {
@@ -498,10 +435,7 @@ function ProjectAnchor({
       <Panel title="Project">
         {showNewProject ? (
           <NewProjectForm
-            onCreate={async (name, bpm, key, scale) => {
-              await onCreateProject(name, bpm, key, scale);
-              setShowNewProject(false);
-            }}
+            onCreate={async (name, bpm, key, scale) => { await onCreateProject(name, bpm, key, scale); setShowNewProject(false); }}
             onCancel={() => setShowNewProject(false)}
           />
         ) : (
@@ -513,28 +447,15 @@ function ProjectAnchor({
       </Panel>
     );
   }
-
   return (
     <Panel title="Project">
       <div className="p-3 space-y-2">
-        <EditableName
-          name={project.name}
-          onSave={(v) => updateProject({ name: v })}
-        />
+        <EditableName name={project.name} onSave={v => updateProject({ name: v })} />
         <FlStudioBadge />
         <div className="flex gap-2 flex-wrap items-center">
-          <EditableBpm
-            bpm={project.bpm}
-            onSave={(v) => updateProject({ bpm: parseInt(v, 10) || 120 })}
-          />
-          <EditableKey
-            keyVal={project.key}
-            onSave={(v) => updateProject({ key: v })}
-          />
-          <EditableScale
-            scale={project.scale}
-            onSave={(v) => updateProject({ scale: v })}
-          />
+          <EditableBpm bpm={project.bpm} onSave={v => updateProject({ bpm: parseInt(v, 10) || 120 })} />
+          <EditableKey keyVal={project.key} onSave={v => updateProject({ key: v })} />
+          <EditableScale scale={project.scale} onSave={v => updateProject({ scale: v })} />
         </div>
       </div>
     </Panel>
@@ -552,13 +473,5 @@ function Panel({ title, className, children }: { title: string; className?: stri
       </div>
       <div className="flex-1 overflow-y-auto">{children}</div>
     </div>
-  );
-}
-
-function Chip({ label }: { label: string }) {
-  return (
-    <span className="px-2.5 py-1 rounded-full bg-surface-700/60 border border-surface-600/40 text-xs text-gray-400">
-      {label}
-    </span>
   );
 }

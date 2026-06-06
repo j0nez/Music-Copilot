@@ -126,3 +126,47 @@ export interface SearchResult {
   genre: string | null;
   created_at: string;
 }
+
+export interface Note {
+  pitch: number;
+  velocity: number;
+  start_beat: number;
+  duration_in_beats: number;
+}
+
+export interface PlayerPart {
+  type: 'chords' | 'melody' | 'bassline';
+  label: string;
+  notes: Note[];
+  color: 'purple' | 'green' | 'blue';
+  solo: boolean;
+}
+
+export interface PlayerState {
+  chords: Note[];
+  melody: Note[];
+  bassline: Note[];
+  solo: { chords: boolean; melody: boolean; bassline: boolean };
+  bpm: number;
+}
+
+export interface GeneratorSettings {
+  key: string;
+  scale: string;
+  mood: string;
+  genre: string;
+  length: number;
+  complexity: string;
+}
+
+export interface GenerationHistory {
+  chords: Note[][];
+  melody: Note[][];
+  bassline: Note[][];
+}
+
+export interface ArrangementExportResult {
+  midi_url: string;
+  download_url: string;
+  filename: string;
+}

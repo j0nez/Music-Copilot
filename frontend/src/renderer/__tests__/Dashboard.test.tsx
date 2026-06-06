@@ -19,6 +19,9 @@ vi.mock("../api", () => ({
   deleteProgression: vi.fn(),
   exportMidi: vi.fn(),
   downloadMidiUrl: vi.fn(() => ""),
+  melodyGenerator: vi.fn(),
+  basslineGenerator: vi.fn(),
+  exportArrangement: vi.fn(),
 }));
 
 describe("Dashboard", () => {
@@ -50,10 +53,10 @@ describe("Dashboard", () => {
       </ProjectProvider>,
     );
 
-    expect(screen.getByText("Music Theory")).toBeInTheDocument();
-    expect(screen.getByText("Co-Producer")).toBeInTheDocument();
-    expect(screen.getByText("Chord Pads")).toBeInTheDocument();
+    expect(screen.getByText("Generate")).toBeInTheDocument();
     expect(screen.getByText("Sample Analysis")).toBeInTheDocument();
+    expect(screen.getAllByText("Project Summary").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("MIDI Player").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Session Notes")).toBeInTheDocument();
   });
 });
