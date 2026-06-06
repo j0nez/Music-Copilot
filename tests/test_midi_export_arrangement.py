@@ -42,7 +42,7 @@ class TestArrangementExport:
         })
         body = resp.json()
         assert body["success"], f"Export failed: {body}"
-        assert "midi_url" in body["data"]
+        assert "download_url" in body["data"]
         assert "filename" in body["data"]
         assert body["data"]["filename"].endswith(".mid")
 
@@ -63,7 +63,7 @@ class TestArrangementExport:
         })
         body = resp.json()
         assert body["success"], f"Export failed: {body}"
-        assert "midi_url" in body["data"]
+        assert "download_url" in body["data"]
         assert body["data"]["filename"].endswith(".mid")
 
     def test_per_part_export(self):
@@ -75,10 +75,24 @@ class TestArrangementExport:
         })
         body = resp.json()
         assert body["success"], f"Per-part export failed: {body}"
-        assert "midi_url" in body["data"]
+        assert "download_url" in body["data"]
 
     def test_per_part_missing_part_returns_error(self):
         resp = client.post(self.PER_PART_URL, json={"notes": []})
         body = resp.json()
         assert not body["success"]
         assert body["error"]["code"] == "INVALID_INPUT"
+
+    def test_export_with_swing_succeeds(self):
+        resp = client.post(self.ARRANGEMENT_URL, json={
+            "chords": [
+                {"pitch": 60, "velocity": 100, "start_beat": 1.0, "duration_in_beats": 0.25},
+                {"pitch": 62, "velocity": 100, "start_beat": 1.25, "duration_in_beats": 0.25},
+            ],
+            "melody": [], "bassline": [], "bpm": 120, "swing": 0.5,
+            "solo": {"chords": True, "melody": False, "bassline": False},
+        })
+        body = resp.json()
+        assert body["success"], f"Swing export failed: {body}"
+        assert "download_url" in body["data"]
+        assert body["data"]["filename"].endswith(".mid")

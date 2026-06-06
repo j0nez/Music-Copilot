@@ -9,6 +9,7 @@ from backend.app.core.config import settings
 from backend.app.services.midi.generator import write_midi
 from backend.app.services.midi.models import MidiFile, MidiNote, MidiTrack
 from backend.app.models.shared import ApiResponse
+from plugins.midi_export.expression.swing import apply_swing
 
 logger = logging.getLogger("music_copilot.arrangement_api")
 
@@ -27,6 +28,7 @@ class ArrangementExportInput(BaseModel):
     melody: list[ArrangementNote] = []
     bassline: list[ArrangementNote] = []
     bpm: int = 120
+    swing: float = 0.0
     solo: dict[str, bool] = {}
 
 
@@ -42,15 +44,26 @@ def _note_to_midi(n: ArrangementNote) -> MidiNote:
 @router.post("/export")
 async def export_arrangement(payload: ArrangementExportInput):
     try:
+        swing_amount = max(0.0, min(1.0, payload.swing or 0.0))
+        chords_swung = apply_swing(
+            [n.model_dump() for n in payload.chords], swing_amount
+        ) if swing_amount > 0 else [n.model_dump() for n in payload.chords]
+        melody_swung = apply_swing(
+            [n.model_dump() for n in payload.melody], swing_amount
+        ) if swing_amount > 0 else [n.model_dump() for n in payload.melody]
+        bassline_swung = apply_swing(
+            [n.model_dump() for n in payload.bassline], swing_amount
+        ) if swing_amount > 0 else [n.model_dump() for n in payload.bassline]
+
         tracks = []
 
         solo_map = payload.solo or {}
         has_solos = any(solo_map.values())
 
         parts = [
-            ("chords", payload.chords, 0),
-            ("melody", payload.melody, 1),
-            ("bassline", payload.bassline, 33),
+            ("chords", chords_swung, 0),
+            ("melody", melody_swung, 1),
+            ("bassline", bassline_swung, 33),
         ]
 
         for part_name, notes, program in parts:
@@ -59,7 +72,7 @@ async def export_arrangement(payload: ArrangementExportInput):
             if not notes:
                 continue
             track = MidiTrack(program=program)
-            track.notes = [_note_to_midi(n) for n in notes]
+            track.notes = [_note_to_midi(ArrangementNote(**n)) for n in notes]
             tracks.append(track)
 
         if not tracks:
@@ -73,7 +86,6 @@ async def export_arrangement(payload: ArrangementExportInput):
         dest = write_midi(midi_file)
 
         return ApiResponse(success=True, data={
-            "midi_url": f"/api/exports/{dest.name}",
             "download_url": f"/api/exports/{dest.name}",
             "filename": dest.name,
         })
@@ -110,7 +122,6 @@ async def export_single_part(payload: dict, bpm: int = 120):
         dest = write_midi(midi_file)
 
         return ApiResponse(success=True, data={
-            "midi_url": f"/api/exports/{dest.name}",
             "download_url": f"/api/exports/{dest.name}",
             "filename": dest.name,
         })

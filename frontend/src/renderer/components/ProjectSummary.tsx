@@ -23,7 +23,7 @@ export default function ProjectSummary({ project, chords, melody, bassline, solo
   async function handleDownloadAll() {
     if (!hasAny) return;
     const bpm = project?.bpm ?? 120;
-    const res = await exportArrangement(chords, melody, bassline, bpm, {
+    const res = await exportArrangement(chords, melody, bassline, bpm, swing, {
       chords: solo.chords,
       melody: solo.melody,
       bassline: solo.bassline,

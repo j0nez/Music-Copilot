@@ -120,14 +120,21 @@ class MelodyGeneratorPlugin(Plugin):
 
 def _map_range(pitches: list[int], pitch_range: tuple[int, int], genre: str, mood: str) -> list[int]:
     lo, hi = pitch_range
-    octave_offset = 0
+    if not pitches:
+        return []
+    p_min = min(pitches)
+    p_max = max(pitches)
+    p_center = (p_min + p_max) / 2
+    range_center = (lo + hi) / 2
+    octave_adjust = 0
     if genre in ("dnb", "drum & bass"):
-        octave_offset += 1
+        octave_adjust += 1
     if mood in ("dark", "melancholic"):
-        octave_offset -= 1
+        octave_adjust -= 1
+    shift = round(range_center - p_center) + octave_adjust * 12
     mapped = []
     for p in pitches:
-        note = p + octave_offset * 12
+        note = p + shift
         note = max(lo, min(hi, note))
         mapped.append(int(note))
     return mapped

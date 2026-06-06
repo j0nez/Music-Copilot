@@ -9,7 +9,8 @@ import LibraryModal from "../components/LibraryModal";
 import SearchOverlay from "../components/SearchOverlay";
 import ReferencePopover from "../components/ReferencePopover";
 import type { Note, GeneratorSettings, ProgressionChord } from "../types";
-import { exportArrangement, saveProgression } from "../api";
+import { SWING_PRESETS } from "../types";
+import { chordGenerator, melodyGenerator, basslineGenerator, exportArrangement, saveProgression } from "../api";
 
 const DEFAULT_SETTINGS: GeneratorSettings = {
   key: "Auto", scale: "major", mood: "Auto", genre: "Auto",
@@ -28,13 +29,17 @@ export default function Dashboard() {
   const [melody, setMelody] = useState<Note[]>([]);
   const [bassline, setBassline] = useState<Note[]>([]);
   const [swing, setSwing] = useState(0);
+  const [progChords, setProgChords] = useState<ProgressionChord[]>([]);
+  const [_vlScore, setVlScore] = useState<number | undefined>(undefined);
 
   const bars = settings.length;
   const hasChords = chords.length > 0;
   const hasMelody = melody.length > 0;
   const hasBassline = bassline.length > 0;
 
-  const handleGenerateChords = useCallback((_progChords: ProgressionChord[], notes: Note[], _vl?: number) => {
+  const handleGenerateChords = useCallback((pchords: ProgressionChord[], notes: Note[], vl?: number) => {
+    setProgChords(pchords);
+    setVlScore(vl);
     setChords(notes);
   }, []);
 
@@ -46,21 +51,54 @@ export default function Dashboard() {
     setBassline(notes);
   }, []);
 
-  const handleRegenerate = useCallback((type: 'chords' | 'melody' | 'bassline') => {
-    if (type === 'chords') { setChords([]); }
-    if (type === 'melody') { setMelody([]); }
-    if (type === 'bassline') { setBassline([]); }
-  }, []);
+  const handleRegenerate = useCallback(async (type: 'chords' | 'melody' | 'bassline') => {
+    const s = settings;
+    const resolvedKey = s.key === 'Auto' ? 'C' : s.key;
+    const resolvedMood = s.mood === 'Auto' ? 'uplifting' : s.mood;
+    const resolvedGenre = s.genre === 'Auto' ? 'house' : s.genre;
+    const resolvedScale = s.scale === 'Auto' ? 'major' : s.scale;
+    const resolvedLength = s.length > 0 ? s.length : 8;
+    const resolvedComplexity = s.complexity === 'Auto' ? 'simple' : s.complexity;
+
+    if (type === 'chords') {
+      const res = await chordGenerator(resolvedKey, resolvedMood, resolvedGenre, resolvedLength, resolvedComplexity);
+      if (res.success && res.data) {
+        setProgChords(res.data.chords);
+        setVlScore(res.data.voice_leading?.score);
+        const notes: Note[] = res.data.chords.map((_, i) => ({
+          pitch: 60, velocity: 100, start_beat: 1 + i * 4, duration_in_beats: 4,
+        }));
+        setChords(notes);
+      }
+    } else if (type === 'melody') {
+      const res = await melodyGenerator(resolvedKey, resolvedScale, resolvedMood, resolvedGenre, resolvedLength, resolvedComplexity);
+      if (res.success && res.data) {
+        setMelody(res.data.notes);
+      }
+    } else if (type === 'bassline') {
+      const res = await basslineGenerator(resolvedKey, resolvedScale, resolvedGenre, resolvedLength);
+      if (res.success && res.data) {
+        setBassline(res.data.notes);
+      }
+    }
+  }, [settings]);
 
   const handleExportMidi = useCallback(async () => {
     if (!project) return;
-    const res = await exportArrangement(chords, melody, bassline, project.bpm, {
+    const res = await exportArrangement(chords, melody, bassline, project.bpm, swing, {
       chords: true, melody: true, bassline: true,
     });
     if (res.success && res.data) {
       window.open(res.data.download_url, '_blank');
     }
-  }, [chords, melody, bassline, project]);
+  }, [chords, melody, bassline, project, swing]);
+
+  useEffect(() => {
+    if (settings.genre !== 'Auto' && swing === 0) {
+      const preset = SWING_PRESETS[settings.genre as keyof typeof SWING_PRESETS];
+      if (preset !== undefined) setSwing(preset);
+    }
+  }, [settings.genre]);
 
   useEffect(() => {
     function handler(e: KeyboardEvent) {
@@ -92,7 +130,7 @@ export default function Dashboard() {
           saveProgression(
             project?.key ?? 'C', settings.mood !== 'Auto' ? settings.mood : null,
             settings.genre !== 'Auto' ? settings.genre : null,
-            [],
+            progChords,
             { project_id: project?.id, name },
           );
         }
@@ -100,7 +138,7 @@ export default function Dashboard() {
     }
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [hubOpen, searchOpen, libraryOpen, hasChords, hasMelody, hasBassline, handleExportMidi, project, settings, bars]);
+  }, [hubOpen, searchOpen, libraryOpen, hasChords, hasMelody, hasBassline, handleExportMidi, project, settings, bars, progChords]);
 
   return (
     <div className="h-full flex flex-col gap-3 p-3">
@@ -178,6 +216,7 @@ export default function Dashboard() {
           <MIDIPlayer
             chords={chords} melody={melody} bassline={bassline}
             bpm={project?.bpm ?? 120} bars={bars}
+            swing={swing} onSwingChange={setSwing}
             onRegenerate={handleRegenerate}
           />
         </Panel>

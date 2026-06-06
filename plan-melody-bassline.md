@@ -1,10 +1,11 @@
 # Melody & Bassline Generator — Implementation Plan
 
-**Status:** All 7 batches implemented. All 13 Section 15 issues fixed. 152 tests passing (129 backend + 23 frontend). 0 TS errors.  
+**Status:** All 7 batches implemented. All 13 Section 15 issues fixed. 154 tests passing (131 backend + 23 frontend). 0 TS errors.  
 **Audit status:** Plan vs implementation cross-reference completed (Section 16). 15 remaining discrepancies found (2 HIGH, 8 MEDIUM, 5 LOW). Fix plan prioritized (Section 17, 5 batches, ~21h estimated).  
-**Batch A (P0) done:** Audio playback (Web Audio API oscillator scheduling) wired in MIDIPlayer. Expression Engine integrated into melody_generator (phrase arc velocity via `_resolve_phrase_multiplier`, articulation gate via `resolve_gate_length`). Same for bassline_generator. DnB offbeat min velocity raised from 78 to 80.  
+**Batch A (P0) done:** Audio playback (Web Audio API oscillator scheduling) wired in MIDIPlayer. Expression Engine integrated into melody_generator and bassline_generator (phrase arc velocity, articulation gate). DnB offbeat min velocity raised from 78 to 80.  
+**Batch B (P1) done:** Swing wired into arrangement export endpoint (swing field on ArrangementExportInput, applied before MIDI conversion). SWING_PRESETS defined in types.ts with genre-based defaults; auto-sets slider when genre changes. _map_range fixed — centering replaces clamping, so energetic mood (72–96) distributes notes across full range instead of clamping all to C5. Bassline octave_jump fixed — alternating root/octave via PSequence replaces chromatic ascent. Trance test added.  
 **Target:** v0.1 MVP completion (Phase A–D done, Phase E deferred)  
-**Last updated:** 2026-06-06 (v5 — Batch A done)
+**Last updated:** 2026-06-06 (v6 — Batch B done)
 
 ---
 
@@ -886,6 +887,8 @@ Batch E (P4) — Polish
 
 **Batch A (DONE):** Audio playback + Expression Engine integration completed 2026-06-06. MIDIPlayer now schedules per-note triangle-wave oscillators via Web Audio API at BPM-based timing, with swing-aware note offsetting. melody_generator and bassline_generator both use `_resolve_phrase_multiplier` for velocity arc and `resolve_gate_length` for articulation-aware note durations. DnB offbeat bass velocity raised to 80.
 
-**Estimated total effort:** ~17h remaining  
-**Estimated batches:** 4 (B–E)  
-**Tests to add:** ~15 (trance pattern, audio playback, swing integration, GenerationHub, NoteGrid, Surprise Me, loading/error states)
+**Batch B (DONE):** Swing + bugfixes completed 2026-06-06. apply_swing() wired into arrangement export (backend). SWING_PRESETS (7 genre defaults) defined in types.ts, auto-fills slider on genre change. _map_range uses centering instead of clamping — energetic mood now spans full 72–96 range. Bassline octave_jump pattern changed from chromatic ascent (PSeries) to root/octave alternation (PSequence). Trance test + swing export test added.
+
+**Estimated total effort:** ~13h remaining  
+**Estimated batches:** 3 (C–E)  
+**Tests to add:** ~13 (GenerationHub, NoteGrid, Surprise Me, loading/error states, preset click → API call)

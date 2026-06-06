@@ -110,6 +110,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-06 | Batch 6 — Frontend Tests | Done — 10 new tests across GeneratePanel, MIDIPlayer, ProjectSummary. 23 frontend tests total. |
 | 2026-06-06 | Batch 7 — Documentation | Done — AGENTS.md updated, plan-v0.1-review.md updated. All 7 batches complete. |
 | 2026-06-06 | Batch A — Audio Playback + Expression Engine | Done — MIDIPlayer: Web Audio API per-note oscillator scheduling with swing. melody_generator/bassline_generator: phrase arc velocity via _resolve_phrase_multiplier, articulation gate via resolve_gate_length. DnB offbeat velocity 78→80. All 152 tests pass. |
+| 2026-06-06 | Batch B — Swing + Bugfixes | Done — Swing wired into arrangement export (swing field on input, applied before MIDI conversion). SWING_PRESETS (7 genre defaults) in types.ts, auto-fills slider on genre change. _map_range centering replaces clamping (energetic mood distributes across 72–96). Bassline octave_jump fixed: PSequence([0,7],repeat=-1) alternates root/octave instead of chromatic ascent. Trance + swing export tests added. 154 tests pass. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**
@@ -167,12 +168,12 @@ See `plan-v0.1-review.md` for full details:
 - [x] Frontend tests (vitest, 6 files, 23 tests)
 - [x] Melody/Bassline Generator Plan — `plan-melody-bassline.md` written, approved, in implementation
 - [x] Melody Generator plugin (isobar-based, phrase arc velocity, articulation gate)
-- [x] Bassline Generator plugin (isobar-based, phrase arc velocity, articulation gate, DnB offbeat ≥80)
+- [x] Bassline Generator plugin (isobar-based, phrase arc velocity, articulation gate, DnB offbeat ≥80, trance octave_jump ✅)
 - [x] Generate Panel (Preset Chips, Auto defaults, loading spinners)
-- [x] MIDI Player (playhead, per-part regenerate, history, swing slider, **Web Audio API playback**)
+- [x] MIDI Player (playhead, per-part regenerate, history, swing slider, **Web Audio API playback**, swing-aware scheduling ✅)
 - [x] Generation Hub (large overlay, NoteGrid preview, Peek toggle)
-- [x] Project Summary (right column, Download All MIDI)
-- [x] Arrangement export endpoint
+- [x] Project Summary (right column, Download All MIDI, swing wired ✅)
+- [x] Arrangement export endpoint (swing applied to exported MIDI ✅)
 - [x] Research Topic 1 — Project-based tool patterns
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)

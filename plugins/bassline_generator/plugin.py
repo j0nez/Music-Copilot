@@ -1,7 +1,7 @@
 import itertools
 import logging
 
-from isobar import PDegree, PRandomWalk, PSeries, Scale
+from isobar import PDegree, PRandomWalk, PSequence, Scale
 from pydantic import BaseModel
 
 from backend.app.services.midi.theory import _resolve_phrase_multiplier, resolve_gate_length
@@ -118,7 +118,7 @@ def _build_degree_pattern(pattern_type: str, total: int):
     if pattern_type == "walking":
         return PRandomWalk([0, 1, 2, 3, 4, 5, 6, 7], min=0, max=7)
     elif pattern_type == "octave_jump":
-        return PSeries(0, 1, total)
+        return PSequence([0, 7], repeats=-1)
     elif pattern_type == "syncopated":
         return PRandomWalk([0, 2, 4, 5, 7], min=0, max=7)
     else:

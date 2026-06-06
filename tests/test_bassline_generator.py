@@ -58,6 +58,25 @@ async def test_bassline_syncopated():
     assert len(notes) >= 8
 
 
+async def test_bassline_trance_octave_jump():
+    discover_plugins()
+    result = await execute_plugin(
+        "bassline_generator",
+        key="A Minor",
+        scale="Natural Minor",
+        genre="trance",
+        length=4,
+    )
+    assert result.success, f"trance failed: {result.error}"
+    notes = result.data["notes"]
+    assert len(notes) > 0
+    for n in notes:
+        assert 24 <= n["pitch"] <= 72
+    pitches = [n["pitch"] for n in notes[:8]]
+    unique_pitches = set(p % 12 for p in pitches)
+    assert len(unique_pitches) <= 3, f"octave_jump should stay near root/octave: {pitches}"
+
+
 async def test_bassline_edge_cases():
     discover_plugins()
     result = await execute_plugin(

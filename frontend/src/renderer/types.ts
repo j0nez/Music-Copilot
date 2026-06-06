@@ -166,7 +166,16 @@ export interface GenerationHistory {
 }
 
 export interface ArrangementExportResult {
-  midi_url: string;
   download_url: string;
   filename: string;
 }
+
+export const SWING_PRESETS: Record<string, number> = {
+  house: 0.30,
+  techno: 0.20,
+  dnb: 0.40,
+  'drum & bass': 0.40,
+  'deep house': 0.35,
+  trance: 0.15,
+  'melodic techno': 0.25,
+};

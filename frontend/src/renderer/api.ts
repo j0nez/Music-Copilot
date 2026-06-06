@@ -1,6 +1,8 @@
 import type {
   ApiResponse,
+  ArrangementExportResult,
   MidiExportResult,
+  Note,
   ProgressionChord,
   Project,
   SampleAnalysisResult,
@@ -193,8 +195,8 @@ export async function melodyGenerator(
   genre: string,
   length = 8,
   complexity = 'simple',
-): Promise<ApiResponse<{ notes: import('./types').Note[]; length_bars: number }>> {
-  return post('/plugins/melody_generator/execute', {
+): Promise<ApiResponse<{ notes: Note[]; length_bars: number }>> {
+  return post<{ notes: Note[]; length_bars: number }>('/plugins/melody_generator/execute', {
     key, scale, mood, genre, length, complexity,
   });
 }
@@ -205,20 +207,21 @@ export async function basslineGenerator(
   genre: string,
   length = 8,
   pattern = 'auto',
-): Promise<ApiResponse<{ notes: import('./types').Note[]; length_bars: number }>> {
-  return post('/plugins/bassline_generator/execute', {
+): Promise<ApiResponse<{ notes: Note[]; length_bars: number }>> {
+  return post<{ notes: Note[]; length_bars: number }>('/plugins/bassline_generator/execute', {
     key, scale, genre, length, pattern,
   });
 }
 
 export async function exportArrangement(
-  chords: import('./types').Note[],
-  melody: import('./types').Note[],
-  bassline: import('./types').Note[],
+  chords: Note[],
+  melody: Note[],
+  bassline: Note[],
   bpm = 120,
+  swing = 0,
   solo = { chords: true, melody: true, bassline: true },
-): Promise<ApiResponse<import('./types').ArrangementExportResult>> {
-  return post<import('./types').ArrangementExportResult>('/arrangement/export', {
-    chords, melody, bassline, bpm, solo,
+): Promise<ApiResponse<ArrangementExportResult>> {
+  return post<ArrangementExportResult>('/arrangement/export', {
+    chords, melody, bassline, bpm, swing, solo,
   });
 }
