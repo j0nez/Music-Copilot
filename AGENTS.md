@@ -35,7 +35,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation (Build)
-- **Current Focus**: Phase D complete (Search, Voice Leading, error handling, stub cleanup). Only D5 (frontend tests) and Phase E (AI Studio) remain.
+- **Current Focus**: Phase D complete (including D5 frontend tests). Only Phase E (AI Studio) remains.
 - **Recent Decisions**: 2026-06-05 — Full codebase audit + v0.1 forward plan written (`plan-v0.1-review.md`). 5 phases, 23 tasks, ~2,700 lines. AI Studio moved to last (Phase E). Sample Analyzer upgrade added: 5-algorithm key ensemble (zero new deps), confidence scores, edge-case robustness, "Apply to Project" button. Basic-Pitch (Apache-2.0, ONNX, ~50MB) identified as Phase 2 unlock for actual chord detection from audio. musicnn/CREMA/Omnizart deferred to Phase 3+.
 - **Recent Decisions**: 2026-06-05 — FL Studio integration research completed (docs/research/fl-studio-integration.md). Splice Bridge case study added as section 10 — reverse-engineered VST3/AU plugin architecture, 3 generations (Bridge 2021, native DAW integrations 2025-2026, Sounds Plugin 2026 beta), comparison to Music Copilot's proposed VST3 bridge. Key finding: keep skip-Tier-4 strategy; if built, use JUCE + named pipes, thin plugin. 29 references.
 - **Recent Decisions**: 2026-06-05 — Model Recommendations research completed (docs/research/model-recommendations.md). Evaluated 20+ tools across 5 categories. Confirmed deeprhythm + music21 as SOTA offline BPM/key. Recommended Groq (free tier) as primary LLM provider. ACE-Step 1.5 (Apache-2.0) best for AI music generation. Procedural (music21 + arvo) preferred over ML for Phase 1-3. Essentia flagged for AGPL license issue. 20 references.
@@ -98,6 +98,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-06 | Phase D1-D2 — Global Search (Ctrl+K) | Done — `GET /api/search/` endpoint in `backend/app/api/search.py` + `backend/app/db/search.py`. Searches ideas (name, key, mood, genre, data), projects (name, key). Frontend SearchOverlay component with Ctrl+K/Cmd+K keyboard listener, 300ms debounced input, grouped results by source type, arrow key navigation, Enter/click to select. 7 new tests (116 total). Committed.
 | 2026-06-06 | Phase D3 — Voice-Leading Scoring | Done — `_score_voice_leading()` method in `plugins/chord_generator/plugin.py`. Uses music21 `VoiceLeadingQuartet` to evaluate adjacent chord transitions: penalizes parallel 5ths/octaves (-1 each), rewards contrary motion (+1-2). Normalized to 0-100 score. Added `voice_leading` field to chord generator output. Frontend displays VL badge on generated progressions (green ≥70, yellow ≥40, red <40). All 116 tests pass.
 | 2026-06-06 | Phase D4 — Frontend error handling | Done — api.ts refactored with `fetchJson()` helper: all API calls return `ApiResponse` on non-2xx (no throw). `get`, `del` helpers added. Network errors captured as structured `{code, message}`. LoadingSkeleton + RetryButton components created. Frontend builds clean.
+| 2026-06-06 | Phase D5 — Frontend tests | Done — vitest + testing-library setup, 3 test files (api.ts mock fetch, Dashboard smoke test, MusicTheoryPanel tab switching), 13 tests. Added test scripts to package.json. Frontend builds clean.
 | 2026-06-06 | Phase D6 — Stub plugin cleanup | Done — 5 stub plugins added (finish_my_idea, melody_generator, producer_coach, reference_analyzer, splice_library). Each returns a structured "not yet implemented" error with planned phase. All 9 plugins now discoverable via `GET /api/plugins/`. 116 tests pass.
 
 ## Feature Status (v0.1)
@@ -113,6 +114,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - [x] **Voice-Leading Scoring** — music21 VoiceLeadingQuartet scoring on generated progressions
 - [x] **Frontend Error Handling** — `fetchJson()` helper, typed errors, LoadingSkeleton, RetryButton
 - [x] **Stub Plugin Cleanup** — 5 stubs with "not yet implemented" responses
+- [x] **Frontend Tests** — vitest + testing-library, 3 test files (api, Dashboard, MusicTheoryPanel), 13 tests
 - [ ] AI Studio (chat + analysis + composition assistant)
 
 ## v0.1 Build Plan (5 phases, 23 tasks)
@@ -120,7 +122,7 @@ See `plan-v0.1-review.md` for full details:
 - **Phase A** — Foundation: Project concept ✅, Ideas migration ✅, state management ✅
 - **Phase B** — Sample Analyzer Upgrade: Multi-algo key, confidence, edge cases ✅
 - **Phase C** — Dashboard: Bento grid scaffold ✅, C2-C6 all done ✅
-- **Phase D** — Search & Voice Leading: Global search endpoint + Ctrl+K overlay ✅, voice-leading scoring ✅, (D4-D6: error handling, frontend tests, stub cleanup — D4 and D6 done, D5 remaining)
+- **Phase D** — Search & Voice Leading: ✅, frontend tests: ✅, stub cleanup: ✅
 - **Phase E** — AI Studio: Groq provider, chat endpoint, wire UI (last)
 
 ## Infrastructure Status
@@ -145,6 +147,7 @@ See `plan-v0.1-review.md` for full details:
 - [x] Library page (sortable table with delete)
 - [x] Save button wired in Music Theory page
 - [x] Backend tests (116 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas, search)
+- [x] Frontend tests (vitest, 3 files, 13 tests)
 - [x] Research Topic 1 — Project-based tool patterns
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)
@@ -170,4 +173,6 @@ See `plan-v0.1-review.md` for full details:
 7. ~~Search tab removal + sequential playback ✅~~
 8. ~~Global Search (Ctrl+K) — Phase D1-D2 ✅~~
 9. ~~Voice-Leading Scoring — Phase D3 ✅~~
-10. AI Studio integration — Phase E (last)
+10. ~~Voice-Leading Scoring — Phase D3 ✅~~
+11. ~~Frontend Tests — Phase D5 ✅~~
+12. AI Studio integration — Phase E (last)
