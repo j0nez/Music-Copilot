@@ -35,7 +35,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation (Build)
-- **Current Focus**: Phase D complete (including D5 frontend tests). Only Phase E (AI Studio) remains.
+- **Current Focus**: All 7 Melody/Bassline Generator batches complete (129 backend tests, 23 frontend tests). Only Phase E (AI Studio) remains.
 - **Recent Decisions**: 2026-06-05 — Full codebase audit + v0.1 forward plan written (`plan-v0.1-review.md`). 5 phases, 23 tasks, ~2,700 lines. AI Studio moved to last (Phase E). Sample Analyzer upgrade added: 5-algorithm key ensemble (zero new deps), confidence scores, edge-case robustness, "Apply to Project" button. Basic-Pitch (Apache-2.0, ONNX, ~50MB) identified as Phase 2 unlock for actual chord detection from audio. musicnn/CREMA/Omnizart deferred to Phase 3+.
 - **Recent Decisions**: 2026-06-05 — FL Studio integration research completed (docs/research/fl-studio-integration.md). Splice Bridge case study added as section 10 — reverse-engineered VST3/AU plugin architecture, 3 generations (Bridge 2021, native DAW integrations 2025-2026, Sounds Plugin 2026 beta), comparison to Music Copilot's proposed VST3 bridge. Key finding: keep skip-Tier-4 strategy; if built, use JUCE + named pipes, thin plugin. 29 references.
 - **Recent Decisions**: 2026-06-05 — Model Recommendations research completed (docs/research/model-recommendations.md). Evaluated 20+ tools across 5 categories. Confirmed deeprhythm + music21 as SOTA offline BPM/key. Recommended Groq (free tier) as primary LLM provider. ACE-Step 1.5 (Apache-2.0) best for AI music generation. Procedural (music21 + arvo) preferred over ML for Phase 1-3. Essentia flagged for AGPL license issue. 20 references.
@@ -55,6 +55,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - **Recent Decisions**: 2026-06-05 — Overall Musical Understanding research completed (docs/research/overall-musical-understanding.md). 9 sections covering: Omnizart (MIT, 1.9k ★, v0.6.3 May 2026 — full polyphonic AMT with 6 transcription modes), MSAF (MIT, 555 ★ — section boundary detection), energy/tension curves from librosa, genre/mood via musicnn (ISC, 704 ★), audio-to-MIDI comparison table, music similarity (Gaia reference + custom librosa approach), MIRFLEX unified extraction framework, 3-layer analysis pipeline architecture, phase-based recommendations. 26 references. Key finding: Omnizart is the biggest Phase 3+ unlock — single `pip install omnizart` gives chord/drum/beat/music/vocal transcription.
 - **Recent Decisions**: 2026-06-05 — Search fallback chain implemented in opencode.json with 4 MCP servers. Order: websearch → Tavily (1k/mo) → Firecrawl (1k/mo) → Open-WebSearch (9 engines) → DuckDuckGo → webfetch. Tavily and Firecrawl use API keys (no CC, configured in opencode.json). Open-WebSearch and DuckDuckGo are zero-config. AGENTS.md now documents the fallback chain as agent instructions.
 - **Recent Decisions**: 2026-06-05 — Search chain verified end-to-end. All 6 tiers confirmed working: (1) websearch delivers results, (2) Tavily remote MCP responds with 5 tools (search, extract, crawl, map, research), (3) Firecrawl remote MCP responds with 13 tools at `/mcp` (corrected from `/v2/mcpp`), (4) Open-WebSearch starts with 9 engines, (5) DuckDuckGo MCP v0.1.1 installed and starts, (6) webfetch fetches URLs. Firecrawl endpoint fixed from `/v2/mcpp` to `/mcp` in opencode.json.
+- **Recent Decisions**: 2026-06-06 — Melody/Bassline Generator implementation completed in 7 batches. Batch 1: isobar + bugfixes. Batch 2: swing post-processor, bassline/melody generator plugins, arrangement export endpoint. Batch 3: 13 new backend tests (129 total). Batch 4: 7 frontend components (NoteGrid, ReferencePopover, ProjectSummary, GeneratePanel, MIDIPlayer, GenerationHub). Batch 5: Dashboard wiring — 45/55 layout replaces old bento grid. Batch 6: 10 new frontend tests (23 total). Batch 7: docs. Only AI Studio (Phase E) remains.
 - **Blockers**: None
 
 ## Task History
@@ -103,6 +104,11 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-06 | Melody/Bassline Generator Plan (v2) | Done — `plan-melody-bassline.md` written with revised layout (45/55 split, Project Summary right column, Preset Chips, Auto defaults, Expression Engine pipeline, swing/humanization, arrangement export endpoint). UI/UX review incorporated. Plan audited against research docs, cross-referenced with codebase. |
 | 2026-06-06 | Batch 1 — Prerequisites | Done — isobar installed (no-deps, pure Python), `requirements.txt` updated. Unused imports removed (4 files). `import librosa` fixed in sample_analyzer. config.py migrated to Pydantic v2 `model_config`. projectContext.tsx revert-on-failure fixed. All 116 tests pass. |
 | 2026-06-06 | Batch 2 — Backend Plugins | Done — swing post-processor (`plugins/midi_export/expression/swing.py`), isobar-based bassline generator (`plugins/bassline_generator/plugin.py`), isobar-based melody generator (`plugins/melody_generator/plugin.py`), arrangement export router (`backend/app/api/arrangement.py` with multi-part + per-part endpoints). All 116 tests pass. |
+| 2026-06-06 | Batch 3 — Backend Tests | Done — 13 new tests (4 melody, 4 bassline, 5 arrangement). 129 total. |
+| 2026-06-06 | Batch 4 — Frontend Components | Done — 7 new components: NoteGrid (SVG piano roll), ReferencePopover, ProjectSummary, GeneratePanel (preset chips + Auto), MIDIPlayer (play/stop, per-part regen), GenerationHub (overlay + Peek). All build clean. |
+| 2026-06-06 | Batch 5 — Dashboard Wiring | Done — 45/55 column split layout. GeneratePanel replaces MusicTheoryPanel. ProjectSummary replaces Co-Producer hero. MIDI Player replaces Chord Pads. Keyboard shortcuts (Ctrl+Enter, Ctrl+Shift+M, Ctrl+S). |
+| 2026-06-06 | Batch 6 — Frontend Tests | Done — 10 new tests across GeneratePanel, MIDIPlayer, ProjectSummary. 23 frontend tests total. |
+| 2026-06-06 | Batch 7 — Documentation | Done — AGENTS.md updated, plan-v0.1-review.md updated. All 7 batches complete. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**
@@ -112,12 +118,19 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - [x] Progression & Melody Library (save, browse, sort — MIDI drag-and-drop stubbed)
 - [x] **Project Concept** — projects table + arrangements table + CRUD API + session persistence
 - [x] **Sample Analyzer Upgrade** — multi-algo key ensemble, confidence, edge cases, Apply button
-- [x] **Dashboard (bento grid)** — full implementation: Project Anchor inline editing, Music Theory panel, Chord Pads (Web Audio + drag), Sample Analysis panel, Library modal, Co-Producer Chat stub
+- [x] **Dashboard (bento grid)** — full implementation: 45/55 layout with Generate Panel, Project Summary, MIDI Player, Sample Analysis, Session Notes. Library modal, Search overlay, keyboard shortcuts.
 - [x] **Global Search** — `GET /api/search/` endpoint + Ctrl+K SearchOverlay with keyboard navigation
 - [x] **Voice-Leading Scoring** — music21 VoiceLeadingQuartet scoring on generated progressions
 - [x] **Frontend Error Handling** — `fetchJson()` helper, typed errors, LoadingSkeleton, RetryButton
 - [x] **Stub Plugin Cleanup** — 5 stubs with "not yet implemented" responses
-- [x] **Frontend Tests** — vitest + testing-library, 3 test files (api, Dashboard, MusicTheoryPanel), 13 tests
+- [x] **Frontend Tests** — vitest + testing-library, 6 test files, 23 tests
+- [x] **Melody Generator** — isobar-based, 2 complexity levels, 5 moods, 7+ genres
+- [x] **Bassline Generator** — isobar-based, 6 genre pattern types
+- [x] **Generate Panel** — Preset Chips, Auto defaults, loading spinners, reference popovers
+- [x] **MIDI Player** — play/stop with playhead, per-part regenerate, swing slider, empty states
+- [x] **Generation Hub** — large overlay, NoteGrid preview, Peek toggle
+- [x] **Project Summary** — right column, parts count, swing slider, Download All MIDI
+- [x] **Arrangement Export** — `POST /api/arrangement/export` with multi-part + per-part endpoints
 - [ ] AI Studio (chat + analysis + composition assistant)
 
 ## v0.1 Build Plan (5 phases, 23 tasks)
@@ -149,16 +162,16 @@ See `plan-v0.1-review.md` for full details:
 - [x] Projects API (POST/GET/PUT/DELETE + /last session persistence + arrangements auto-create)
 - [x] Library page (sortable table with delete)
 - [x] Save button wired in Music Theory page
-- [x] Backend tests (116 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas, search)
-- [x] Frontend tests (vitest, 3 files, 13 tests)
+- [x] Backend tests (129 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas, search, melody generator, bassline generator, arrangement)
+- [x] Frontend tests (vitest, 6 files, 23 tests)
 - [x] Melody/Bassline Generator Plan — `plan-melody-bassline.md` written, approved, in implementation
-- [ ] Melody Generator plugin (isobar-based)
-- [ ] Bassline Generator plugin (isobar-based)
-- [ ] Generate Panel (Preset Chips, Auto defaults, loading spinners)
-- [ ] MIDI Player (playhead, per-part regenerate, history, swing slider)
-- [ ] Generation Hub (large overlay, NoteGrid preview, Peek toggle)
-- [ ] Project Summary (right column, Download All MIDI)
-- [ ] Arrangement export endpoint
+- [x] Melody Generator plugin (isobar-based)
+- [x] Bassline Generator plugin (isobar-based)
+- [x] Generate Panel (Preset Chips, Auto defaults, loading spinners)
+- [x] MIDI Player (playhead, per-part regenerate, history, swing slider)
+- [x] Generation Hub (large overlay, NoteGrid preview, Peek toggle)
+- [x] Project Summary (right column, Download All MIDI)
+- [x] Arrangement export endpoint
 - [x] Research Topic 1 — Project-based tool patterns
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)
@@ -176,10 +189,10 @@ See `plan-v0.1-review.md` for full details:
 
 ## Next Actions
 1. ✅ Batch 1 — Prerequisites (isobar, bug fixes, imports, Pydantic v2, revert-on-failure)
-2. ⬜ Batch 2 — Backend Plugins (swing, bassline_generator, melody_generator, arrangement endpoint)
-3. ⬜ Batch 3 — Backend Tests
-4. ⬜ Batch 4 — Frontend Components (NoteGrid, GeneratePanel, MIDIPlayer, GenerationHub, etc.)
-5. ⬜ Batch 5 — Dashboard Wiring (45/55 layout, component tree)
-6. ⬜ Batch 6 — Frontend Tests
-7. ⬜ Batch 7 — Documentation
+2. ✅ Batch 2 — Backend Plugins (swing, bassline_generator, melody_generator, arrangement endpoint)
+3. ✅ Batch 3 — Backend Tests
+4. ✅ Batch 4 — Frontend Components (NoteGrid, GeneratePanel, MIDIPlayer, GenerationHub, etc.)
+5. ✅ Batch 5 — Dashboard Wiring (45/55 layout, component tree)
+6. ✅ Batch 6 — Frontend Tests
+7. ✅ Batch 7 — Documentation
 8. ⬜ Phase E — AI Studio (last)
