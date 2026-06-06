@@ -89,10 +89,36 @@ export default function ChordPads({
 
   const handlePlayAll = useCallback(() => {
     if (progression.length === 0) return;
-    const allNotes = progression.flatMap((c) => c.notes);
-    playNotes(allNotes, progression.length * 0.8);
-    setPlayingIdx(-1);
-    setTimeout(() => setPlayingIdx(null), progression.length * 800 + 200);
+    stopAll();
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    const gap = 0.8;
+    const duration = 1.2;
+
+    progression.forEach((chord, i) => {
+      const offset = i * gap;
+      chord.notes.forEach((note) => {
+        const freq = noteToFreq(note);
+        if (freq <= 0) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, now + offset);
+        gain.gain.setValueAtTime(0, now + offset);
+        gain.gain.linearRampToValueAtTime(0.15, now + offset + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + offset + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + duration + 0.1);
+        activeOscillators.push(osc);
+      });
+    });
+
+    setPlayingIdx(0);
+    progression.forEach((_, i) => {
+      setTimeout(() => setPlayingIdx(i), i * gap * 1000);
+    });
+    setTimeout(() => setPlayingIdx(null), progression.length * gap * 1000 + 200);
   }, [progression]);
 
   const handleStop = useCallback(() => {

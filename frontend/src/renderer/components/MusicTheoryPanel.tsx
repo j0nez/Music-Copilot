@@ -2,7 +2,7 @@ import { useState } from "react";
 import { chordGenerator as apiChordGenerator, exportMidi as apiExportMidi, saveProgression as apiSaveProgression, theoryEngine } from "../api";
 import type { TheoryChord, TheoryInterval, TheoryProgression, ProgressionChord, TheoryScale } from "../types";
 
-const tabs = ["Scale Generator", "Chord Builder", "Interval Analyzer", "Chord Progressions", "Chord Generator"] as const;
+const tabs = ["Scale Generator", "Chord Builder", "Interval Analyzer", "Progressions"] as const;
 type Tab = (typeof tabs)[number];
 
 const NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
@@ -17,14 +17,6 @@ const CHORD_QUALITIES = [
   "Major", "Minor", "Diminished", "Augmented",
   "Major 7th", "Minor 7th", "Dominant 7th", "Sus2", "Sus4",
 ];
-
-const PROGRESSION_KEYS = [
-  "C Minor", "F Minor", "G Minor", "A Minor",
-  "C Major", "G Major", "D Major",
-];
-
-const MOODS = ["Emotional", "Dark", "Uplifting", "Melancholic", "Energetic"];
-const GENRES = ["Melodic Techno", "House", "Trance", "Techno", "Deep House", "Progressive House"];
 
 export default function MusicTheoryPanel({
   onProgressionGenerated,
@@ -54,11 +46,8 @@ export default function MusicTheoryPanel({
         {activeTab === "Scale Generator" && <ScaleGenerator />}
         {activeTab === "Chord Builder" && <ChordBuilder />}
         {activeTab === "Interval Analyzer" && <IntervalAnalyzer />}
-        {activeTab === "Chord Progressions" && (
-          <ChordProgressions onGenerated={onProgressionGenerated} />
-        )}
-        {activeTab === "Chord Generator" && (
-          <ChordGenerator onGenerated={onProgressionGenerated} />
+        {activeTab === "Progressions" && (
+          <Progressions onGenerated={onProgressionGenerated} />
         )}
       </div>
     </div>
@@ -255,154 +244,7 @@ function IntervalAnalyzer() {
   );
 }
 
-/* ── Tab: Chord Progressions ───── */
-
-function ChordProgressions({ onGenerated }: {
-  onGenerated?: (progression: { key: string; chords: ProgressionChord[]; mood: string; genre: string }) => void;
-}) {
-  const [key, setKey] = useState("A Minor");
-  const [mood, setMood] = useState("Dark");
-  const [genre, setGenre] = useState("Techno");
-  const [result, setResult] = useState<TheoryProgression | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [savedMsg, setSavedMsg] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [midiStyle, setMidiStyle] = useState("block");
-  const [midiVoicing, setMidiVoicing] = useState("close");
-
-  const handleGenerate = async () => {
-    setLoading(true);
-    setResult(null);
-    setSavedMsg(null);
-    setError(null);
-    try {
-      const res = await theoryEngine("progression", { key, mood: mood.toLowerCase(), genre });
-      if (res.success && res.data) {
-        const p = res.data as TheoryProgression;
-        setResult(p);
-        onGenerated?.({ key: p.key, chords: p.chords, mood: p.mood, genre: p.genre });
-      } else {
-        setError(res.error?.message ?? "Failed to generate progression");
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!result) return;
-    setSaving(true);
-    setSavedMsg(null);
-    setError(null);
-    try {
-      const res = await apiSaveProgression(result.key, result.mood, result.genre, result.chords);
-      if (res.success) {
-        setSavedMsg("Saved to Library");
-      } else {
-        setError(res.error?.message ?? "Failed to save");
-      }
-    } catch {
-      setError("Failed to connect to backend");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleExportMidi = async () => {
-    if (!result) return;
-    setExporting(true);
-    setError(null);
-    try {
-      const res = await apiExportMidi(result.key, result.chords, {
-        style: midiStyle, voicing: midiVoicing, genre: genre.toLowerCase(), mood: mood.toLowerCase(),
-      });
-      if (res.success && res.data) {
-        const a = document.createElement("a");
-        a.href = `http://localhost:8000/api/exports/${res.data.filename}`;
-        a.download = res.data.filename;
-        a.click();
-      } else {
-        setError(res.error?.message ?? "Failed to export MIDI");
-      }
-    } catch {
-      setError("Failed to connect to backend");
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  return (
-    <div className="space-y-3">
-      <p className="text-xs text-gray-500">Generate progressions by key, mood, and genre.</p>
-      <div className="grid grid-cols-3 gap-2 max-w-sm">
-        <select value={key} onChange={(e) => setKey(e.target.value)}
-          className="bg-surface-800 rounded px-2 py-1.5 text-xs text-gray-200 outline-none focus:ring-1 focus:ring-accent-500/50">
-          {PROGRESSION_KEYS.map((k) => <option key={k}>{k}</option>)}
-        </select>
-        <select value={mood} onChange={(e) => setMood(e.target.value)}
-          className="bg-surface-800 rounded px-2 py-1.5 text-xs text-gray-200 outline-none focus:ring-1 focus:ring-accent-500/50">
-          {MOODS.map((m) => <option key={m}>{m}</option>)}
-        </select>
-        <select value={genre} onChange={(e) => setGenre(e.target.value)}
-          className="bg-surface-800 rounded px-2 py-1.5 text-xs text-gray-200 outline-none focus:ring-1 focus:ring-accent-500/50">
-          {GENRES.map((g) => <option key={g}>{g}</option>)}
-        </select>
-      </div>
-      <div className="flex gap-2 flex-wrap">
-        <button onClick={handleGenerate} disabled={loading}
-          className="px-3 py-1.5 bg-accent-500/20 text-accent-300 rounded text-xs border border-accent-500/30 hover:bg-accent-500/30 transition-colors disabled:opacity-50">
-          {loading ? "Generating..." : "Generate"}
-        </button>
-        <button onClick={handleSave} disabled={saving || !result}
-          className="px-3 py-1.5 bg-surface-700 rounded text-xs text-gray-300 hover:bg-surface-600 transition-colors disabled:opacity-50">
-          {saving ? "Saving..." : "Save"}
-        </button>
-        <button onClick={handleExportMidi} disabled={exporting || !result}
-          className="px-3 py-1.5 bg-blue-900/40 text-blue-300 rounded text-xs hover:bg-blue-900/60 transition-colors disabled:opacity-50">
-          {exporting ? "Exporting..." : "MIDI"}
-        </button>
-      </div>
-
-      {savedMsg && <p className="text-green-300 text-xs">{savedMsg}</p>}
-      {error && <p className="text-red-300 text-xs">{error}</p>}
-
-      {result && (
-        <div>
-          <div className="flex items-center gap-3 mb-2 flex-wrap">
-            <p className="text-sm font-semibold text-gray-200">{result.key} — {result.mood}</p>
-            <span className="text-xs text-gray-500">MIDI:</span>
-            <select value={midiStyle} onChange={(e) => setMidiStyle(e.target.value)}
-              className="bg-surface-800 rounded px-1.5 py-0.5 text-xs outline-none focus:ring-1 focus:ring-accent-500/50">
-              <option value="block">Block</option>
-              <option value="arpeggio">Arpeggio</option>
-              <option value="full">Full</option>
-            </select>
-            <select value={midiVoicing} onChange={(e) => setMidiVoicing(e.target.value)}
-              className="bg-surface-800 rounded px-1.5 py-0.5 text-xs outline-none focus:ring-1 focus:ring-accent-500/50">
-              <option value="close">Close</option>
-              <option value="open">Open</option>
-              <option value="drop2">Drop 2</option>
-            </select>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {result.chords.map((chord: ProgressionChord, i: number) => (
-              <div key={i} className="px-3 py-2 rounded-lg bg-purple-800/30 border border-purple-700/40 text-center min-w-[68px]">
-                <p className="text-sm font-bold text-purple-200">{chord.roman}</p>
-                <p className="text-[10px] text-gray-400">{chord.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Tab: Chord Generator ──────── */
+/* ── Tab: Progressions ─────────── */
 
 const GENERATOR_KEYS = [
   "C Minor", "C# Minor", "D Minor", "Eb Minor", "E Minor", "F Minor",
@@ -414,7 +256,7 @@ const GENERATOR_KEYS = [
 const GENERATOR_MOODS = ["Dark", "Uplifting", "Emotional", "Melancholic", "Energetic", "Dreamy", "Aggressive"];
 const GENERATOR_GENRES = ["Techno", "House", "Trance", "Deep House", "Progressive House", "Melodic Techno"];
 
-function ChordGenerator({ onGenerated }: {
+function Progressions({ onGenerated }: {
   onGenerated?: (progression: { key: string; chords: ProgressionChord[]; mood: string; genre: string }) => void;
 }) {
   const [key, setKey] = useState("A Minor");
@@ -496,7 +338,7 @@ function ChordGenerator({ onGenerated }: {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-gray-500">Advanced chord progression generator with configurable rules.</p>
+      <p className="text-xs text-gray-500">Generate progressions by key, mood, genre, length, and complexity.</p>
       <div className="grid grid-cols-5 gap-2 max-w-xl">
         <select value={key} onChange={(e) => setKey(e.target.value)}
           className="bg-surface-800 rounded px-2 py-1.5 text-xs text-gray-200 outline-none focus:ring-1 focus:ring-accent-500/50">
