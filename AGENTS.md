@@ -90,6 +90,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-05 | Phase A2 — Ideas migration (progressions → polymorphic ideas table) | Done — new `ideas` table in database.py with type CHECK constraint (progression/melody/bassline/drum_pattern/arpeggio/phrase), auto-migration from progressions on init, DAO+API re-targeted to ideas table with type filter + project_id support, frontend Library updated with type filter tabs (All/Progressions/Melodies/Basslines/Drums/Arpeggios), Idea + updated SavedProgression types. 4 new tests (type filter, project_id, get, nonexistent), 101 total.
 | 2026-06-05 | Phase A3 — Frontend state management (projectContext.tsx + useApi hook) | Done — `hooks/useApi.ts` with loading/error/data states and execute/reset methods. `store/projectContext.tsx` with React Context: loads last project on mount, optimistic debounced saves (500ms), createProject/updateProject/refreshProject actions. `App.tsx` wrapped in `ProjectProvider`. `SortField` extended with `name`. Unused `MidiExportResult` import removed.
 | 2026-06-06 | Phase B — Sample Analyzer Upgrade | Done — Fixed broken `music21.key` import path (was `key.KrumhanslSchmuckler`, now `from music21.analysis.discrete import ...`). 5-algorithm ensemble (KrumhanslSchmuckler, AardenEssen, BellmanBudge, TemperleyKostkaPayne, SimpleWeights) with voting confidence. KrumhanslKessler removed — it's a no-op subclass of KrumhanslSchmuckler with identical weights, so it was inflating ensemble agreement. SimpleWeights provides genuine algorithmic diversity. Added tests for corrupt audio handling and clean-tone warning check. Research doc algorithm table updated. 109 tests (+8).
+| 2026-06-06 | Phase C1 — Bento grid scaffold | Done — Dashboard.tsx rewritten as full bento grid: TopBar with New/Switch Project button, Project Anchor panel (creates project via context, editable name + BPM/key/scale chips), collapsible Music Theory placeholder, Co-Producer Chat hero panel with quick-action chips, bottom row (Chord Pads / Sample Analysis / Session Notes). Added `accent` color palette (Neon Mint: #0d1b2a base, #2dd4a8/#73ffb8 accents). Tailwind config updated with accent colors + fontFamily. Layout.tsx widened sidebar to 52 and updated for full-height dashboard. Frontend builds clean, all 109 backend tests pass.
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**
@@ -99,13 +100,14 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - [x] Progression & Melody Library (save, browse, sort — MIDI drag-and-drop stubbed)
 - [x] **Project Concept** — projects table + arrangements table + CRUD API + session persistence
 - [x] **Sample Analyzer Upgrade** — multi-algo key ensemble, confidence, edge cases, Apply button
+- [ ] **Dashboard (bento grid)** — scaffold complete (TopBar, panel layout, New Project dialog)
 - [ ] AI Studio (chat + analysis + composition assistant)
 
 ## v0.1 Build Plan (5 phases, 23 tasks)
 See `plan-v0.1-review.md` for full details:
 - **Phase A** — Foundation: Project concept ✅, Ideas migration ✅, state management ✅
 - **Phase B** — Sample Analyzer Upgrade: Multi-algo key, confidence, edge cases ✅
-- **Phase C** — Dashboard: Bento grid, Project Anchor, Chord Pads, absorb panels
+- **Phase C** — Dashboard: Bento grid scaffold ✅, C2-C6 remaining
 - **Phase D** — Search & Voice Leading: Ctrl+K, voice-leading scoring, polish
 - **Phase E** — AI Studio: Groq provider, chat endpoint, wire UI (last)
 
@@ -151,7 +153,8 @@ See `plan-v0.1-review.md` for full details:
 2. ~~Idea Library migration (progressions → ideas table) — Phase A2 ✅~~
 3. ~~Frontend state management (projectContext.tsx + useApi hook) — Phase A3 ✅~~
 4. ~~Sample Analyzer upgrade (multi-algo key, confidence, edge cases) — Phase B ✅~~
-5. Dashboard implementation (bento grid layout, Project Anchor, Chord Pads) — Phase C
-6. Global search (Ctrl+K overlay) — Phase D1-D2
-7. Voice-leading scoring — Phase D3
-8. AI Studio integration — Phase E (last)
+5. ~~Dashboard implementation (bento grid, Project Anchor, Chord Pads) — Phase C1 ✅~~
+6. Project Anchor inline editing, Chord Pads Web Audio, absorb Music Theory + Samples, remove old routes — Phase C2-C6
+7. Global search (Ctrl+K overlay) — Phase D1-D2
+8. Voice-leading scoring — Phase D3
+9. AI Studio integration — Phase E (last)
