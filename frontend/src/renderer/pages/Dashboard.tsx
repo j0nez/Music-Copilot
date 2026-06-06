@@ -3,6 +3,7 @@ import { useProject } from "../store/projectContext";
 import MusicTheoryPanel from "../components/MusicTheoryPanel";
 import ChordPads from "../components/ChordPads";
 import SampleAnalysisPanel from "../components/SampleAnalysisPanel";
+import LibraryModal from "../components/LibraryModal";
 import type { ProgressionChord } from "../types";
 
 const NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const { project, createProject, updateProject } = useProject();
   const [showNewProject, setShowNewProject] = useState(false);
   const [chordPads, setChordPads] = useState<ProgressionChord[]>([]);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const handleProgressionGenerated = (progression: { chords: ProgressionChord[] }) => {
     setChordPads(progression.chords);
@@ -28,10 +30,13 @@ export default function Dashboard() {
 
   return (
     <div className="h-full flex flex-col gap-4">
+      {libraryOpen && <LibraryModal onClose={() => setLibraryOpen(false)} />}
+
       {/* TopBar */}
       <TopBar
         projectName={project?.name ?? null}
         onNewProject={() => setShowNewProject(true)}
+        onOpenLibrary={() => setLibraryOpen(true)}
       />
 
       {/* Main area: left 40% | right 60% */}
@@ -104,9 +109,11 @@ export default function Dashboard() {
 function TopBar({
   projectName,
   onNewProject,
+  onOpenLibrary,
 }: {
   projectName: string | null;
   onNewProject: () => void;
+  onOpenLibrary: () => void;
 }) {
   return (
     <div className="flex items-center gap-4 px-4 py-3 bg-surface-800/50 rounded-xl border border-surface-700/50 shrink-0">
@@ -121,7 +128,7 @@ function TopBar({
       <button className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-surface-700/50">
         Ctrl+K Search
       </button>
-      <button className="text-xs text-gray-400 hover:text-white transition-colors px-3 py-1 rounded border border-surface-700/50 hover:border-surface-600">
+      <button onClick={onOpenLibrary} className="text-xs text-gray-400 hover:text-white transition-colors px-3 py-1 rounded border border-surface-700/50 hover:border-surface-600">
         Library
       </button>
       <button

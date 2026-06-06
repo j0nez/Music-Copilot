@@ -1,2 +1,0 @@
-// Shared components barrel
-export {};
