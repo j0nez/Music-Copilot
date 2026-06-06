@@ -1,8 +1,10 @@
 # Melody & Bassline Generator — Implementation Plan
 
-**Status:** Design revised — UI/UX review incorporated  
+**Status:** All 7 batches implemented. All 13 Section 15 issues fixed. 152 tests passing (129 backend + 23 frontend). 0 TS errors.  
+**Audit status:** Plan vs implementation cross-reference completed (Section 16). 15 remaining discrepancies found (2 HIGH, 8 MEDIUM, 5 LOW). Fix plan prioritized (Section 17, 5 batches, ~21h estimated).  
+**Batch A (P0) done:** Audio playback (Web Audio API oscillator scheduling) wired in MIDIPlayer. Expression Engine integrated into melody_generator (phrase arc velocity via `_resolve_phrase_multiplier`, articulation gate via `resolve_gate_length`). Same for bassline_generator. DnB offbeat min velocity raised from 78 to 80.  
 **Target:** v0.1 MVP completion (Phase A–D done, Phase E deferred)  
-**Last updated:** 2026-06-06 (v2)
+**Last updated:** 2026-06-06 (v5 — Batch A done)
 
 ---
 
@@ -630,9 +632,9 @@ Generation Hub overlay:
 | `ProjectSummary.test.tsx` | Renders project metadata, part summary, Download All MIDI | 2 |
 | `tests/test_midi_export_arrangement.py` | Multi-part arrangement export with expression engine integration | 3 |
 
-**Total new tests:** ~18  
-**Backend total after:** 127  
-**Frontend total after:** 20
+**Total new tests:** ~23  
+**Backend total after:** 129 (13 new: 4 melody, 4 bassline, 5 arrangement)  
+**Frontend total after:** 23 (10 new across GeneratePanel, MIDIPlayer, ProjectSummary)
 
 ---
 
@@ -694,4 +696,196 @@ Generation Hub overlay:
 
 ---
 
-*Next step: Execute Batch 1.*
+## 15. Post-Implementation Audit — 13 Issues Found
+
+After all 7 batches were implemented, a comprehensive code audit was performed (2026-06-06). **13 issues were identified** across backend plugins, frontend components, and API wiring.
+
+### 🔴 Critical (3)
+
+| # | Issue | File | Description |
+|---|-------|------|-------------|
+| 1 | **All notes at same pitch** | `plugins/melody_generator/plugin.py:86-88` → `plugins/bassline_generator/plugin.py:86-87` | `PDegree` outputs raw MIDI pitches (0-12), not scale degrees. Clamp `[60, 84]` maps everything to C4 (melody) or C1 (bassline). Need +48 octave offset before genre/mood adjustments. |
+| 2 | **api.ts missing generic type params** | `frontend/src/renderer/api.ts:197,209,221` | `melodyGenerator`, `basslineGenerator`, `exportArrangement` call `post(...)` without type arg → `res.data` is `unknown`, compilation error. |
+| 3 | **Ctrl+Enter shortcut broken** | `frontend/src/renderer/pages/Dashboard.tsx:77-83` | `document.querySelector('[data-gen="chords"]')` targets nonexistent attributes. Buttons in `GeneratePanel.tsx` have no `data-gen` attributes. |
+
+### 🟡 Medium (6)
+
+| # | Issue | File | Description |
+|---|-------|------|-------------|
+| 4 | **Harmonic/Melodic Minor = Natural Minor** | `plugins/melody_generator/plugin.py:23-24` | `Scale.minor` used for both. Should define custom semitone lists via `Scale([0,2,3,5,7,8,11])` and `Scale([0,2,3,5,7,9,11])`. |
+| 5 | **Mood overrides Genre octave** | `plugins/melody_generator/plugin.py:116-121` | Dark mood (octave 3) unconditionally overwrites DnB genre (octave 5). Should take max or be additive. |
+| 6 | **Duplicate swing state** | `frontend/src/renderer/components/MIDIPlayer.tsx:23` vs `Dashboard.tsx:30` | MIDIPlayer has local `useState(0)` for swing; Dashboard passes separate swing to ProjectSummary. Two independent sliders. |
+| 7 | **Chord data discarded** | `frontend/src/renderer/pages/Dashboard.tsx:37` | `handleGenerateChords` ignores `ProgressionChord[]` and voice_leading score. Only stores raw notes. Ctrl+S saves empty array. |
+| 8 | **Regenerate only clears** | `frontend/src/renderer/components/MIDIPlayer.tsx:77-81` | Clicking "Regenerate" calls `onRegenerate` which sets `setChords([])` — clears without triggering new generation. |
+| 9 | **Surprise Me ✨ doesn't randomize scale** | `frontend/src/renderer/components/GeneratePanel.tsx:46` | Scale hardcoded to `'major'`. Should randomly pick between `'major'` and `'minor'`. |
+
+### 🟢 Minor (4)
+
+| # | Issue | File | Description |
+|---|-------|------|-------------|
+| 10 | **Dead code in `_map_range`** | `plugins/melody_generator/plugin.py:124` | `note == 0` guard is unreachable — clamp already handles it. |
+| 11 | **Duplicate response fields** | `backend/app/api/arrangement.py:76-77` | `midi_url` and `download_url` return identical values. |
+| 12 | **Fallback pitches are chromatic** | `plugins/melody_generator/plugin.py:85-86` | Chromatic fallback sequence violates specified key/scale. |
+| 13 | **No request timeout on API calls** | `frontend/src/renderer/components/GeneratePanel.tsx:77-123` | If backend hangs, loading spinner runs forever. No `AbortController`. |
+
+### Fix Plan (Priority Order)
+
+1. **🔴 C1** — Add base octave offset (+48) in melody/bassline generators before genre/mood adjustments
+2. **🔴 C2** — Add type parameters to `post()` calls in `api.ts`
+3. **🔴 C3** — Add `data-gen` attributes to generate buttons in `GeneratePanel.tsx`
+4. **🟡 M1** — Define custom `Scale(...)` for Harmonic/Melodic Minor
+5. **🟡 M2** — Make genre octave adjustment additive (not overwritten by mood)
+6. **🟡 M3** — Lift swing state to Dashboard, pass down to both MIDIPlayer and ProjectSummary
+7. **🟡 M4** — Wire chord data + voice_leading through Dashboard state
+8. **🟡 M5** — Fix Regenerate to actually call generation API, not just clear
+9. **🟡 M6** — Randomize scale in Surprise Me preset
+
+**Status:** All 13 issues fixed (2026-06-06). 152 tests pass (129 backend + 23 frontend), 0 TS errors.  
+**Fix verification:** Backend `pytest tests/` = 129/129 passed. Frontend `tsc --noEmit` = clean. `vitest run` = 23/23 passed.
+
+---
+
+## 16. Plan vs Implementation Cross-Reference Audit
+
+A comprehensive cross-reference audit was performed (2026-06-06) comparing the plan specification against the actual implementation, and cross-checking both against research docs (`docs/research/advanced-midi-generation.md`).
+
+### 16.1 Research Doc Alignment (advanced-midi-generation.md)
+
+| Research Recommendation | Implementation | Status |
+|------------------------|---------------|--------|
+| isobar `PDegree(PSeries/PWalk/PMarkov, scale) + octave` | `PDegree` + `PRandomWalk`/`PMarkov` + +60 offset | ✅ Core approach followed |
+| `PRandomWalk` for bassline passing tones | `PRandomWalk` used in walking/syncopated/root_fifth patterns | ✅ |
+| Swing as tick-offset post-processor | `apply_swing()` defined but never called | ⚠️ Defined but unwired |
+| No ML dependencies | Zero ML imports | ✅ |
+| No GPU needed | Zero GPU code | ✅ |
+| Beat-based Note format | `{pitch, velocity, start_beat, duration_in_beats}` | ✅ |
+| Custom swing (no external lib) | Pure arithmetic on beat values | ✅ |
+| Genre swing presets (House 30%, Techno 20%, etc.) | `SWING_PRESETS` dict defined | ✅ |
+
+### 16.2 Post-Audit Fix Verification (Section 15)
+
+All 13 issues verified resolved:
+
+| # | Issue | Resolution | Verified |
+|---|-------|-----------|----------|
+| C1 | All notes at same pitch | `melody_generator/plugin.py:90` adds +60 offset; `bassline_generator/plugin.py:86` uses `octave * 12` | ✅ |
+| C2 | api.ts missing generic type params | `post<...>()` on melody/bassline/arrangement calls | ✅ |
+| C3 | Ctrl+Enter shortcut broken | `data-gen="chords/melody/bassline"` on generate buttons | ✅ |
+| M1 | Harmonic/Melodic Minor = Natural Minor | Custom `Scale([...])` for both variants | ✅ |
+| M2 | Mood overrides Genre octave | Additive offsets in `_map_range` | ✅ |
+| M3 | Duplicate swing state | Lifted to Dashboard, single source of truth | ✅ |
+| M4 | Chord data discarded | `progChords` state + `vlScore` state wired | ✅ |
+| M5 | Regenerate only clears | `handleRegenerate` calls generation APIs | ✅ |
+| M6 | Surprise Me no scale randomize | `randomScale()` from `['major', 'minor']` | ✅ |
+| 10 | Dead code in `_map_range` | `if note == 0` guard removed | ✅ |
+| 11 | Duplicate response fields | Only `download_url` + `filename` returned | ✅ |
+| 12 | Chromatic fallback pitches | Diatonic `[0,2,4,5,7,9,11]` fallback | ✅ |
+| 13 | No request timeout | `withTimeout` helper + 30s `API_TIMEOUT` | ✅ |
+
+### 16.3 Plan vs Implementation Discrepancies
+
+#### HIGH Severity
+
+| # | Issue | Plan Spec | Actual | Where |
+|---|-------|-----------|--------|-------|
+| H1 | **No audio playback** | "Simultaneous multi-part playback: All parts schedule oscillators against same AudioContext. Each note gets its own oscillator + gain node." | MIDI Player is visual-only — playhead animation only, zero `AudioContext`/`OscillatorNode` calls. No sound. | `MIDIPlayer.tsx` |
+| H2 | **No Expression Engine integration** | Generators pass through Expression Engine (`compute_velocity`, `voicing`, `articulation`, `arpeggiation`). See data flow section 10. | Generators manage velocity/duration internally. Never import or call `plugins/midi_export/expression/`. | `melody_generator/plugin.py`, `bassline_generator/plugin.py` |
+
+#### MEDIUM Severity
+
+| # | Issue | Plan Spec | Actual | Where |
+|---|-------|-----------|--------|-------|
+| M1 | **`apply_swing()` never called** | Swing post-processor applied to all generated notes before display | `swing.py` has correct implementation + 7 presets but zero callers in entire codebase. Frontend swing slider stores state, never transforms notes. | `swing.py`, `MIDIPlayer.tsx` |
+| M2 | **Bassline `octave_jump` = chromatic ascent** | "Root-octave jumps, eighth notes" for trance | `PSeries(0, 1, total)` produces ascending scale, not root/octave alternation. Zero test coverage for trance. | `bassline_generator/plugin.py:117` |
+| M3 | **Energetic mood all same pitch** | Mood range `(72, 96)` should distribute notes | `+60` offset puts PDegree output at 60-72, then `_map_range` clamps everything below 72 → all notes = MIDI 72 (C5). | `melody_generator/plugin.py:90` |
+| M4 | **"Clear All" regenerates instead of clearing** | "[Clear All] removes all generated parts" | `clearAll()` fires 3 simultaneous API calls via `handleRegenerate`. Creates new parts instead of removing. | `MIDIPlayer.tsx:84-88` |
+| M5 | **Preset chips don't auto-trigger** | "Clicking a chip fills dropdowns, then triggers generation on the primary part" | Only calls `onChange(s)` to fill dropdowns. User must manually click generate button. | `GeneratePanel.tsx` `applyPreset()` |
+| M6 | **No project state auto-fill** | "Pre-fills key/scale/BPM from project state" | `resolveSettings()` hardcodes `key='C'`, `scale='major'`. GeneratePanel doesn't receive project as prop. | `GeneratePanel.tsx:69-79` |
+| M7 | **Generation Hub is a shell** | Full sections: Melody controls, Bassline controls, Preview, Play/Stop, Send to Player, MIDI, Save, history | Contains only NoteGrid + Peek toggle. No per-part controls, no generate buttons, no Play/Stop, no export/save. | `GenerationHub.tsx` |
+| M8 | **Preset values differ from spec** | See section 6.6 preset table | Dark Techno: `advanced` (plan: `simple`). Uplifting Trance: `simple` (plan: `advanced`). Deep House: `happy`/`house` (plan: `Neutral`/`Deep House`). | `GeneratePanel.tsx:16-21` |
+
+#### LOW Severity
+
+| # | Issue | Plan Spec | Actual | Where |
+|---|-------|-----------|--------|-------|
+| L1 | **Ctrl+S saves chords only** | Saves full arrangement with all parts | Saves only `progChords` as `progression` type. Melody/bassline excluded. | `Dashboard.tsx` |
+| L2 | **Voice-leading score undisplayed** | "Voice-leading score badge shown briefly in a toast" | `_vlScore` stored in Dashboard (`_` = unused prefix). No toast, badge, or UI element. | `Dashboard.tsx:32` |
+| L3 | **Generation history is a noop** | "Cycling keeps last 5 per part in ring buffer" | `onPushHistory` = `() => {}`. `GenerationHistory` type exists but never populated. | `Dashboard.tsx:175` |
+| L4 | **Bassline missing velocity features** | Phrase arc, `PAccent`, articulation, default 80-110 | No phrase arc awareness. No `PAccent`. No articulation call. DnB offbeats = 78 (<80). | `bassline_generator/plugin.py` |
+| L5 | **Swing presets not wired to UI** | Genre-based swing amounts guide slider default | `SWING_PRESETS` exists in `swing.py` but never queried by any component. Slider always starts at 0. | `swing.py` |
+| L6 | **Reference tools layout** | Collapsed section at bottom of Generate panel + TopBar icons | Always-visible icons at top-right of Generate panel (plus duplicates in TopBar). No collapsed section. | `GeneratePanel.tsx:137-141` |
+| L7 | **"Open Hub" button in wrong location** | `[🎵 Open Generation Hub →]` in Generate panel | "Overview" button in TopBar only. No trigger inside Generate panel. | `Dashboard.tsx` |
+| L8 | **MIDI export path wrong in plan** | `POST /api/plugins/midi_export/arrangement` | Actual: `POST /api/arrangement/export` (dedicated router, not under midi_export) | `plan-melody-bassline.md:563` (docs only) |
+
+### 16.4 Test Coverage Gaps
+
+| Gap | Detail |
+|-----|--------|
+| **Trance/octave_jump not tested** | Bassline test suite covers root_fifth, walking, syncopated — never passes `genre='trance'` |
+| **No GenerationHub tests** | No test file exists for `GenerationHub.tsx` |
+| **No NoteGrid tests** | No test file exists for `NoteGrid.tsx` |
+| **No swing end-to-end test** | No test verifies `apply_swing()` is called during generation or export |
+| **No voice-leading display test** | No test verifies VL badge/toast appears after chord generation |
+| **No Surprise Me / randomization test** | No test for `randomScale()`, `randomMood()`, etc. |
+| **No loading/error state tests** | No test for spinner `⟳` appearing during API call, or red error toast on failure |
+| **No preset click → API call test** | No test that clicking a chip followed by a generate button triggers the correct API call |
+
+---
+
+## 17. Comprehensive Fix Plan (15 Items)
+
+Priority-ordered based on impact and dependency chain. Items H1 and H2 unblock several downstream features (swing cannot be auditioned without audio playback; expression engine cannot be verified without being wired).
+
+| Priority | Ref | Description | Est. | Dependencies |
+|----------|-----|-------------|------|-------------|
+| P0 | H1 | **Implement audio playback** — Add `AudioContext` + per-note oscillators + gain nodes in MIDIPlayer. Each note gets its own `OscillatorNode` scheduled at BPM-based time. | 4h | None |
+| P0 | H2 | **Wire Expression Engine** — Call `compute_velocity()` and `apply_articulation()` in melody/bassline generators as post-processors. Import from `plugins/midi_export/expression/`. | 2h | None |
+| P1 | M1 | **Wire swing into playback + export** — Call `apply_swing()` on notes before playback scheduling and before arrangement export. Connect frontend slider to actual timing transform. | 2h | H1 (swing needs audio to be audible) |
+| P1 | M3 | **Fix energetic mood clamping** — Make `_map_range` transpose the sequence by mood range midpoint instead of clamping per-note. Or remove `+60` hardcode and compute base from mood range center. | 1h | None |
+| P1 | M2 | **Fix bassline `octave_jump`** — Replace `PSeries(0, 1, total)` with `PRandomWalk([0, 7], min=1, max=1)` or explicit root/octave pattern. Add trance test. | 0.5h | None |
+| P2 | M6 | **Auto-fill from project state** — Pass project key/scale/BPM as props from Dashboard to GeneratePanel. Use them before falling back to hardcoded defaults. | 1h | None |
+| P2 | M5 | **Auto-trigger on preset chip** — After `applyPreset()` sets dropdowns, immediately call the chords generation function. | 1h | None |
+| P2 | M4 | **Fix "Clear All" to clear, not regenerate** — Add a separate `handleClear(type)` callback that sets state to `[]` without calling any API. Keep `handleRegenerate` for the regenerate buttons. | 1h | None |
+| P3 | M7 | **Complete Generation Hub** — Add Melody section (controls + generate), Bassline section, Play/Stop, Send to Player, MIDI export, Save to Library, click-outside dismiss. | 4h | H1 (play), M5/M6 (controls) |
+| P3 | L1 | **Ctrl+S save all parts** — Extend save handler to create an `arrangement`-type idea with chords + melody + bassline data. | 1h | None |
+| P3 | L2 | **Display voice-leading score** — Show badge or brief toast after chord generation with VL score. | 0.5h | None |
+| P3 | L3 | **Wire generation history** — Populate `GenerationHistory` ring buffer from `onPushHistory`. Add ⬆/⬇ cycling in MIDIPlayer row headers. | 2h | None |
+| P4 | M8 | **Fix preset values** — Swap Dark Techno/Uplifting Trance complexities. Decide on Deep House mood (pick `'chill'`/`'happy'` since `'neutral'` doesn't exist, or add `'neutral'` to mood list). | 0.5h | None |
+| P4 | L4 | **Bassline velocity enhancements** — Add phrase arc awareness, bump DnB offbeat min to 80, add PAccent if isobar supports it. | 1h | H2 |
+| P4 | L5 | **Wire swing presets to UI helper** — Pass genre from settings, query `SWING_PRESETS` dict, suggest swing slider default per genre. | 0.5h | M1 |
+
+### Implementation Order
+
+```
+Batch A (P0) — Audio + Expression Engine
+  A1. MIDIPlayer: Web Audio API oscillator scheduling
+  A2. melody_generator: post-process through compute_velocity()
+  A3. bassline_generator: post-process through compute_velocity()
+
+Batch B (P1) — Swing + Bugfixes
+  B1. apply_swing() wired in playback + export pipeline
+  B2. _map_range: remove clamping bug for high moods
+  B3. bassline octave_jump: fix pattern + add tests
+
+Batch C (P2) — Preset + Auto behavior
+  C1. Project state auto-fill in GeneratePanel
+  C2. Auto-trigger generation on preset chip click
+  C3. Separate clear vs regenerate in MIDIPlayer
+
+Batch D (P3) — Hub + Save + History
+  D1. Generation Hub: full controls
+  D2. Ctrl+S full arrangement save
+  D3. Voice-leading badge
+  D4. Generation history ring buffer
+
+Batch E (P4) — Polish
+  E1. Preset value corrections
+  E2. Bassline velocity polish
+  E3. Swing preset-driven defaults
+```
+
+**Batch A (DONE):** Audio playback + Expression Engine integration completed 2026-06-06. MIDIPlayer now schedules per-note triangle-wave oscillators via Web Audio API at BPM-based timing, with swing-aware note offsetting. melody_generator and bassline_generator both use `_resolve_phrase_multiplier` for velocity arc and `resolve_gate_length` for articulation-aware note durations. DnB offbeat bass velocity raised to 80.
+
+**Estimated total effort:** ~17h remaining  
+**Estimated batches:** 4 (B–E)  
+**Tests to add:** ~15 (trance pattern, audio playback, swing integration, GenerationHub, NoteGrid, Surprise Me, loading/error states)

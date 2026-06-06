@@ -4,6 +4,7 @@ import logging
 from isobar import PDegree, PMarkov, PRandomWalk, Scale
 from pydantic import BaseModel
 
+from backend.app.services.midi.theory import _resolve_phrase_multiplier, resolve_gate_length
 from plugins.base import Plugin, PluginResult
 
 logger = logging.getLogger("music_copilot.melody_generator")
@@ -16,12 +17,13 @@ class MelodyGeneratorInput(BaseModel):
     genre: str = "techno"
     length: int = 8
     complexity: str = "simple"
+    articulation: str = "auto"
 
 
 _SCALE_NAMES: dict[str, Scale] = {
     "Natural Minor": Scale.minor,
-    "Harmonic Minor": Scale.minor,
-    "Melodic Minor": Scale.minor,
+    "Harmonic Minor": Scale([0, 2, 3, 5, 7, 8, 11]),
+    "Melodic Minor": Scale([0, 2, 3, 5, 7, 9, 11]),
     "Major": Scale.major,
     "Dorian": Scale.dorian,
     "Phrygian": Scale.phrygian,
@@ -54,7 +56,7 @@ _NOTES_PER_BAR: dict[str, int] = {
 class MelodyGeneratorPlugin(Plugin):
     name = "melody_generator"
     description = "Generate melodies per key, mood, and genre using isobar patterns"
-    version = "0.2.0"
+    version = "0.3.0"
     input_schema = MelodyGeneratorInput
 
     async def execute(
@@ -65,6 +67,7 @@ class MelodyGeneratorPlugin(Plugin):
         genre: str = "techno",
         length: int = 8,
         complexity: str = "simple",
+        articulation: str = "auto",
         **kwargs,
     ) -> PluginResult:
         try:
@@ -83,12 +86,16 @@ class MelodyGeneratorPlugin(Plugin):
             pitches = list(degree_iter)
 
             while len(pitches) < total_notes:
-                pitches.extend([60 + (i % 12) for i in range(total_notes - len(pitches))])
+                fallback = [0, 2, 4, 5, 7, 9, 11]
+                pitches.extend([fallback[i % 7] for i in range(total_notes - len(pitches))])
             pitches = pitches[:total_notes]
+
+            pitches = [p + 60 for p in pitches]
             pitches = _map_range(pitches, pitch_range, genre, mood)
 
             durations = _duration_sequence(total_notes, genre)
-            velocities = _velocity_sequence(total_notes, notes_per_bar, mood, complexity)
+            gate = resolve_gate_length(genre, articulation)
+            velocities = _velocity_sequence(total_notes, notes_per_bar, mood, complexity, genre)
 
             notes_out = []
             current_beat = 1.0
@@ -97,7 +104,7 @@ class MelodyGeneratorPlugin(Plugin):
                     "pitch": pitches[i],
                     "velocity": velocities[i],
                     "start_beat": round(current_beat, 3),
-                    "duration_in_beats": round(durations[i], 3),
+                    "duration_in_beats": round(durations[i] * gate, 3),
                 })
                 current_beat += durations[i]
 
@@ -113,16 +120,14 @@ class MelodyGeneratorPlugin(Plugin):
 
 def _map_range(pitches: list[int], pitch_range: tuple[int, int], genre: str, mood: str) -> list[int]:
     lo, hi = pitch_range
-    octave_base = 4
+    octave_offset = 0
     if genre in ("dnb", "drum & bass"):
-        octave_base = 5
+        octave_offset += 1
     if mood in ("dark", "melancholic"):
-        octave_base = 3
+        octave_offset -= 1
     mapped = []
     for p in pitches:
-        note = p + (octave_base - 4) * 12
-        if note == 0:
-            note = 60 + octave_base * 12
+        note = p + octave_offset * 12
         note = max(lo, min(hi, note))
         mapped.append(int(note))
     return mapped
@@ -138,7 +143,7 @@ def _duration_sequence(total: int, genre: str) -> list[float]:
     return [0.5] * total
 
 
-def _velocity_sequence(total: int, notes_per_bar: int, mood: str, complexity: str) -> list[int]:
+def _velocity_sequence(total: int, notes_per_bar: int, mood: str, complexity: str, genre: str = "house") -> list[int]:
     result = []
     for i in range(total):
         beat = (i % notes_per_bar) + 1
@@ -149,4 +154,9 @@ def _velocity_sequence(total: int, notes_per_bar: int, mood: str, complexity: st
         else:
             base = 78 if complexity == "simple" else 85
         result.append(max(30, min(127, base)))
+    total_bars = total / max(1, notes_per_bar)
+    for i, vel in enumerate(result):
+        bar_idx = int(i / notes_per_bar)
+        mult = _resolve_phrase_multiplier(bar_idx, round(total_bars), genre)
+        result[i] = max(30, min(127, round(vel * mult)))
     return result

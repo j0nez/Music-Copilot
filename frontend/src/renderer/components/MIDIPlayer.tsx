@@ -2,12 +2,30 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import NoteGrid from './NoteGrid';
 import type { Note } from '../types';
 
+function midiToFreq(pitch: number): number {
+  return 440 * Math.pow(2, (pitch - 69) / 12);
+}
+
+function applySwing(notes: Note[], amount: number): Note[] {
+  if (amount <= 0) return notes;
+  return notes.map(n => {
+    const beatPos = n.start_beat % 1.0;
+    const sixteenthIndex = Math.round(beatPos * 4);
+    if (sixteenthIndex === 1 || sixteenthIndex === 3) {
+      return { ...n, start_beat: n.start_beat + amount * 0.25 };
+    }
+    return n;
+  });
+}
+
 interface MIDIPlayerProps {
   chords: Note[];
   melody: Note[];
   bassline: Note[];
   bpm: number;
   bars: number;
+  swing: number;
+  onSwingChange: (v: number) => void;
   onRegenerate: (type: 'chords' | 'melody' | 'bassline') => void;
 }
 
@@ -17,12 +35,13 @@ const PART_CONFIG = [
   { type: 'bassline' as const, label: 'Bassline', color: 'text-blue-400' as const },
 ];
 
-export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, onRegenerate }: MIDIPlayerProps) {
+export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing, onSwingChange, onRegenerate }: MIDIPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [playheadBeat, setPlayheadBeat] = useState<number | null>(null);
-  const [swing, setSwing] = useState(0);
   const animRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const scheduledRef = useRef<{ stop: () => void }[]>([]);
   const [loading, setLoading] = useState<'none' | 'chords' | 'melody' | 'bassline'>('none');
 
   const parts = [
@@ -34,17 +53,71 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, onRege
 
   const totalBeats = bars * 4;
 
-  const play = useCallback(() => {
-    startTimeRef.current = performance.now();
-    setPlayheadBeat(1);
-    setPlaying(true);
-  }, []);
-
   const stop = useCallback(() => {
     setPlaying(false);
     setPlayheadBeat(null);
     if (animRef.current) cancelAnimationFrame(animRef.current);
+    scheduledRef.current.forEach(s => s.stop());
+    scheduledRef.current = [];
   }, []);
+
+  const play = useCallback(() => {
+    scheduledRef.current.forEach(s => s.stop());
+    scheduledRef.current = [];
+
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = new AudioContext();
+    } else if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+
+    const ctx = audioCtxRef.current;
+    const beatDuration = 60 / bpm;
+
+    const allParts = [
+      applySwing(chords, swing),
+      applySwing(melody, swing),
+      applySwing(bassline, swing),
+    ];
+
+    for (const partNotes of allParts) {
+      for (const note of partNotes) {
+        const startTime = ctx.currentTime + (note.start_beat - 1) * beatDuration;
+        const noteDur = note.duration_in_beats * beatDuration;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.value = midiToFreq(note.pitch);
+
+        const vel = (note.velocity / 127) * 0.25;
+
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(vel, startTime + 0.008);
+        gain.gain.setValueAtTime(vel, startTime + noteDur - 0.008);
+        gain.gain.linearRampToValueAtTime(0, startTime + noteDur);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + noteDur);
+
+        scheduledRef.current.push({
+          stop: () => {
+            try { osc.stop(); } catch { /* already stopped */ }
+            try { osc.disconnect(); } catch { /* already disconnected */ }
+            try { gain.disconnect(); } catch { /* already disconnected */ }
+          },
+        });
+      }
+    }
+
+    startTimeRef.current = performance.now();
+    setPlayheadBeat(1);
+    setPlaying(true);
+  }, [chords, melody, bassline, bpm, swing]);
 
   useEffect(() => {
     if (!playing) return;
@@ -73,6 +146,17 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, onRege
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [playing, hasAny, play, stop]);
+
+  useEffect(() => {
+    return () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+      scheduledRef.current.forEach(s => s.stop());
+      scheduledRef.current = [];
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close();
+      }
+    };
+  }, []);
 
   async function handleRegenerate(type: 'chords' | 'melody' | 'bassline') {
     setLoading(type);
@@ -110,7 +194,7 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, onRege
             min={0}
             max={100}
             value={Math.round(swing * 100)}
-            onChange={e => setSwing(Number(e.target.value) / 100)}
+            onChange={e => onSwingChange(Number(e.target.value) / 100)}
             className="w-16 h-1 accent-green-400"
           />
         </div>

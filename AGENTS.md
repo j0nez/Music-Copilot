@@ -109,6 +109,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-06 | Batch 5 — Dashboard Wiring | Done — 45/55 column split layout. GeneratePanel replaces MusicTheoryPanel. ProjectSummary replaces Co-Producer hero. MIDI Player replaces Chord Pads. Keyboard shortcuts (Ctrl+Enter, Ctrl+Shift+M, Ctrl+S). |
 | 2026-06-06 | Batch 6 — Frontend Tests | Done — 10 new tests across GeneratePanel, MIDIPlayer, ProjectSummary. 23 frontend tests total. |
 | 2026-06-06 | Batch 7 — Documentation | Done — AGENTS.md updated, plan-v0.1-review.md updated. All 7 batches complete. |
+| 2026-06-06 | Batch A — Audio Playback + Expression Engine | Done — MIDIPlayer: Web Audio API per-note oscillator scheduling with swing. melody_generator/bassline_generator: phrase arc velocity via _resolve_phrase_multiplier, articulation gate via resolve_gate_length. DnB offbeat velocity 78→80. All 152 tests pass. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**
@@ -165,10 +166,10 @@ See `plan-v0.1-review.md` for full details:
 - [x] Backend tests (129 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas, search, melody generator, bassline generator, arrangement)
 - [x] Frontend tests (vitest, 6 files, 23 tests)
 - [x] Melody/Bassline Generator Plan — `plan-melody-bassline.md` written, approved, in implementation
-- [x] Melody Generator plugin (isobar-based)
-- [x] Bassline Generator plugin (isobar-based)
+- [x] Melody Generator plugin (isobar-based, phrase arc velocity, articulation gate)
+- [x] Bassline Generator plugin (isobar-based, phrase arc velocity, articulation gate, DnB offbeat ≥80)
 - [x] Generate Panel (Preset Chips, Auto defaults, loading spinners)
-- [x] MIDI Player (playhead, per-part regenerate, history, swing slider)
+- [x] MIDI Player (playhead, per-part regenerate, history, swing slider, **Web Audio API playback**)
 - [x] Generation Hub (large overlay, NoteGrid preview, Peek toggle)
 - [x] Project Summary (right column, Download All MIDI)
 - [x] Arrangement export endpoint
