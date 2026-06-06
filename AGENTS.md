@@ -102,6 +102,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-06 | Phase D6 — Stub plugin cleanup | Done — 5 stub plugins added (finish_my_idea, melody_generator, producer_coach, reference_analyzer, splice_library). Each returns a structured "not yet implemented" error with planned phase. All 9 plugins now discoverable via `GET /api/plugins/`. 116 tests pass.
 | 2026-06-06 | Melody/Bassline Generator Plan (v2) | Done — `plan-melody-bassline.md` written with revised layout (45/55 split, Project Summary right column, Preset Chips, Auto defaults, Expression Engine pipeline, swing/humanization, arrangement export endpoint). UI/UX review incorporated. Plan audited against research docs, cross-referenced with codebase. |
 | 2026-06-06 | Batch 1 — Prerequisites | Done — isobar installed (no-deps, pure Python), `requirements.txt` updated. Unused imports removed (4 files). `import librosa` fixed in sample_analyzer. config.py migrated to Pydantic v2 `model_config`. projectContext.tsx revert-on-failure fixed. All 116 tests pass. |
+| 2026-06-06 | Batch 2 — Backend Plugins | Done — swing post-processor (`plugins/midi_export/expression/swing.py`), isobar-based bassline generator (`plugins/bassline_generator/plugin.py`), isobar-based melody generator (`plugins/melody_generator/plugin.py`), arrangement export router (`backend/app/api/arrangement.py` with multi-part + per-part endpoints). All 116 tests pass. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**

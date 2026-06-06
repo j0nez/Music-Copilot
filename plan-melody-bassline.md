@@ -612,7 +612,8 @@ Generation Hub overlay:
 | 🆕 Update | `AGENTS.md` | Status + task history |
 | 🆕 Update | `plan-v0.1-review.md` | Acceptance criteria |
 | 🆕 Update | `README.md` | Full rewrite |
-| 🆕 Update | `plugins/midi_export/plugin.py` | Add `POST /api/plugins/midi_export/arrangement` endpoint for multi-part multi-track export |
+| ✅ Fix | `backend/app/main.py` | Register arrangement router |
+| 🆕 Create | `backend/app/api/arrangement.py` | `POST /api/arrangement/export` (multi-part multi-track) + `POST /api/arrangement/per-part` (single part export) |
 | 🆕 Create | `plugins/midi_export/expression/swing.py` | Universal swing post-processor applying to all parts |
 | 🆕 Update | `plugins/midi_export/expression/__init__.py` | Export `apply_swing` from new swing module |
 
