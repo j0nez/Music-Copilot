@@ -13,35 +13,48 @@ import type {
 
 const BASE = 'http://localhost:8000/api';
 
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
+  try {
+    const res = await fetch(url, init);
+    const body = await res.json();
+    if (!res.ok && !body.success) {
+      return { success: false, data: null, error: body.error ?? { code: 'HTTP_ERROR', message: `Status ${res.status}` } };
+    }
+    return body as ApiResponse<T>;
+  } catch (e) {
+    return { success: false, data: null, error: { code: 'NETWORK_ERROR', message: e instanceof Error ? e.message : 'Network request failed' } };
+  }
+}
+
+async function get<T>(path: string, params?: Record<string, string>): Promise<ApiResponse<T>> {
+  const qs = params ? `?${new URLSearchParams(params)}` : '';
+  return fetchJson<T>(`${BASE}${path}${qs}`);
+}
+
 async function post<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
-  const res = await fetch(`${BASE}${path}`, {
+  return fetchJson<T>(`${BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
 }
 
 async function put<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
-  const res = await fetch(`${BASE}${path}`, {
+  return fetchJson<T>(`${BASE}${path}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+}
+
+async function del<T>(path: string): Promise<ApiResponse<T>> {
+  return fetchJson<T>(`${BASE}${path}`, { method: 'DELETE' });
 }
 
 export async function uploadFile(file: File): Promise<ApiResponse<UploadResult>> {
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${BASE}/upload/`, {
-    method: 'POST',
-    body: form,
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return fetchJson<UploadResult>(`${BASE}/upload/`, { method: 'POST', body: form });
 }
 
 export async function analyzeSample(
@@ -81,19 +94,13 @@ export async function listProgressions(
   sortOrder = 'DESC',
   type: string | null = null,
 ): Promise<ApiResponse<{ progressions: SavedProgression[] }>> {
-  const params = new URLSearchParams({ sort_by: sortBy, sort_order: sortOrder });
-  if (type !== null) params.set('type', type);
-  const res = await fetch(`http://localhost:8000/api/progressions/?${params}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const params: Record<string, string> = { sort_by: sortBy, sort_order: sortOrder };
+  if (type !== null) params.type = type;
+  return get<{ progressions: SavedProgression[] }>('/progressions/', params);
 }
 
 export async function deleteProgression(id: number): Promise<ApiResponse<{ deleted: boolean }>> {
-  const res = await fetch(`http://localhost:8000/api/progressions/${id}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return del<{ deleted: boolean }>(`/progressions/${id}`);
 }
 
 export async function exportMidi(
@@ -125,7 +132,7 @@ export async function exportMidi(
 }
 
 export function downloadMidiUrl(progressionId: number, bpm = 120): string {
-  return `http://localhost:8000/api/progressions/${progressionId}/midi?bpm=${bpm}`;
+  return `${BASE}/progressions/${progressionId}/midi?bpm=${bpm}`;
 }
 
 export async function createProject(
@@ -138,21 +145,15 @@ export async function createProject(
 }
 
 export async function listProjects(): Promise<ApiResponse<{ projects: Project[] }>> {
-  const res = await fetch('http://localhost:8000/api/projects/');
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return get<{ projects: Project[] }>('/projects/');
 }
 
 export async function getProject(id: number): Promise<ApiResponse<{ project: Project }>> {
-  const res = await fetch(`http://localhost:8000/api/projects/${id}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return get<{ project: Project }>(`/projects/${id}`);
 }
 
 export async function getLastProject(): Promise<ApiResponse<{ project: Project | null }>> {
-  const res = await fetch('http://localhost:8000/api/projects/last');
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return get<{ project: Project | null }>('/projects/last');
 }
 
 export async function updateProject(
@@ -163,21 +164,14 @@ export async function updateProject(
 }
 
 export async function deleteProject(id: number): Promise<ApiResponse<{ deleted: boolean }>> {
-  const res = await fetch(`http://localhost:8000/api/projects/${id}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return del<{ deleted: boolean }>(`/projects/${id}`);
 }
 
 export async function searchAll(
   q: string,
   limit = 20,
 ): Promise<ApiResponse<{ results: SearchResult[] }>> {
-  const params = new URLSearchParams({ q, limit: String(limit) });
-  const res = await fetch(`http://localhost:8000/api/search/?${params}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return get<{ results: SearchResult[] }>('/search/', { q, limit: String(limit) });
 }
 
 export async function chordGenerator(

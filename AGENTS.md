@@ -97,6 +97,8 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-06 | Phase C6 — Library modal, old routing removed, cleanup | Done — LibraryModal as overlay (triggered from TopBar). Old page files deleted (MusicTheory.tsx, Samples.tsx, Library.tsx, AiStudio.tsx, __init__.ts). Layout.tsx stripped of sidebar — dashboard is the only route. App.tsx reduced to single route. Frontend builds clean. Committed.
 | 2026-06-06 | Phase D1-D2 — Global Search (Ctrl+K) | Done — `GET /api/search/` endpoint in `backend/app/api/search.py` + `backend/app/db/search.py`. Searches ideas (name, key, mood, genre, data), projects (name, key). Frontend SearchOverlay component with Ctrl+K/Cmd+K keyboard listener, 300ms debounced input, grouped results by source type, arrow key navigation, Enter/click to select. 7 new tests (116 total). Committed.
 | 2026-06-06 | Phase D3 — Voice-Leading Scoring | Done — `_score_voice_leading()` method in `plugins/chord_generator/plugin.py`. Uses music21 `VoiceLeadingQuartet` to evaluate adjacent chord transitions: penalizes parallel 5ths/octaves (-1 each), rewards contrary motion (+1-2). Normalized to 0-100 score. Added `voice_leading` field to chord generator output. Frontend displays VL badge on generated progressions (green ≥70, yellow ≥40, red <40). All 116 tests pass.
+| 2026-06-06 | Phase D4 — Frontend error handling | Done — api.ts refactored with `fetchJson()` helper: all API calls return `ApiResponse` on non-2xx (no throw). `get`, `del` helpers added. Network errors captured as structured `{code, message}`. LoadingSkeleton + RetryButton components created. Frontend builds clean.
+| 2026-06-06 | Phase D6 — Stub plugin cleanup | Done — 5 stub plugins added (finish_my_idea, melody_generator, producer_coach, reference_analyzer, splice_library). Each returns a structured "not yet implemented" error with planned phase. All 9 plugins now discoverable via `GET /api/plugins/`. 116 tests pass.
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**
@@ -109,6 +111,8 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 - [x] **Dashboard (bento grid)** — full implementation: Project Anchor inline editing, Music Theory panel, Chord Pads (Web Audio + drag), Sample Analysis panel, Library modal, Co-Producer Chat stub
 - [x] **Global Search** — `GET /api/search/` endpoint + Ctrl+K SearchOverlay with keyboard navigation
 - [x] **Voice-Leading Scoring** — music21 VoiceLeadingQuartet scoring on generated progressions
+- [x] **Frontend Error Handling** — `fetchJson()` helper, typed errors, LoadingSkeleton, RetryButton
+- [x] **Stub Plugin Cleanup** — 5 stubs with "not yet implemented" responses
 - [ ] AI Studio (chat + analysis + composition assistant)
 
 ## v0.1 Build Plan (5 phases, 23 tasks)
