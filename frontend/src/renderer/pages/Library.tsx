@@ -20,7 +20,7 @@ export default function Library() {
   const [error, setError] = useState('');
   const [sortBy, setSortBy] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('DESC');
-  const [typeFilter, setTypeFilter] = useState<string | null>('progression');
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
 
   async function fetchItems() {

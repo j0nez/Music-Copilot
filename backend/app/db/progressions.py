@@ -39,7 +39,7 @@ def save_progression(
 def list_progressions(
     sort_by: str = "created_at",
     sort_order: str = "DESC",
-    idea_type: str | None = "progression",
+    idea_type: str | None = None,
 ) -> list[dict]:
     allowed_sort = {"key", "mood", "genre", "created_at", "name"}
     if sort_by not in allowed_sort:

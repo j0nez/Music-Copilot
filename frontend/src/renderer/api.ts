@@ -22,6 +22,16 @@ async function post<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
   return res.json();
 }
 
+async function put<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function uploadFile(file: File): Promise<ApiResponse<UploadResult>> {
   const form = new FormData();
   form.append('file', file);
@@ -68,7 +78,7 @@ export async function saveProgression(
 export async function listProgressions(
   sortBy = 'created_at',
   sortOrder = 'DESC',
-  type: string | null = 'progression',
+  type: string | null = null,
 ): Promise<ApiResponse<{ progressions: SavedProgression[] }>> {
   const params = new URLSearchParams({ sort_by: sortBy, sort_order: sortOrder });
   if (type !== null) params.set('type', type);
@@ -148,7 +158,7 @@ export async function updateProject(
   id: number,
   updates: Partial<Pick<Project, 'name' | 'bpm' | 'key' | 'scale'>>,
 ): Promise<ApiResponse<{ project: Project }>> {
-  return post<{ project: Project }>(`/projects/${id}`, updates);
+  return put<{ project: Project }>(`/projects/${id}`, updates);
 }
 
 export async function deleteProject(id: number): Promise<ApiResponse<{ deleted: boolean }>> {

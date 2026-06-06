@@ -47,7 +47,7 @@ async def create_progression(payload: dict):
 async def get_progressions(
     sort_by: str = "created_at",
     sort_order: str = "DESC",
-    type: str | None = Query(default="progression", alias="type"),
+    type: str | None = Query(default=None, alias="type"),
 ):
     try:
         items = list_progressions(sort_by=sort_by, sort_order=sort_order, idea_type=type)

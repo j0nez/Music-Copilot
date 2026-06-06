@@ -36,7 +36,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 ## Active Context
 - **Phase**: v0.1 MVP Foundation (Build)
 - **Current Focus**: Phase A complete (Project concept, Ideas migration, state management). Next: Phase B — Sample Analyzer Upgrade.
-- **Recent Decisions**: 2026-06-05 — Full codebase audit + v0.1 forward plan written (`plan-v0.1-review.md`). 5 phases, 23 tasks, ~2,700 lines. AI Studio moved to last (Phase E). Sample Analyzer upgrade added: 4-algorithm key ensemble (zero new deps), confidence scores, edge-case robustness, "Apply to Project" button. Basic-Pitch (Apache-2.0, ONNX, ~50MB) identified as Phase 2 unlock for actual chord detection from audio. musicnn/CREMA/Omnizart deferred to Phase 3+.
+- **Recent Decisions**: 2026-06-05 — Full codebase audit + v0.1 forward plan written (`plan-v0.1-review.md`). 5 phases, 23 tasks, ~2,700 lines. AI Studio moved to last (Phase E). Sample Analyzer upgrade added: 5-algorithm key ensemble (zero new deps), confidence scores, edge-case robustness, "Apply to Project" button. Basic-Pitch (Apache-2.0, ONNX, ~50MB) identified as Phase 2 unlock for actual chord detection from audio. musicnn/CREMA/Omnizart deferred to Phase 3+.
 - **Recent Decisions**: 2026-06-05 — FL Studio integration research completed (docs/research/fl-studio-integration.md). Splice Bridge case study added as section 10 — reverse-engineered VST3/AU plugin architecture, 3 generations (Bridge 2021, native DAW integrations 2025-2026, Sounds Plugin 2026 beta), comparison to Music Copilot's proposed VST3 bridge. Key finding: keep skip-Tier-4 strategy; if built, use JUCE + named pipes, thin plugin. 29 references.
 - **Recent Decisions**: 2026-06-05 — Model Recommendations research completed (docs/research/model-recommendations.md). Evaluated 20+ tools across 5 categories. Confirmed deeprhythm + music21 as SOTA offline BPM/key. Recommended Groq (free tier) as primary LLM provider. ACE-Step 1.5 (Apache-2.0) best for AI music generation. Procedural (music21 + arvo) preferred over ML for Phase 1-3. Essentia flagged for AGPL license issue. 20 references.
 - **Recent Decisions**: 2026-06-05 — Music Theory & Algorithms research completed (docs/research/music-theory-algorithms.md). 12 references across 6 topics: music21 voice leading (VoiceLeadingQuartet with 6 motion types), Roman numeral analysis (functionalityScore, secondary dominants), cadence detection (cadence-detector + CADET GNN vs music21-based approach), key modulation (5 algorithms via WindowedAnalysis), algorithmic composition (isobar 426 stars for Phase 3 melodies, arvo for procedural/counter-melody), post-tonal set theory. Key finding: all Phase 1-2 features need zero new dependencies — music21 already provides everything. isobar recommended for Phase 3 Melody/Bassline Generator.
@@ -113,7 +113,7 @@ See `plan-v0.1-review.md` for full details:
 
 ## Infrastructure Status
 - [x] Backend scaffold (FastAPI + lifespan + config)
-- [x] SQLite database (8 tables + init + connection)
+- [x] SQLite database (9 tables + init + connection)
 - [x] Plugin ABC with input_schema + auto-discovery
 - [x] EventBus (on/off/emit with auto-wiring)
 - [x] Data contracts (shared/types.py)
@@ -132,7 +132,7 @@ See `plan-v0.1-review.md` for full details:
 - [x] Projects API (POST/GET/PUT/DELETE + /last session persistence + arrangements auto-create)
 - [x] Library page (sortable table with delete)
 - [x] Save button wired in Music Theory page
-- [x] Backend tests (107 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas)
+- [x] Backend tests (109 tests: event bus, plugin discovery, sample analyzer, theory engine, progressions, midi export, chord generator, projects, ideas)
 - [x] Research Topic 1 — Project-based tool patterns
 - [x] Research Topic 2 — Note/chord recognition (16 sources)
 - [x] Research Topic 3 — FL Studio integration (29 references)

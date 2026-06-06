@@ -436,7 +436,7 @@ The v0.1 upgrade above stays zero-new-deps, but the research identifies paths fo
 - [ ] Project Anchor: create project, edit name/BPM/key/scale inline, persists across sessions
 - [ ] Music Theory panel works identically to current 5-tab page
 - [ ] Samples panel — upload + analyze + results with BPM/key confidence indicators
-- [ ] Sample Analyzer uses 4-algorithm key ensemble (K-S, Aarden, Bellman-Budge, Temperley) with voting
+- [ ] Sample Analyzer uses 5-algorithm key ensemble (Krumhansl-Schmuckler, Aarden-Essen, Bellman-Budge, Temperley-Kostka-Payne, Simple-Weights) with voting
 - [ ] Sample Analyzer detects and warns on silence, short audio, and high-noise content
 - [ ] "Apply to Project" button sends sample analysis values to Project Anchor (never auto-overwrites)
 - [ ] Chord Pads: play generated progression via Web Audio API, reorder by drag
