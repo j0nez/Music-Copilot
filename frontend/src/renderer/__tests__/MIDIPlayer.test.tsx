@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import MIDIPlayer from "../components/MIDIPlayer";
 import type { Note } from "../types";
@@ -11,7 +11,9 @@ describe("MIDIPlayer", () => {
       <MIDIPlayer
         chords={[]} melody={[]} bassline={[]}
         bpm={120} bars={8}
+        swing={0} onSwingChange={noop}
         onRegenerate={noop}
+        onClear={noop}
       />,
     );
 
@@ -24,7 +26,9 @@ describe("MIDIPlayer", () => {
       <MIDIPlayer
         chords={notes} melody={[]} bassline={[]}
         bpm={120} bars={8}
+        swing={0} onSwingChange={noop}
         onRegenerate={noop}
+        onClear={noop}
       />,
     );
 
@@ -37,7 +41,9 @@ describe("MIDIPlayer", () => {
       <MIDIPlayer
         chords={notes} melody={[]} bassline={[]}
         bpm={120} bars={16}
+        swing={0} onSwingChange={noop}
         onRegenerate={noop}
+        onClear={noop}
       />,
     );
 

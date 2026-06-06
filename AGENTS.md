@@ -111,6 +111,7 @@ For diverse results in research: use Open-WebSearch's `engines` parameter to que
 | 2026-06-06 | Batch 7 — Documentation | Done — AGENTS.md updated, plan-v0.1-review.md updated. All 7 batches complete. |
 | 2026-06-06 | Batch A — Audio Playback + Expression Engine | Done — MIDIPlayer: Web Audio API per-note oscillator scheduling with swing. melody_generator/bassline_generator: phrase arc velocity via _resolve_phrase_multiplier, articulation gate via resolve_gate_length. DnB offbeat velocity 78→80. All 152 tests pass. |
 | 2026-06-06 | Batch B — Swing + Bugfixes | Done — Swing wired into arrangement export (swing field on input, applied before MIDI conversion). SWING_PRESETS (7 genre defaults) in types.ts, auto-fills slider on genre change. _map_range centering replaces clamping (energetic mood distributes across 72–96). Bassline octave_jump fixed: PSequence([0,7],repeat=-1) alternates root/octave instead of chromatic ascent. Trance + swing export tests added. 154 tests pass. |
+| 2026-06-06 | Batch C — Preset + Auto behavior | Done — GeneratePanel receives `project` prop, resolveSettings() uses project key/scale when Auto, preset chips auto-trigger chord generation via onAutoGenerate callback. MIDIPlayer has onClear prop — clearAll() clears state instead of regenerating. 154 tests pass. |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale) **⬆ 5-algo key ensemble**
@@ -197,4 +198,9 @@ See `plan-v0.1-review.md` for full details:
 5. ✅ Batch 5 — Dashboard Wiring (45/55 layout, component tree)
 6. ✅ Batch 6 — Frontend Tests
 7. ✅ Batch 7 — Documentation
-8. ⬜ Phase E — AI Studio (last)
+8. ✅ Batch A (P0) — Audio Playback + Expression Engine
+9. ✅ Batch B (P1) — Swing + Bugfixes
+10. ✅ Batch C (P2) — Preset + Auto behavior (project auto-fill, auto-trigger on click, clear vs regenerate)
+11. ⬜ Batch D (P3) — Generation Hub controls, Ctrl+S full arrangement save, voice-leading badge, history ring buffer
+12. ⬜ Batch E (P4) — Preset value corrections, bassline velocity polish, swing preset-driven defaults
+13. ⬜ Phase E — AI Studio (last)

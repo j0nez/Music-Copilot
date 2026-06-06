@@ -3,6 +3,15 @@ import { chordGenerator, melodyGenerator, basslineGenerator } from '../api';
 import ReferencePopover from './ReferencePopover';
 import type { GeneratorSettings, Note, ProgressionChord } from '../types';
 
+const API_TIMEOUT = 30_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms)),
+  ]);
+}
+
 interface GeneratePanelProps {
   settings: GeneratorSettings;
   onChange: (s: GeneratorSettings) => void;
@@ -10,6 +19,8 @@ interface GeneratePanelProps {
   onGenerateMelody: (notes: Note[]) => void;
   onGenerateBassline: (notes: Note[]) => void;
   onPushHistory: (type: 'chords' | 'melody' | 'bassline', notes: Note[]) => void;
+  onAutoGenerate: (s: GeneratorSettings) => Promise<void>;
+  project: { key: string; scale: string; bpm: number } | null;
   disabled: boolean;
 }
 
@@ -24,12 +35,13 @@ const PRESETS = [
 const randomMood = () => ['dark', 'uplifting', 'happy', 'chill', 'angry', 'sad'][Math.floor(Math.random() * 6)];
 const randomGenre = () => ['house', 'techno', 'trance', 'dnb', 'dubstep', 'future_bass'][Math.floor(Math.random() * 6)];
 const randomKey = () => ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'][Math.floor(Math.random() * 12)];
+const randomScale = () => ['major', 'minor'][Math.floor(Math.random() * 2)];
 const randomComplexity = () => ['simple', 'advanced'][Math.floor(Math.random() * 2)];
 const randomLength = () => [4, 8, 16][Math.floor(Math.random() * 3)];
 
 export default function GeneratePanel({
   settings, onChange, onGenerateChords, onGenerateMelody, onGenerateBassline,
-  onPushHistory, disabled,
+  onPushHistory, onAutoGenerate, project, disabled,
 }: GeneratePanelProps) {
   const [loading, setLoading] = useState<'none' | 'chords' | 'melody' | 'bassline'>('none');
   const [error, setError] = useState<string | null>(null);
@@ -37,20 +49,20 @@ export default function GeneratePanel({
 
   const allAuto = settings.key === 'Auto' || settings.mood === 'Auto' || settings.genre === 'Auto';
 
-  const applyPreset = useCallback((p: typeof PRESETS[number]) => {
+  function applyPreset(p: typeof PRESETS[number]) {
+    const randomize = p.label === 'Surprise Me ✨';
+    const projectKey = project?.key ?? 'C';
     const s: GeneratorSettings = {
-      key: p.label === 'Surprise Me ✨' ? randomKey() : settings.key === 'Auto' ? 'C' : settings.key,
-      scale: 'major',
+      key: randomize ? randomKey() : settings.key === 'Auto' ? projectKey : settings.key,
+      scale: randomize ? randomScale() : 'major',
       mood: p.mood === 'random' ? randomMood() : p.mood,
       genre: p.genre === 'random' ? randomGenre() : p.genre,
-      length: p.mood === 'random' ? randomLength() : settings.length > 0 ? settings.length : 8,
+      length: randomize ? randomLength() : settings.length > 0 ? settings.length : 8,
       complexity: p.complexity === 'random' ? randomComplexity() : p.complexity,
     };
-    if (p.label === 'Surprise Me ✨') {
-      s.key = randomKey();
-    }
     onChange(s);
-  }, [settings, onChange]);
+    onAutoGenerate(s);
+  }
 
   const handleError = useCallback((msg: string) => {
     setError(msg);
@@ -61,8 +73,8 @@ export default function GeneratePanel({
   function resolveSettings(): GeneratorSettings {
     if (!allAuto) return settings;
     return {
-      key: settings.key === 'Auto' ? 'C' : settings.key,
-      scale: 'major',
+      key: settings.key === 'Auto' ? (project?.key ?? 'C') : settings.key,
+      scale: settings.scale === 'Auto' ? (project?.scale.toLowerCase() ?? 'major') : settings.scale,
       mood: settings.mood === 'Auto' ? 'uplifting' : settings.mood,
       genre: settings.genre === 'Auto' ? 'house' : settings.genre,
       length: settings.length > 0 ? settings.length : 8,
@@ -74,7 +86,7 @@ export default function GeneratePanel({
     setLoading('chords');
     setError(null);
     const s = resolveSettings();
-    const res = await chordGenerator(s.key, s.mood, s.genre, s.length, s.complexity);
+    const res = await withTimeout(chordGenerator(s.key, s.mood, s.genre, s.length, s.complexity), API_TIMEOUT);
     if (res.success && res.data) {
       const notes: Note[] = res.data.chords.map((_, i) => ({
         pitch: 60,
@@ -94,7 +106,7 @@ export default function GeneratePanel({
     setLoading('melody');
     setError(null);
     const s = resolveSettings();
-    const res = await melodyGenerator(s.key, s.scale, s.mood, s.genre, s.length, s.complexity);
+    const res = await withTimeout(melodyGenerator(s.key, s.scale, s.mood, s.genre, s.length, s.complexity), API_TIMEOUT);
     if (res.success && res.data) {
       onPushHistory('melody', res.data.notes);
       onGenerateMelody(res.data.notes);
@@ -108,7 +120,7 @@ export default function GeneratePanel({
     setLoading('bassline');
     setError(null);
     const s = resolveSettings();
-    const res = await basslineGenerator(s.key, s.scale, s.genre, s.length);
+    const res = await withTimeout(basslineGenerator(s.key, s.scale, s.genre, s.length), API_TIMEOUT);
     if (res.success && res.data) {
       onPushHistory('bassline', res.data.notes);
       onGenerateBassline(res.data.notes);
@@ -233,6 +245,7 @@ export default function GeneratePanel({
         <button
           onClick={handleGenerateChords}
           disabled={loading !== 'none' || disabled}
+          data-gen="chords"
           className="flex-1 px-2 py-1.5 rounded bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 text-xs font-medium transition-colors"
         >
           {loading === 'chords' ? '\u27F3' : 'Chords'}
@@ -240,6 +253,7 @@ export default function GeneratePanel({
         <button
           onClick={handleGenerateMelody}
           disabled={loading !== 'none' || disabled}
+          data-gen="melody"
           className="flex-1 px-2 py-1.5 rounded bg-green-700 hover:bg-green-600 disabled:bg-gray-700 disabled:text-gray-500 text-xs font-medium transition-colors"
         >
           {loading === 'melody' ? '\u27F3' : 'Melody'}
@@ -247,6 +261,7 @@ export default function GeneratePanel({
         <button
           onClick={handleGenerateBassline}
           disabled={loading !== 'none' || disabled}
+          data-gen="bassline"
           className="flex-1 px-2 py-1.5 rounded bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-xs font-medium transition-colors"
         >
           {loading === 'bassline' ? '\u27F3' : 'Bass'}

@@ -51,6 +51,24 @@ export default function Dashboard() {
     setBassline(notes);
   }, []);
 
+  const handleAutoGenerate = useCallback(async (s: GeneratorSettings) => {
+    const res = await chordGenerator(s.key, s.mood, s.genre, s.length, s.complexity);
+    if (res.success && res.data) {
+      setProgChords(res.data.chords);
+      setVlScore(res.data.voice_leading?.score);
+      const notes: Note[] = res.data.chords.map((_, i) => ({
+        pitch: 60, velocity: 100, start_beat: 1 + i * 4, duration_in_beats: 4,
+      }));
+      setChords(notes);
+    }
+  }, []);
+
+  const handleClear = useCallback((type: 'chords' | 'melody' | 'bassline') => {
+    if (type === 'chords') { setChords([]); setProgChords([]); }
+    else if (type === 'melody') setMelody([]);
+    else if (type === 'bassline') setBassline([]);
+  }, []);
+
   const handleRegenerate = useCallback(async (type: 'chords' | 'melody' | 'bassline') => {
     const s = settings;
     const resolvedKey = s.key === 'Auto' ? 'C' : s.key;
@@ -181,6 +199,8 @@ export default function Dashboard() {
                   onGenerateMelody={handleGenerateMelody}
                   onGenerateBassline={handleGenerateBassline}
                   onPushHistory={() => {}}
+                  onAutoGenerate={handleAutoGenerate}
+                  project={project ? { key: project.key, scale: project.scale, bpm: project.bpm } : null}
                   disabled={false}
                 />
               </div>
@@ -218,6 +238,7 @@ export default function Dashboard() {
             bpm={project?.bpm ?? 120} bars={bars}
             swing={swing} onSwingChange={setSwing}
             onRegenerate={handleRegenerate}
+            onClear={handleClear}
           />
         </Panel>
         <Panel title="Session Notes" className="flex-1">

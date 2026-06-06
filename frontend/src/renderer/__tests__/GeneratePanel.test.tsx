@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import GeneratePanel from "../components/GeneratePanel";
 import type { GeneratorSettings, Note, ProgressionChord } from "../types";
 
@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS: GeneratorSettings = {
 
 const noop = (..._args: unknown[]) => {};
 const noopPushHistory = (_type: 'chords' | 'melody' | 'bassline', _notes: Note[]) => {};
+const noopAutoGenerate = async (_s: GeneratorSettings) => {};
 
 vi.mock("../api", () => ({
   chordGenerator: vi.fn().mockResolvedValue({ success: true, data: { key: "C", chords: [], mood: "uplifting", genre: "house" } }),
@@ -27,6 +28,8 @@ describe("GeneratePanel", () => {
         onGenerateMelody={noop}
         onGenerateBassline={noop}
         onPushHistory={noopPushHistory}
+        onAutoGenerate={noopAutoGenerate}
+        project={null}
         disabled={false}
       />,
     );
@@ -44,6 +47,8 @@ describe("GeneratePanel", () => {
         onGenerateMelody={noop}
         onGenerateBassline={noop}
         onPushHistory={noopPushHistory}
+        onAutoGenerate={noopAutoGenerate}
+        project={null}
         disabled={false}
       />,
     );
@@ -60,6 +65,8 @@ describe("GeneratePanel", () => {
         onGenerateMelody={noop}
         onGenerateBassline={noop}
         onPushHistory={noopPushHistory}
+        onAutoGenerate={noopAutoGenerate}
+        project={null}
         disabled={false}
       />,
     );

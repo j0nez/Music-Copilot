@@ -27,6 +27,7 @@ interface MIDIPlayerProps {
   swing: number;
   onSwingChange: (v: number) => void;
   onRegenerate: (type: 'chords' | 'melody' | 'bassline') => void;
+  onClear: (type: 'chords' | 'melody' | 'bassline') => void;
 }
 
 const PART_CONFIG = [
@@ -35,7 +36,7 @@ const PART_CONFIG = [
   { type: 'bassline' as const, label: 'Bassline', color: 'text-blue-400' as const },
 ];
 
-export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing, onSwingChange, onRegenerate }: MIDIPlayerProps) {
+export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing, onSwingChange, onRegenerate, onClear }: MIDIPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [playheadBeat, setPlayheadBeat] = useState<number | null>(null);
   const animRef = useRef<number | null>(null);
@@ -165,9 +166,9 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
   }
 
   function clearAll() {
-    onRegenerate('chords');
-    onRegenerate('melody');
-    onRegenerate('bassline');
+    onClear('chords');
+    onClear('melody');
+    onClear('bassline');
   }
 
   if (!hasAny) {
