@@ -50,8 +50,9 @@ export default function ProviderSettings({ providers, onClose, onConfigured }: P
     setSaving(true);
     for (const p of providers) {
       const key = keys[p.name];
-      if (key) {
-        await configureProvider(p.name, key, models[p.name] || undefined);
+      const model = models[p.name];
+      if (key || model) {
+        await configureProvider(p.name, key || undefined, model || undefined);
       }
     }
     await setProviderPriority(priority);

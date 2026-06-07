@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/providers", tags=["providers"])
 
 class ConfigureRequest(BaseModel):
     name: str
-    api_key: str
+    api_key: str | None = None
     model: str | None = None
 
 
@@ -45,11 +45,17 @@ async def list_providers():
 async def configure_provider(req: ConfigureRequest):
     from providers import configure
     try:
-        configure(req.name, req.api_key, model=req.model)
+        if req.api_key:
+            configure(req.name, req.api_key, model=req.model)
+        elif req.model:
+            configure(req.name, "", model=req.model)
+        else:
+            return ApiResponse(success=False, error={"code": "NO_CHANGE", "message": "No api_key or model provided"})
     except ValueError as e:
         return ApiResponse(success=False, error={"code": "INVALID_PROVIDER", "message": str(e)})
 
-    _save_api_key(req.name, req.api_key)
+    if req.api_key:
+        _save_api_key(req.name, req.api_key)
     if req.model:
         _save_model(req.name, req.model)
 

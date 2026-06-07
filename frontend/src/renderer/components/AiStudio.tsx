@@ -35,7 +35,13 @@ export default function AiStudio({ project, activeParts }: AiStudioProps) {
   const loadHistory = useCallback(async () => {
     const res = await getChatHistory(20);
     if (res.success && res.data) {
-      setMessages(res.data.history.map(h => ({ ...h, timestamp: Date.now() })));
+      setMessages(res.data.history.map(h => ({
+        role: h.role,
+        content: h.message,
+        provider: h.provider ?? undefined,
+        model: h.model ?? undefined,
+        timestamp: new Date(h.created_at).getTime(),
+      })));
     }
     setLoadedHistory(true);
   }, []);
