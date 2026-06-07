@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import NoteGrid from './NoteGrid';
 import { melodyGenerator, basslineGenerator, exportArrangement, saveArrangement } from '../api';
+import { withAbort } from '../utils/async';
 import type { Note, GeneratorSettings } from '../types';
 
 function midiToFreq(pitch: number): number {
@@ -51,6 +52,7 @@ export default function GenerationHub({
 }: GenerationHubProps) {
   const [peek, setPeek] = useState(false);
   const [loading, setLoading] = useState<'none' | 'melody' | 'bassline'>('none');
+  const [error, setError] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
   const [saving, setSaving] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -77,18 +79,26 @@ export default function GenerationHub({
 
   async function handleGenerateMelody() {
     setLoading('melody');
-    const res = await melodyGenerator(resolveKey(), resolveScale(), resolveMood(), resolveGenre(), settings.length, settings.complexity);
+    setError(null);
+    const res = await withAbort(signal =>
+      melodyGenerator(resolveKey(), resolveScale(), resolveMood(), resolveGenre(), settings.length, settings.complexity, signal));
     if (res.success && res.data) {
       onSetMelody(res.data.notes);
+    } else {
+      setError(res.error?.message ?? 'Melody generation failed');
     }
     setLoading('none');
   }
 
   async function handleGenerateBassline() {
     setLoading('bassline');
-    const res = await basslineGenerator(resolveKey(), resolveScale(), resolveGenre(), settings.length, settings.pattern);
+    setError(null);
+    const res = await withAbort(signal =>
+      basslineGenerator(resolveKey(), resolveScale(), resolveGenre(), settings.length, settings.pattern, signal));
     if (res.success && res.data) {
       onSetBassline(res.data.notes);
+    } else {
+      setError(res.error?.message ?? 'Bassline generation failed');
     }
     setLoading('none');
   }
@@ -241,6 +251,11 @@ export default function GenerationHub({
         <h2 className="text-lg font-semibold text-gray-200 mb-6 text-center">Generation Hub</h2>
 
         <div className="w-full max-w-3xl mx-auto space-y-6">
+          {error && (
+            <div className="px-3 py-2 rounded bg-red-900/40 border border-red-700/50 text-red-300 text-xs text-center">
+              {error}
+            </div>
+          )}
           {/* Melody Section */}
           <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-4 space-y-3">
             <h3 className="text-sm font-medium text-gray-300">Melody</h3>

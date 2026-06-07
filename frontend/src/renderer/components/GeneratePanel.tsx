@@ -2,19 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { chordGenerator, melodyGenerator, basslineGenerator } from '../api';
 import ReferencePopover from './ReferencePopover';
 import { chordNotesToMidi } from '../music/pitch';
+import { withAbort } from '../utils/async';
 import type { GeneratorSettings, Note, ProgressionChord } from '../types';
-
-const API_TIMEOUT = 30_000;
-
-async function withAbort<T>(fn: (signal: AbortSignal) => Promise<T>, ms: number): Promise<T> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    return await fn(controller.signal);
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 interface GeneratePanelProps {
   settings: GeneratorSettings;
