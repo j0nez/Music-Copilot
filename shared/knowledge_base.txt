@@ -1,0 +1,45 @@
+# Last updated: 2026-06-07 | Version: 0.1
+
+=== Architecture ===
+Music Copilot is a desktop app (Electron + React + FastAPI + SQLite) for FL Studio producers.
+All AI goes through providers.generate(prompt) — never direct API calls.
+All features are plugins under plugins/ — every Plugin ABC subclass is auto-discovered.
+Plugins communicate via event_bus.emit() — never call another plugin directly.
+Audio/MIDI analysis is fully offline (librosa, deeprhythm, music21).
+LLMs never touch raw audio — audio goes through DSP first, then structured JSON is sent.
+
+=== Available Plugins ===
+sample_analyzer — BPM (deeprhythm), key/scale (music21 Krumhansl-Schmuckler), spectral features
+theory_engine — scales, chords, intervals, functions (deterministic, no AI)
+chord_generator — 7 moods, 24 keys, 9 chord qualities, voice-leading scoring via music21
+melody_generator — isobar-based, genre-aware, phrase arc velocity, articulation gate
+bassline_generator — 4 patterns per genre, trance octave jumps
+midi_export — swing quantization, velocity arcs, articulation, multiple voicings
+
+=== Configuration ===
+Project: {name, bpm, key, scale} — editable via inline hover edit
+Generate panel: {key, scale, mood, genre, length, complexity, pattern}
+MIDI Player: per-part mute, swing slider (0-100%), history cycling, regenerate/clear
+Generation Hub: full controls, NoteGrid preview, Play/Stop, MIDI export, Save to Library
+
+=== Providers (AI) ===
+groq — default, llama-3.3-70b-versatile, httpx POST to api.groq.com
+openrouter — fallback, supports many models via single API key
+openai — stub (not implemented)
+glm — stub (not implemented)
+Auto-failover: on 429 rate limit, tries next provider in priority order
+
+=== Music Theory Constants ===
+12 semitones: C=0, C#=1, D=2, D#=3, E=4, F=5, F#=6, G=7, G#=8, A=9, A#=10, B=11
+Chord intervals (semitones from root):
+  major=[0,4,7] minor=[0,3,7] dim=[0,3,6] aug=[0,4,8]
+  maj7=[0,4,7,11] min7=[0,3,7,10] dom7=[0,4,7,10] sus2=[0,2,7] sus4=[0,5,7]
+Diatonic qualities (major): [major, minor, minor, major, major, minor, diminished]
+Diatonic qualities (minor): [minor, diminished, major, minor, minor, major, major]
+
+=== Key Actions ===
+Ctrl+K — Global search (Library, samples)
+Ctrl+Enter — Auto-generate (chords → melody → bassline)
+Ctrl+Shift+M — Export all MIDI
+Ctrl+S — Save arrangement to Library
+Ctrl+Enter in chat — Send message
