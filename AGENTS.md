@@ -28,9 +28,10 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: Batch E polish complete (preset corrections, swing preset-driven defaults). Bassline velocity (phrase arc, DnB offbeat 80) was already done in Batch A. Remaining: Phase E (AI Studio).
+- **Current Focus**: Qodo code review fixes complete (7 batches). All bugs addressed: pattern/complexity mixup, history cycling, arrangement save schema, export security, AbortController gaps, shared pitch utility, ErrorBoundary import. Remaining: Phase E (AI Studio).
 - **Recent Decisions**: 2026-06-06 — All 7 original implementation batches done + all 13 post-audit fixes. Batches A–D (P0–P3) completed: audio playback (Web Audio API), Expression Engine integration (phrase arc velocity, articulation gate), swing pipeline, _map_range centering fix, bassline octave_jump fix, project state auto-fill, preset chip auto-trigger, clear vs regenerate separation, Generation Hub full controls, Ctrl+S arrangement save, VL score badge, generation history ring buffer. 154 tests pass (131 backend + 23 frontend).
 - **Recent Decisions**: 2026-06-07 — Infrastructure & polish: `shared/music_theory.py` created (consolidated NOTE_TO_SEMITONE, CHORD_INTERVALS, DIATONIC_QUALITIES from 4+ files). Provider layer decoupled from backend config (`configure()` takes explicit `provider_name`/`api_key`; `generate()` no longer auto-inits). EventBus handlers run concurrently via `asyncio.gather` with per-handler error isolation. Sample Analyzer: lazy `DeepRhythmPredictor` (delayed import), `asyncio.to_thread` for librosa calls, double-analysis guard. Frontend: `AbortController` replaces `Promise.race` for timeouts, `ErrorBoundary` wraps app, playhead refactored to imperative SVG API (no re-renders), proper chord→MIDI pitch mapping, per-part mute buttons, Library "Load" support, `ReferencePopover` now shows actual chord/interval content.
+- **Recent Decisions**: 2026-06-07 — Qodo code review fixes (7 batches). Pattern/complexity mixup fixed (dedicated `pattern` field in GeneratorSettings). History cycling uses stable index ref instead of `arr.indexOf()` reference equality. Arrangement save route uses Pydantic schema + structured logging. Export download hardened with extension whitelist + resolve guard. GenerationHub uses AbortController + shows error feedback. Shared `withAbort` extracted to `utils/async.ts`. Shared `PITCH_CLASSES`/`chordNotesToMidi` in `music/pitch.ts`. ErrorBoundary imports `ReactNode`/`ErrorInfo` directly. Scale dropdown includes 'Auto' option.
 - **Blockers**: None
 
 ## Task History
@@ -48,6 +49,7 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-06 | Batch D (P3) — Hub + Save + History | Done — GenerationHub full controls, Ctrl+S arrangement save, VL badge, history ring buffer with cycle arrows |
 | 2026-06-06 | Batch E (P4) — Preset corrections + swing defaults | Done — complexity swaps, Deep House mood/genre fix, swing auto-set on genre switch |
 | 2026-06-07 | Infrastructure & polish updates | Done — shared/music_theory.py, provider decoupling, async EventBus, async sample analyzer, AbortController, ErrorBoundary, imperative playhead, mute buttons, Library Load |
+| 2026-06-07 | Qodo review fixes (7 batches) | Done — shared pitch utility (music/pitch.ts), shared withAbort (utils/async.ts), GeneratorSettings pattern field, Scale Auto option, arrangement save Pydantic schema + logging, export extension whitelist + resolve guard, history index ref (fix array ref equality), GenerationHub AbortController + error feedback, ErrorBoundary React import |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)
