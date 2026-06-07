@@ -30,6 +30,9 @@ data/logs/*
 .env
 .env.local
 
+# opencode config (contains API keys)
+opencode.json
+
 # Generated
 *.mid
 *.wav
