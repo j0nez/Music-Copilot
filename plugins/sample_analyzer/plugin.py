@@ -68,7 +68,7 @@ class SampleAnalyzerPlugin(Plugin):
         try:
             y, sr = await asyncio.to_thread(librosa.load, str(path))
 
-            duration = float(await asyncio.to_thread(librosa.get_duration, y=y, sr=sr))
+            duration = float(librosa.get_duration(y=y, sr=sr))
 
             if duration < SHORT_AUDIO_THRESHOLD:
                 return PluginResult(

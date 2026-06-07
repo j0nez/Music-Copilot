@@ -94,6 +94,7 @@ async def execute_plugin(name: str, **kwargs: Any) -> PluginResult:
             validated = plugin.input_schema(**kwargs)
             result = await plugin.execute(**validated.model_dump())
         else:
+            logger.warning("Plugin '%s' has no input_schema — kwargs passed unvalidated", name)
             result = await plugin.execute(**kwargs)
         logger.info("Plugin '%s' executed successfully", name)
         return result
