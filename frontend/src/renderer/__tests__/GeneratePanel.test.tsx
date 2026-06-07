@@ -5,7 +5,7 @@ import type { GeneratorSettings, Note, ProgressionChord } from "../types";
 
 const DEFAULT_SETTINGS: GeneratorSettings = {
   key: "Auto", scale: "major", mood: "Auto", genre: "Auto",
-  length: 8, complexity: "Auto", pattern: "auto",
+  length: 8, complexity: "Auto", pattern: "Auto",
 };
 
 const noop = (..._args: unknown[]) => {};

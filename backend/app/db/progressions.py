@@ -44,17 +44,18 @@ def save_idea(
     data: dict | list,
     project_id: int | None = None,
     name: str | None = None,
+    bpm: int | None = None,
 ) -> int:
     conn = get_connection()
     try:
         cur = conn.execute(
-            """INSERT INTO ideas (project_id, type, name, data, key, mood, genre)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (project_id, idea_type, name or "", json.dumps(data, ensure_ascii=False), key, mood, genre),
+            """INSERT INTO ideas (project_id, type, name, data, key, mood, genre, bpm)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (project_id, idea_type, name or "", json.dumps(data, ensure_ascii=False), key, mood, genre, bpm),
         )
         conn.commit()
         row_id = cur.lastrowid
-        logger.info("Saved %s %d: %s", idea_type, row_id, name)
+        logger.info("Saved %s id=%d name='%s' project_id=%s key=%s", idea_type, row_id, name or "", project_id, key)
         return row_id
     finally:
         conn.close()
@@ -67,12 +68,13 @@ def save_arrangement(
     data: dict,
     project_id: int | None = None,
     name: str | None = None,
+    bpm: int | None = None,
 ) -> int:
     conn = get_connection()
     try:
         cur = conn.execute(
-            """INSERT INTO ideas (project_id, type, name, data, key, mood, genre)
-               VALUES (?, 'arrangement', ?, ?, ?, ?, ?)""",
+            """INSERT INTO ideas (project_id, type, name, data, key, mood, genre, bpm)
+               VALUES (?, 'arrangement', ?, ?, ?, ?, ?, ?)""",
             (
                 project_id,
                 name or "",
@@ -80,6 +82,7 @@ def save_arrangement(
                 key,
                 mood,
                 genre,
+                bpm,
             ),
         )
         conn.commit()
@@ -127,6 +130,22 @@ def get_progression(progression_id: int) -> dict | None:
         row = conn.execute(
             "SELECT id, project_id, type, name, data, key, mood, genre, bpm, created_at FROM ideas WHERE id = ? AND type = 'progression'",
             (progression_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        r = dict(row)
+        r["data"] = json.loads(r["data"])
+        return r
+    finally:
+        conn.close()
+
+
+def get_any_idea(idea_id: int) -> dict | None:
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT id, project_id, type, name, data, key, mood, genre, bpm, created_at FROM ideas WHERE id = ?",
+            (idea_id,),
         ).fetchone()
         if row is None:
             return None

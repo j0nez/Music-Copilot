@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS ideas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
     type TEXT NOT NULL DEFAULT 'progression' CHECK(type IN (
-        'progression', 'melody', 'bassline', 'drum_pattern', 'arpeggio', 'phrase'
+        'progression', 'melody', 'bassline', 'drum_pattern', 'arpeggio', 'phrase',
+        'arrangement', 'arrangement_chords'
     )),
     name TEXT,
     data TEXT NOT NULL DEFAULT '{}',
@@ -105,6 +106,7 @@ def init_db() -> None:
     try:
         conn.executescript(SCHEMA_SQL)
         _migrate_progressions_to_ideas(conn)
+        _migrate_ideas_type_constraint(conn)
         conn.commit()
     finally:
         conn.close()
@@ -132,6 +134,40 @@ def _migrate_progressions_to_ideas(conn: sqlite3.Connection) -> None:
                 r["created_at"],
             ),
         )
+
+
+def _migrate_ideas_type_constraint(conn: sqlite3.Connection) -> None:
+    schema = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='ideas'"
+    ).fetchone()
+    if schema and 'arrangement' in schema[0]:
+        return
+    conn.execute("PRAGMA foreign_keys=OFF")
+    try:
+        conn.executescript("""
+            CREATE TABLE ideas_v2 (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+                type TEXT NOT NULL DEFAULT 'progression' CHECK(type IN (
+                    'progression', 'melody', 'bassline', 'drum_pattern', 'arpeggio', 'phrase',
+                    'arrangement', 'arrangement_chords'
+                )),
+                name TEXT,
+                data TEXT NOT NULL DEFAULT '{}',
+                key TEXT,
+                mood TEXT,
+                genre TEXT,
+                bpm INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            INSERT INTO ideas_v2 SELECT * FROM ideas;
+            DROP TABLE ideas;
+            ALTER TABLE ideas_v2 RENAME TO ideas;
+        """)
+        conn.commit()
+    finally:
+        conn.execute("PRAGMA foreign_keys=ON")
 
 
 def get_connection() -> sqlite3.Connection:

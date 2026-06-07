@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { deleteProgression, downloadMidiUrl, downloadFromUrl, exportArrangement, listProgressions } from "../api";
+import { deleteProgression, downloadFromUrl, downloadMidiUrl, exportArrangement, exportSinglePart, listProgressions } from "../api";
 import type { Note, SavedProgression } from "../types";
 
 type SortField = "key" | "mood" | "genre" | "name" | "created_at";
@@ -150,7 +150,7 @@ export default function LibraryModal({ onClose, onLoad }: { onClose: () => void;
                   {items.map((p) => (
                     <tr key={p.id} className="border-b border-surface-800 hover:bg-surface-800/50 transition-colors">
                       <td className="py-3 pr-4">
-                        <span className="px-2 py-0.5 rounded text-xs bg-surface-700 text-gray-300 capitalize">{p.type}</span>
+                        <span className="px-2 py-0.5 rounded text-xs bg-surface-700 text-gray-300 capitalize">{displayType(p.type)}</span>
                       </td>
                       <td className="py-3 pr-4 font-medium">{p.name || "—"}</td>
                       <td className="py-3 pr-4 font-medium">{p.key}</td>
@@ -159,6 +159,8 @@ export default function LibraryModal({ onClose, onLoad }: { onClose: () => void;
                       <td className="py-3 pr-4">
                         {p.type === 'arrangement' ? (
                           <ArrangementDataCell data={p.data as unknown as { chords: Note[]; melody: Note[]; bassline: Note[] }} />
+                        ) : p.type === 'arrangement_chords' || p.type === 'melody' || p.type === 'bassline' ? (
+                          <span className="text-gray-400 text-xs">{(p.data as unknown as Note[]).length} notes</span>
                         ) : (
                           <div className="flex flex-wrap gap-1">
                             {(p.data as { roman: string }[]).map((c, i) => (
@@ -174,12 +176,14 @@ export default function LibraryModal({ onClose, onLoad }: { onClose: () => void;
                       </td>
                       <td className="py-3 pr-4">
                         {p.type === 'arrangement' ? (
-                          <ArrangementMidiButton data={p.data as unknown as { chords: Note[]; melody: Note[]; bassline: Note[] }} />
-                        ) : (
+                          <ArrangementMidiButton bpm={p.bpm} data={p.data as unknown as { chords: Note[]; melody: Note[]; bassline: Note[] }} />
+                        ) : p.type === 'progression' ? (
                           <a href={downloadMidiUrl(p.id)} download
                             className="px-2.5 py-1 rounded bg-blue-900/40 text-blue-300 text-xs hover:bg-blue-900/60 transition-colors inline-block">
                             MIDI
                           </a>
+                        ) : (
+                          <NoteListMidiButton bpm={p.bpm} type={p.type === 'arrangement_chords' ? 'chords' : p.type === 'melody' ? 'melody' : 'bassline'} notes={p.data as unknown as Note[]} />
                         )}
                       </td>
                       {onLoad && (
@@ -218,7 +222,29 @@ export default function LibraryModal({ onClose, onLoad }: { onClose: () => void;
   );
 }
 
-/* ── Arrangement helpers ─────────────────────── */
+/* ── Helpers ─────────────────────── */
+
+function displayType(type: string): string {
+  return type === 'arrangement_chords' ? 'Arrangement Chords' : type;
+}
+
+function NoteListMidiButton({ bpm, type, notes }: { bpm: number | null; type: string; notes: Note[] }) {
+  const [busy, setBusy] = useState(false);
+  async function handleClick() {
+    setBusy(true);
+    const res = await exportSinglePart(type as 'chords' | 'melody' | 'bassline', notes, bpm ?? 120);
+    if (res.success && res.data) {
+      await downloadFromUrl(res.data.download_url, res.data.filename);
+    }
+    setBusy(false);
+  }
+  return (
+    <button onClick={handleClick} disabled={busy}
+      className="px-2.5 py-1 rounded bg-blue-900/40 text-blue-300 text-xs hover:bg-blue-900/60 transition-colors disabled:opacity-50 inline-block">
+      {busy ? '...' : 'MIDI'}
+    </button>
+  );
+}
 
 function ArrangementDataCell({ data }: { data: { chords: Note[]; melody: Note[]; bassline: Note[] } }) {
   const count = (arr: Note[]) => arr?.length ?? 0;
@@ -231,13 +257,13 @@ function ArrangementDataCell({ data }: { data: { chords: Note[]; melody: Note[];
   );
 }
 
-function ArrangementMidiButton({ data }: { data: { chords: Note[]; melody: Note[]; bassline: Note[] } }) {
+function ArrangementMidiButton({ bpm, data }: { bpm: number | null; data: { chords: Note[]; melody: Note[]; bassline: Note[] } }) {
   const [busy, setBusy] = useState(false);
   async function handleClick() {
     setBusy(true);
     const res = await exportArrangement(
       data.chords ?? [], data.melody ?? [], data.bassline ?? [],
-      120, 0, { chords: true, melody: true, bassline: true },
+      bpm ?? 120, 0, { chords: true, melody: true, bassline: true },
     );
     if (res.success && res.data) {
       await downloadFromUrl(res.data.download_url, res.data.filename);

@@ -74,7 +74,7 @@ class BasslineGeneratorPlugin(Plugin):
             isobar_scale = _SCALE_NAMES.get(scale, Scale.minor)
             octave = _OCTAVE_FOR_GENRE.get(genre, 2)
 
-            pattern_type = pattern if pattern != "auto" else GENRE_PATTERNS.get(genre, "root_fifth")
+            pattern_type = pattern if pattern and pattern.lower() != "auto" else GENRE_PATTERNS.get(genre, "root_fifth")
             notes_per_bar = _notes_per_bar(genre)
             total_notes = length * notes_per_bar
 

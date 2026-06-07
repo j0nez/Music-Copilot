@@ -52,7 +52,7 @@ export default function GeneratePanel({
       genre: p.genre === 'random' ? randomGenre() : p.genre,
       length: randomize ? randomLength() : settings.length > 0 ? settings.length : 8,
       complexity: p.complexity === 'random' ? randomComplexity() : p.complexity,
-      pattern: 'auto',
+      pattern: 'Auto',
     };
     onChange(s);
     onAutoGenerate(s);
@@ -73,7 +73,7 @@ export default function GeneratePanel({
       genre: settings.genre === 'Auto' ? 'house' : settings.genre,
       length: settings.length > 0 ? settings.length : 8,
       complexity: settings.complexity === 'Auto' ? 'simple' : settings.complexity,
-      pattern: 'auto',
+      pattern: 'Auto',
     };
   }
 

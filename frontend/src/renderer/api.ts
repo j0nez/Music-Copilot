@@ -229,10 +229,11 @@ export async function saveArrangement(
   key: string,
   mood: string | null,
   genre: string | null,
+  bpm: number | null,
   opts?: { project_id?: number; name?: string },
 ): Promise<ApiResponse<{ id: number }>> {
   return post<{ id: number }>('/arrangement/save', {
-    chords, melody, bassline, key, mood, genre, ...opts,
+    chords, melody, bassline, key, mood, genre, bpm, ...opts,
   });
 }
 
@@ -258,8 +259,8 @@ export async function exportSinglePart(
 }
 
 export async function downloadFromUrl(downloadUrl: string, filename: string): Promise<void> {
-  const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `http://localhost:8000${downloadUrl}`;
-  const res = await fetch(fullUrl);
+  const fullUrl = `${BASE.replace('/api', '')}${downloadUrl}`;
+  const res = await fetch(fullUrl, { credentials: 'include' });
   if (!res.ok) throw new Error(`Download failed: ${res.status}`);
   const blob = await res.blob();
   const blobUrl = URL.createObjectURL(blob);

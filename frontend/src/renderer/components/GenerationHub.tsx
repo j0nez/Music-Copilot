@@ -178,7 +178,7 @@ export default function GenerationHub({
     setSaving(true);
     const name = saveNameRef.current?.value?.trim() ||
       `Arrangement - ${resolveKey()} - ${resolveGenre()} - ${bars} bars`;
-    await saveArrangement(chords, melody, bassline, resolveKey(), resolveMood(), resolveGenre(), {
+    await saveArrangement(chords, melody, bassline, resolveKey(), resolveMood(), resolveGenre(), bpm, {
       project_id: projectId,
       name,
     });

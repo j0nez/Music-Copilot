@@ -16,7 +16,7 @@ import { chordNotesToMidi } from "../music/pitch";
 const MAX_HISTORY = 5;
 const DEFAULT_SETTINGS: GeneratorSettings = {
   key: "Auto", scale: "major", mood: "Auto", genre: "Auto",
-  length: 8, complexity: "Auto", pattern: "auto",
+  length: 8, complexity: "Auto", pattern: "Auto",
 };
 
 function emptyHistory(): GenerationHistory {
@@ -166,11 +166,12 @@ export default function Dashboard() {
     await saveArrangement(chords, melody, bassline, project.key,
       settings.mood !== 'Auto' ? settings.mood : null,
       settings.genre !== 'Auto' ? settings.genre : null,
+      project.bpm,
       { project_id: project.id, name },
     );
   }, [project, chords, melody, bassline, settings, bars]);
 
-  const handleLoadFromLibrary = useCallback((item: { data: ProgressionChord[] | { chords: Note[]; melody: Note[]; bassline: Note[] }; _part?: string }) => {
+  const handleLoadFromLibrary = useCallback((item: { data: ProgressionChord[] | { chords: Note[]; melody: Note[]; bassline: Note[] } | Note[]; _part?: string }) => {
     if (item._part) {
       const arrData = item.data as { chords: Note[]; melody: Note[]; bassline: Note[] };
       const part = item._part as 'chords' | 'melody' | 'bassline';
@@ -182,10 +183,15 @@ export default function Dashboard() {
       return;
     }
     if (Array.isArray(item.data)) {
-      const notes = chordNotesToMidi(item.data, 1);
-      setProgChords(item.data);
-      setChords(notes);
-      pushHistory('chords', notes);
+      if (item.data.length > 0 && 'roman' in item.data[0]) {
+        const notes = chordNotesToMidi(item.data as ProgressionChord[], 1);
+        setProgChords(item.data as ProgressionChord[]);
+        setChords(notes);
+        pushHistory('chords', notes);
+      } else {
+        setChords(item.data as Note[]);
+        pushHistory('chords', item.data as Note[]);
+      }
     } else {
       const arrData = item.data as { chords: Note[]; melody: Note[]; bassline: Note[] };
       if (arrData.chords?.length) {

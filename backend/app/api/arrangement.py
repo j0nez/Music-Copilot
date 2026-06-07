@@ -34,6 +34,13 @@ class ArrangementSaveInput(BaseModel):
     genre: str | None = None
     project_id: int | None = None
     name: str | None = None
+    bpm: int | None = None
+
+
+class PerPartExportInput(BaseModel):
+    part: str
+    notes: list[ArrangementNote]
+    bpm: int = 120
 
 
 class ArrangementExportInput(BaseModel):
@@ -113,12 +120,8 @@ async def export_arrangement(payload: ArrangementExportInput):
 
 
 @router.post("/per-part")
-async def export_single_part(payload: dict):
-    part_name = payload.get("part", "")
-    notes_data = payload.get("notes", [])
-    bpm = payload.get("bpm", 120)
-
-    if not part_name or not notes_data:
+async def export_single_part(payload: PerPartExportInput):
+    if not payload.part or not payload.notes:
         return ApiResponse(
             success=False,
             data=None,
@@ -126,10 +129,12 @@ async def export_single_part(payload: dict):
         )
 
     program_map = {"chords": 0, "melody": 1, "bassline": 33}
-    program = program_map.get(part_name, 0)
+    program = program_map.get(payload.part, 0)
 
     try:
-        notes = [ArrangementNote(**n) for n in notes_data]
+        track = MidiTrack(program=program)
+        track.notes = [_note_to_midi(n) for n in payload.notes]
+        midi_file = MidiFile(tracks=[track], bpm=payload.bpm)
         track = MidiTrack(program=program)
         track.notes = [_note_to_midi(n) for n in notes]
         midi_file = MidiFile(tracks=[track], bpm=bpm)
@@ -163,20 +168,21 @@ async def save_arrangement_route(payload: ArrangementSaveInput):
         row_id = save_arrangement(
             key=payload.key, mood=payload.mood, genre=payload.genre,
             data=data, project_id=payload.project_id, name=payload.name,
+            bpm=payload.bpm,
         )
         base = payload.name or f"Arrangement - {payload.key}"
         if payload.chords:
-            save_idea("progression", payload.key, payload.mood, payload.genre,
+            save_idea("arrangement_chords", payload.key, payload.mood, payload.genre,
                        [n.model_dump() for n in payload.chords],
-                       payload.project_id, f"{base} - Chords")
+                       payload.project_id, f"{base} - Chords", bpm=payload.bpm)
         if payload.melody:
             save_idea("melody", payload.key, payload.mood, payload.genre,
                        [n.model_dump() for n in payload.melody],
-                       payload.project_id, f"{base} - Melody")
+                       payload.project_id, f"{base} - Melody", bpm=payload.bpm)
         if payload.bassline:
             save_idea("bassline", payload.key, payload.mood, payload.genre,
                        [n.model_dump() for n in payload.bassline],
-                       payload.project_id, f"{base} - Bassline")
+                       payload.project_id, f"{base} - Bassline", bpm=payload.bpm)
         return ApiResponse(success=True, data={"id": row_id})
     except Exception as exc:
         logger.error("Failed to save arrangement: project_id=%s name=%s exc=%s",
