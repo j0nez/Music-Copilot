@@ -23,7 +23,7 @@ Built with Electron + React + FastAPI + SQLite.
 - **Tests**: `pytest` for backend, `vitest` for frontend.
 - **Imports**: absolute from project root. `from backend.app.models import X`; shared constants from `shared.music_theory`.
 - **Errors**: custom exception hierarchy → HTTPException with detail.
-- **Async audio**: librosa calls wrapped in `asyncio.to_thread()` for non-blocking analysis.
+- **Async audio**: heavy librosa calls wrapped in `asyncio.to_thread()` for non-blocking analysis (not `get_duration` — pure math).
 - **Frontend API**: all fetch methods accept optional `AbortSignal` for cancellation.
 
 ## Active Context
