@@ -39,6 +39,7 @@ Built with Electron + React + FastAPI + SQLite.
 - **Recent Decisions**: 2026-06-07 — Phase 1 audit fix batch: NoteGrid bar line bug (`beat % BEATS_PER_BAR` instead of `beat % BEAT_WIDTH`). Dashboard `handleRegenerate()` uses `project?.key` and `project?.scale?.toLowerCase()` instead of hardcoded `'C'`/`'major'`. GeneratePanel scale dropdown adds `'Auto'` option (consistent with GenerationHub). ProjectSummary MIDI download uses `downloadFromUrl()` (blob+fetch) instead of `window.open()`.
 - **Recent Decisions**: 2026-06-07 — Phase 2 audit fix batch: GenerationHub `handleSave()` now checks `res.success` and shows error via existing `error` state. Dashboard `handleSaveArrangement()` has `saving` state (guards double-click + disabled), checks API response, and shows a top-center toast (green on success, red on error) that auto-dismisses after 3s.
 - **Recent Decisions**: 2026-06-07 — Phase 3 audit fix batch: README corrected (removed claims for unimplemented Producer Chat/Why Does This Sound Good?/Finish My Idea). All 17 remaining exported API functions now accept optional `AbortSignal`. Dead `Idea` interface removed from `types.ts`. Dead `ChordPads.tsx` component deleted. Empty `backend/tests/`, `services/audio/`, `services/chat/` directories cleaned up. Architecture docs (`frontend.md`, `api-contract.md`) updated. MIDI `_note_name_to_midi()` confirmed correct (no bug).
+- **Recent Decisions**: 2026-06-07 — Phase E (AI Studio) fully implemented. Multi-provider registry with auto-failover (Groq + OpenRouter live, others stubs). Provider config API stores keys in DB, never returns full key. Chat API route injects project context + knowledge base + conversation history. AiStudio chat UI in right column (hero panel, 55%). Project Summary collapsed to compact bottom-row strip. Knowledge_base.txt with version marker. 125 backend + 23 frontend tests pass.
 - **Blockers**: None
 
 ## Task History
@@ -69,7 +70,7 @@ Built with Electron + React + FastAPI + SQLite.
 - [x] Generation Hub (full controls, NoteGrid preview, Play/Stop, MIDI export, Save to Library)
 - [x] Project Summary + Ctrl+S arrangement save
 - [x] Voice-leading score badge
-- [ ] AI Studio (chat + analysis + composition assistant)
+- [x] AI Studio (multi-provider chat with project context, knowledge base, auto-failover)
 
 ## Infrastructure Status
 - [x] Backend scaffold (FastAPI + lifespan + config)
@@ -105,12 +106,12 @@ Built with Electron + React + FastAPI + SQLite.
 10. ✅ Batch C (P2) — Preset + Auto behavior
 11. ✅ Batch D (P3) — Hub + Save + History
 12. ✅ Batch E (P4) — Preset value corrections (complexity swaps, Deep House mood), swing preset-driven defaults (auto-set on genre switch via prevGenreRef). Bassline velocity (phrase arc, DnB offbeat 80, PAccent) already done in Batch A.
-13. ⬜ **Phase E — AI Studio** — See `docs/plans/04-phase-e-ai-studio.md` for full plan (8 tasks, ~850 lines)
+13. ✅ **Phase E — AI Studio** — See `docs/plans/04-phase-e-ai-studio.md` for full plan (8 tasks, ~850 lines)
      - ✅ E1 — Multi-provider registry + auto-failover + Groq/OpenRouter implementations
-     - ⬜ E2 — Provider configuration API
-     - ⬜ E3 — Chat API route with project context
-     - ⬜ E4 — Chat history service
-     - ⬜ E5 — Knowledge base file
-     - ⬜ E6 — AiStudio chat UI component (hero panel)
-     - ⬜ E7 — Provider Settings UI modal
-     - ⬜ E8 — Dashboard integration + compact Project Summary
+     - ✅ E2 — Provider configuration API
+     - ✅ E3 — Chat API route with project context
+     - ✅ E4 — Chat history service
+     - ✅ E5 — Knowledge base file
+     - ✅ E6 — AiStudio chat UI component (hero panel)
+     - ✅ E7 — Provider Settings UI modal
+     - ✅ E8 — Dashboard integration + compact Project Summary
