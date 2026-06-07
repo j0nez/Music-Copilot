@@ -19,12 +19,33 @@ from backend.app.db.database import init_db
 from backend.app.models.shared import ApiResponse
 from plugins import discover_plugins
 from providers import configure as configure_provider
+from providers import configure_priority
 from providers.openai_provider import OpenAIProvider  # noqa: F401
 from providers.groq_provider import GroqProvider  # noqa: F401
 from providers.glm_provider import GLMProvider  # noqa: F401
 from providers.openrouter_provider import OpenRouterProvider  # noqa: F401
 
 logger = logging.getLogger("music_copilot.app")
+
+
+def _configure_provider_priority() -> None:
+    from providers import configure, get_provider_info
+    priority_str = settings.ai_provider_priority
+    if not priority_str:
+        return
+    priority = [p.strip() for p in priority_str.split(",") if p.strip()]
+    existing = [p["name"] for p in get_provider_info() if p["configured"]]
+    for p in priority:
+        if p not in existing:
+            try:
+                configure(p, "", model=settings.ai_model)
+            except ValueError:
+                logger.warning("Provider %s not registered, skipping priority", p)
+    try:
+        from providers import configure_priority as set_prio
+        set_prio([p for p in priority if p in [x["name"] for x in get_provider_info()]])
+    except (ValueError, RuntimeError) as e:
+        logger.warning("Could not set provider priority: %s", e)
 
 
 @asynccontextmanager
@@ -35,6 +56,7 @@ async def lifespan(app: FastAPI):
     discover_plugins()
     if settings.ai_api_key:
         configure_provider(settings.ai_provider, settings.ai_api_key, model=settings.ai_model)
+    _configure_provider_priority()
     yield
     logger.info("Shutting down Music Copilot")
 

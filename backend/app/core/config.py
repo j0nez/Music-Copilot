@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     ai_provider: str = "groq"
     ai_model: str = "mixtral-8x7b-32768"
     ai_api_key: str = ""
+    ai_provider_priority: str = ""
 
     log_path: Path = PROJECT_ROOT / "data" / "logs" / "app.log"
     log_level: str = "DEBUG"

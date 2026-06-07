@@ -105,8 +105,8 @@ Built with Electron + React + FastAPI + SQLite.
 10. ✅ Batch C (P2) — Preset + Auto behavior
 11. ✅ Batch D (P3) — Hub + Save + History
 12. ✅ Batch E (P4) — Preset value corrections (complexity swaps, Deep House mood), swing preset-driven defaults (auto-set on genre switch via prevGenreRef). Bassline velocity (phrase arc, DnB offbeat 80, PAccent) already done in Batch A.
-13. ⬜ **Phase E — AI Studio** — See `docs/plans/04-phase-e-ai-studio.md` for full plan (8 tasks, ~835 lines)
-     - ⬜ E1 — Multi-provider registry + auto-failover + Groq/OpenRouter implementations
+13. ⬜ **Phase E — AI Studio** — See `docs/plans/04-phase-e-ai-studio.md` for full plan (8 tasks, ~850 lines)
+     - ✅ E1 — Multi-provider registry + auto-failover + Groq/OpenRouter implementations
      - ⬜ E2 — Provider configuration API
      - ⬜ E3 — Chat API route with project context
      - ⬜ E4 — Chat history service
