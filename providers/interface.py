@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class LLMResponse(BaseModel):
     content: str
     model: str
+    provider: str = ""
     tokens_used: int = 0
 
 

@@ -97,6 +97,7 @@ async def generate(prompt: str, **kwargs: Any) -> LLMResponse:
         provider = cfg.instance
         try:
             response = await provider.generate(prompt, **kwargs)
+            response.provider = name
             _active_idx = idx
             _schedule_reprobe()
             return response

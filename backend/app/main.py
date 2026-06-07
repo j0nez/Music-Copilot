@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.app.api import arrangement as arrangement_routes
+from backend.app.api import chat as chat_routes
 from backend.app.api import exports as export_routes
 from backend.app.api import plugins as plugin_routes
 from backend.app.api import progressions as progression_routes
@@ -79,6 +80,7 @@ app.add_middleware(
 )
 
 app.include_router(arrangement_routes.router, prefix="/api")
+app.include_router(chat_routes.router)
 app.include_router(export_routes.router, prefix="/api")
 app.include_router(plugin_routes.router, prefix="/api")
 app.include_router(progression_routes.router, prefix="/api")
