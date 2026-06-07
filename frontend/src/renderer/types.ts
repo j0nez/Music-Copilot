@@ -168,6 +168,15 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+export interface ChatHistoryEntry {
+  id?: number;
+  role: 'user' | 'assistant';
+  message: string;
+  provider: string | null;
+  model: string | null;
+  created_at: string;
+}
+
 export interface ActivePartsSummary {
   count: number;
   bars: number;

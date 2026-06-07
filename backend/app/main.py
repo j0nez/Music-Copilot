@@ -1,9 +1,12 @@
 import logging
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from backend.app.api import arrangement as arrangement_routes
 from backend.app.api import chat as chat_routes
@@ -89,6 +92,12 @@ app.include_router(project_routes.router, prefix="/api")
 app.include_router(search_routes.router, prefix="/api")
 app.include_router(upload_routes.router, prefix="/api")
 
+_frontend_dist = settings.data_dir.parent / "frontend" / "dist"
+if _frontend_dist.is_dir():
+    app.mount("/", StaticFiles(directory=str(_frontend_dist), html=True), name="frontend")
+    logger.info("Serving frontend from %s", _frontend_dist)
+else:
+    logger.warning("Frontend dist not found at %s — API only", _frontend_dist)
 
 @app.exception_handler(MusicCopilotError)
 async def handle_music_copilot_error(request, exc: MusicCopilotError):

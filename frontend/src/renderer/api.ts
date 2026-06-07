@@ -2,7 +2,7 @@ import type {
   ActivePartsSummary,
   ApiResponse,
   ArrangementExportResult,
-  ChatMessage,
+  ChatHistoryEntry,
   ChatResult,
   MidiExportResult,
   Note,
@@ -309,8 +309,8 @@ export async function sendChat(
   }, signal);
 }
 
-export async function getChatHistory(limit = 20, signal?: AbortSignal): Promise<ApiResponse<{ history: ChatMessage[] }>> {
-  return get<{ history: ChatMessage[] }>('/chat/history', { limit: String(limit) }, signal);
+export async function getChatHistory(limit = 20, signal?: AbortSignal): Promise<ApiResponse<{ history: ChatHistoryEntry[] }>> {
+  return get<{ history: ChatHistoryEntry[] }>('/chat/history', { limit: String(limit) }, signal);
 }
 
 export async function clearChatHistory(signal?: AbortSignal): Promise<ApiResponse<{ cleared: boolean }>> {
@@ -325,7 +325,7 @@ export async function listProviders(signal?: AbortSignal): Promise<ApiResponse<{
 
 export async function configureProvider(
   name: string,
-  apiKey: string,
+  apiKey?: string,
   model?: string,
   signal?: AbortSignal,
 ): Promise<ApiResponse<{ configured: boolean }>> {
