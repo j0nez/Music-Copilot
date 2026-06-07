@@ -10,16 +10,22 @@
 
 The only remaining v0.1 feature. Architecture already scaffolded — Provider layer is decoupled and Groq/OpenAI/GLM/OpenRouter stubs exist.
 
-| # | Task | Detail | Effort | Depends On |
-|---|------|--------|--------|------------|
-| E1 | Groq provider configuration + verification | Add `.env` key, verify `GroqProvider.generate()` works end-to-end | ~15 min | None |
-| E2 | `POST /api/chat` route with project context injection | Backend route that calls `llm.generate()` with current project (BPM, key, scale, mood, genre) as system prompt | ~80 lines | E1 |
-| E3 | Build `ToolBridge` | Expose each plugin's `execute()` + `input_schema` as LLM-callable JSON tool functions. No plugin rewrites needed. | ~120 lines | E2 |
-| E4 | State mutation endpoints | `POST /api/project/settings`, `POST /api/player/set-part`, `POST /api/player/clear-part` — allows AI to modify project/player state | ~60 lines | Project state exists |
-| E5 | Wire AI Studio chat UI | Replace fake responses in AiStudio with real API calls. Wire chat bubbles to backend + tool call display. | ~60 lines | E3 + E4 |
-| E6 | Absorb into dashboard | Collapse Project Summary to header, expand Co-Producer Chat in right column. Remove standalone AiStudio page. | ~30 lines | E5 + C1 |
+**Detailed implementation plan:** `docs/plans/04-phase-e-ai-studio.md` (835 lines across 8 tasks)
 
-**Total Phase E effort:** ~350 lines, ~1-2 days
+**Summary of tasks:**
+
+| # | Task | Effort |
+|---|------|--------|
+| E1 | Multi-provider registry with auto-failover (Groq + OpenRouter) | ~185 lines |
+| E2 | Provider configuration API (`GET/POST /api/providers/`) | ~80 lines |
+| E3 | Chat API route (`POST /api/chat` with project context) | ~80 lines |
+| E4 | Chat history service (`backend/app/db/chat.py`) | ~50 lines |
+| E5 | Knowledge base file (`shared/knowledge_base.txt`) | ~80 lines |
+| E6 | AiStudio chat UI component (hero panel, right column) | ~180 lines |
+| E7 | Provider Settings UI (modal for API keys + models) | ~80 lines |
+| E8 | Dashboard integration + compact Project Summary | ~80 lines |
+
+**Total Phase E effort:** ~835 lines, ~1-2 days
 
 ---
 
