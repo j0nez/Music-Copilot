@@ -22,6 +22,12 @@ vi.mock("../api", () => ({
   melodyGenerator: vi.fn(),
   basslineGenerator: vi.fn(),
   exportArrangement: vi.fn(),
+  saveArrangement: vi.fn(),
+  downloadFromUrl: vi.fn(),
+  listProviders: vi.fn().mockResolvedValue({ success: true, data: { providers: [] }, error: null }),
+  getChatHistory: vi.fn().mockResolvedValue({ success: true, data: { history: [] }, error: null }),
+  clearChatHistory: vi.fn(),
+  sendChat: vi.fn(),
 }));
 
 describe("Dashboard", () => {
@@ -55,8 +61,8 @@ describe("Dashboard", () => {
 
     expect(screen.getByText("Generate")).toBeInTheDocument();
     expect(screen.getByText("Sample Analysis")).toBeInTheDocument();
-    expect(screen.getAllByText("Project Summary").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Chat").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("MIDI Player").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Session Notes")).toBeInTheDocument();
+    expect(screen.getAllByText("Project Summary").length).toBeGreaterThanOrEqual(1);
   });
 });

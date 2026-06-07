@@ -19,7 +19,9 @@ describe("ProjectSummary", () => {
       />,
     );
 
-    expect(screen.getByText("Generate something to get started")).toBeInTheDocument();
+    expect(screen.getByText("Chords: —")).toBeInTheDocument();
+    expect(screen.getByText("Melody: —")).toBeInTheDocument();
+    expect(screen.getByText("Bassline: —")).toBeInTheDocument();
   });
 
   it("shows parts count when notes exist", () => {
@@ -32,7 +34,7 @@ describe("ProjectSummary", () => {
       />,
     );
 
-    expect(screen.getByText("Parts (1)")).toBeInTheDocument();
+    expect(screen.getByText("Chords: 1 notes")).toBeInTheDocument();
   });
 
   it("shows project info when project provided", () => {
@@ -60,7 +62,7 @@ describe("ProjectSummary", () => {
       />,
     );
 
-    const btn = screen.getByText("Download All MIDI");
+    const btn = screen.getByText("Download MIDI");
     expect(btn).not.toBeDisabled();
   });
 });

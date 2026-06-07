@@ -79,8 +79,6 @@ async def chat(req: ChatRequest):
 
     from providers import generate
 
-    save_message("user", req.message)
-
     try:
         response = await generate(
             req.message,
@@ -91,12 +89,12 @@ async def chat(req: ChatRequest):
         )
     except Exception as e:
         logger.error("Chat generation failed: %s", e)
-        save_message("assistant", f"Error: {e}")
         return ApiResponse(
             success=False,
             error={"code": "AI_ERROR", "message": str(e)},
         )
 
+    save_message("user", req.message)
     save_message("assistant", response.content, provider=response.provider or "unknown", model=response.model)
 
     return ApiResponse(
@@ -104,7 +102,7 @@ async def chat(req: ChatRequest):
         data=ChatResponse(
             reply=response.content,
             model_used=response.model,
-            provider_used=response.model,
+            provider_used=response.provider,
             tokens_used=response.tokens_used,
         ).model_dump(),
     )
