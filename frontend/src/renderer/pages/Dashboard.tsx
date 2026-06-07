@@ -16,7 +16,7 @@ import { chordNotesToMidi } from "../music/pitch";
 const MAX_HISTORY = 5;
 const DEFAULT_SETTINGS: GeneratorSettings = {
   key: "Auto", scale: "major", mood: "Auto", genre: "Auto",
-  length: 8, complexity: "Auto",
+  length: 8, complexity: "Auto", pattern: "auto",
 };
 
 function emptyHistory(): GenerationHistory {
@@ -137,7 +137,7 @@ export default function Dashboard() {
         pushHistory('melody', res.data.notes);
       }
     } else if (type === 'bassline') {
-      const res = await basslineGenerator(resolvedKey, resolvedScale, resolvedGenre, resolvedLength);
+      const res = await basslineGenerator(resolvedKey, resolvedScale, resolvedGenre, resolvedLength, settings.pattern);
       if (res.success && res.data) {
         setBassline(res.data.notes);
         pushHistory('bassline', res.data.notes);

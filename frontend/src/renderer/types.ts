@@ -157,6 +157,7 @@ export interface GeneratorSettings {
   genre: string;
   length: number;
   complexity: string;
+  pattern: string;
 }
 
 export interface GenerationHistory {

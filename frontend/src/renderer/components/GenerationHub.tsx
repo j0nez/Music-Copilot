@@ -86,7 +86,7 @@ export default function GenerationHub({
 
   async function handleGenerateBassline() {
     setLoading('bassline');
-    const res = await basslineGenerator(resolveKey(), resolveScale(), resolveGenre(), settings.length);
+    const res = await basslineGenerator(resolveKey(), resolveScale(), resolveGenre(), settings.length, settings.pattern);
     if (res.success && res.data) {
       onSetBassline(res.data.notes);
     }
@@ -248,7 +248,7 @@ export default function GenerationHub({
               <Select label="Key" value={settings.key} onChange={v => onSettingsChange({ ...settings, key: v })}
                 options={[{ value: 'Auto', label: 'Auto' }, ...KEYS.map(k => ({ value: k, label: k }))]} />
               <Select label="Scale" value={settings.scale} onChange={v => onSettingsChange({ ...settings, scale: v })}
-                options={[{ value: 'major', label: 'Major' }, { value: 'minor', label: 'Minor' }]} />
+                options={[{ value: 'Auto', label: 'Auto' }, { value: 'major', label: 'Major' }, { value: 'minor', label: 'Minor' }]} />
               <Select label="Mood" value={settings.mood} onChange={v => onSettingsChange({ ...settings, mood: v })}
                 options={[{ value: 'Auto', label: 'Auto' }, ...MOODS.map(m => ({ value: m, label: m }))]} />
               <Select label="Genre" value={settings.genre} onChange={v => onSettingsChange({ ...settings, genre: v })}
@@ -273,7 +273,7 @@ export default function GenerationHub({
             <div className="grid grid-cols-3 gap-2">
               <Select label="Genre" value={settings.genre} onChange={v => onSettingsChange({ ...settings, genre: v })}
                 options={[{ value: 'Auto', label: 'Auto' }, ...GENRES.map(g => ({ value: g, label: g }))]} />
-              <Select label="Pattern" value={settings.complexity} onChange={v => onSettingsChange({ ...settings, complexity: v })}
+              <Select label="Pattern" value={settings.pattern} onChange={v => onSettingsChange({ ...settings, pattern: v })}
                 options={PATTERNS.map(p => ({ value: p, label: p.replace('_', ' ') }))} />
               <Select label="Length" value={settings.length} onChange={v => onSettingsChange({ ...settings, length: Number(v) })}
                 options={LENGTHS.map(l => ({ value: l, label: `${l} bars` }))} />
