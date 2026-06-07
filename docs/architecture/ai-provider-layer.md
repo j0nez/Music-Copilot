@@ -55,27 +55,31 @@ _registry: dict[str, type[Provider]] = {
 
 _active_provider: Provider | None = None
 
-def configure(provider_name: str, **config):
-    """Set the active provider from config."""
-    cls = _registry[provider_name]
-    _active_provider = cls(**config)
+def configure(provider_name: str, api_key: str, **config):
+    """Set the active provider. Called at startup from main.py."""
+    cls = _registry.get(provider_name)
+    if cls is None:
+        raise ValueError(f"Unknown provider: {provider_name}")
+    _active_provider = cls(api_key=api_key, **config)
 
 async def generate(prompt: str, **kwargs) -> LLMResponse:
     if _active_provider is None:
-        raise RuntimeError("No AI provider configured")
+        raise RuntimeError("No AI provider configured. Call configure() first.")
     return await _active_provider.generate(prompt, **kwargs)
 ```
 
 ## Configuration
 
-Provider selection and API keys are stored in the backend config (environment variables or config file):
+Provider selection and API keys are injected at application startup in main.py using explicit arguments, not imported directly:
 
 ```python
-# backend/app/core/config.py
-AI_PROVIDER = "groq"              # Switch here
-AI_MODEL = "mixtral-8x7b-32768"  # Per-provider model selection
-AI_API_KEY = env("AI_API_KEY")   # From .env
+# backend/app/main.py (lifespan)
+from providers import configure as configure_provider
+
+configure_provider(settings.ai_provider, settings.ai_api_key, model=settings.ai_model)
 ```
+
+The provider module has no hard dependency on the backend config — configure() receives provider_name and api_key explicitly, avoiding circular imports and allowing the providers folder to be used as a standalone module.
 
 ## Provider Implementations
 

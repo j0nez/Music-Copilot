@@ -13,19 +13,24 @@ Built with Electron + React + FastAPI + SQLite.
 - Frontend ↔ Backend via REST. No direct filesystem access from renderer.
 - Audio/MIDI analysis must work fully offline.
 - Every plugin declares an `input_schema` (Pydantic model) for auto-validation and frontend form generation.
+- Shared music theory constants live in `shared/music_theory.py`, not duplicated per module.
+- Provider layer has zero dependency on backend config — `configure(provider_name, api_key)` receives credentials explicitly at startup.
 - After every significant change: (1) update AGENTS.md (Active Context / Feature Status), (2) update ARCHITECTURE docs if structure changed, (3) `git add -A && git commit`.
 
 ## Coding Conventions
 - **Python**: FastAPI async routes, Pydantic v2, `ruff` formatting, type hints everywhere.
 - **TypeScript**: Strict mode, functional components, no `any`.
 - **Tests**: `pytest` for backend, `vitest` for frontend.
-- **Imports**: absolute from project root. `from backend.app.models import X`
+- **Imports**: absolute from project root. `from backend.app.models import X`; shared constants from `shared.music_theory`.
 - **Errors**: custom exception hierarchy → HTTPException with detail.
+- **Async audio**: librosa calls wrapped in `asyncio.to_thread()` for non-blocking analysis.
+- **Frontend API**: all fetch methods accept optional `AbortSignal` for cancellation.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
 - **Current Focus**: Batch E polish complete (preset corrections, swing preset-driven defaults). Bassline velocity (phrase arc, DnB offbeat 80) was already done in Batch A. Remaining: Phase E (AI Studio).
 - **Recent Decisions**: 2026-06-06 — All 7 original implementation batches done + all 13 post-audit fixes. Batches A–D (P0–P3) completed: audio playback (Web Audio API), Expression Engine integration (phrase arc velocity, articulation gate), swing pipeline, _map_range centering fix, bassline octave_jump fix, project state auto-fill, preset chip auto-trigger, clear vs regenerate separation, Generation Hub full controls, Ctrl+S arrangement save, VL score badge, generation history ring buffer. 154 tests pass (131 backend + 23 frontend).
+- **Recent Decisions**: 2026-06-07 — Infrastructure & polish: `shared/music_theory.py` created (consolidated NOTE_TO_SEMITONE, CHORD_INTERVALS, DIATONIC_QUALITIES from 4+ files). Provider layer decoupled from backend config (`configure()` takes explicit `provider_name`/`api_key`; `generate()` no longer auto-inits). EventBus handlers run concurrently via `asyncio.gather` with per-handler error isolation. Sample Analyzer: lazy `DeepRhythmPredictor` (delayed import), `asyncio.to_thread` for librosa calls, double-analysis guard. Frontend: `AbortController` replaces `Promise.race` for timeouts, `ErrorBoundary` wraps app, playhead refactored to imperative SVG API (no re-renders), proper chord→MIDI pitch mapping, per-part mute buttons, Library "Load" support, `ReferencePopover` now shows actual chord/interval content.
 - **Blockers**: None
 
 ## Task History
@@ -41,6 +46,8 @@ Built with Electron + React + FastAPI + SQLite.
 | 2026-06-06 | Batch B (P1) — Swing + Bugfixes | Done — swing in export, _map_range centering, bassline octave_jump PSequence fix |
 | 2026-06-06 | Batch C (P2) — Preset + Auto behavior | Done — project auto-fill in GeneratePanel, auto-trigger on preset click, clear vs regenerate |
 | 2026-06-06 | Batch D (P3) — Hub + Save + History | Done — GenerationHub full controls, Ctrl+S arrangement save, VL badge, history ring buffer with cycle arrows |
+| 2026-06-06 | Batch E (P4) — Preset corrections + swing defaults | Done — complexity swaps, Deep House mood/genre fix, swing auto-set on genre switch |
+| 2026-06-07 | Infrastructure & polish updates | Done — shared/music_theory.py, provider decoupling, async EventBus, async sample analyzer, AbortController, ErrorBoundary, imperative playhead, mute buttons, Library Load |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)

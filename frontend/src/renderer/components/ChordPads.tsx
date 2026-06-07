@@ -61,6 +61,10 @@ function playNotes(notes: string[], duration = 1.2) {
     osc.start(now);
     osc.stop(now + duration + 0.1);
 
+    osc.onended = () => {
+      activeOscillators = activeOscillators.filter(o => o !== osc);
+      osc.disconnect();
+    };
     activeOscillators.push(osc);
   });
 }
@@ -107,6 +111,10 @@ export default function ChordPads({
         gain.gain.setValueAtTime(0, now + offset);
         gain.gain.linearRampToValueAtTime(0.15, now + offset + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.01, now + offset + duration);
+        osc.onended = () => {
+          activeOscillators = activeOscillators.filter(o => o !== osc);
+          osc.disconnect();
+        };
         osc.connect(gain).connect(ctx.destination);
         osc.start(now + offset);
         osc.stop(now + offset + duration + 0.1);
@@ -201,7 +209,7 @@ export default function ChordPads({
               title={`${chord.notes.join(" ")}`}
             >
               <p className="text-xs font-bold">{chord.roman}</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">{chord.name}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">{chord.name} ({chord.notes.join(', ')})</p>
             </button>
           ))}
         </div>

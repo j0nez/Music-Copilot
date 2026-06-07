@@ -28,6 +28,7 @@ export default function SampleAnalysisPanel() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SampleAnalysisResult | null>(null);
+  const analyzingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [rangeIdx, setRangeIdx] = useState(0);
@@ -37,6 +38,8 @@ export default function SampleAnalysisPanel() {
   const { project, updateProject } = useProject();
 
   const handleFile = async (f: File) => {
+    if (analyzingRef.current) return;
+    analyzingRef.current = true;
     setFile(f);
     setLoading(true);
     setResult(null);
@@ -66,6 +69,7 @@ export default function SampleAnalysisPanel() {
       setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
       setLoading(false);
+      analyzingRef.current = false;
     }
   };
 

@@ -20,7 +20,7 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 
 @router.post("/")
-async def api_create_project(payload: dict):
+def api_create_project(payload: dict):
     name = str(payload.get("name", "Untitled Project"))
     bpm = payload.get("bpm", 120)
     key = payload.get("key", "C")
@@ -43,7 +43,7 @@ async def api_create_project(payload: dict):
 
 
 @router.get("/")
-async def api_list_projects():
+def api_list_projects():
     try:
         items = list_projects()
     except Exception as exc:
@@ -53,7 +53,7 @@ async def api_list_projects():
 
 
 @router.get("/last")
-async def api_get_last_project():
+def api_get_last_project():
     try:
         project_id = get_last_project()
         if project_id is None:
@@ -65,7 +65,7 @@ async def api_get_last_project():
 
 
 @router.get("/{project_id}")
-async def api_get_project(project_id: int):
+def api_get_project(project_id: int):
     try:
         project = get_project(project_id)
     except Exception as exc:
@@ -82,7 +82,7 @@ async def api_get_project(project_id: int):
 
 
 @router.put("/{project_id}")
-async def api_update_project(project_id: int, payload: dict):
+def api_update_project(project_id: int, payload: dict):
     if not payload:
         raise InputValidationError("No fields to update")
 
@@ -103,7 +103,7 @@ async def api_update_project(project_id: int, payload: dict):
 
 
 @router.delete("/{project_id}")
-async def api_delete_project(project_id: int):
+def api_delete_project(project_id: int):
     try:
         deleted = delete_project(project_id)
     except Exception as exc:

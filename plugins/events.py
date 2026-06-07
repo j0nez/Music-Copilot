@@ -1,4 +1,8 @@
+import asyncio
+import logging
 from typing import Any, Awaitable, Callable
+
+logger = logging.getLogger("music_copilot.event_bus")
 
 Handler = Callable[..., Awaitable[None]]
 
@@ -19,8 +23,14 @@ class EventBus:
             ]
 
     async def emit(self, event: str, **data: Any) -> None:
-        for handler in self._handlers.get(event, []):
-            await handler(**data)
+        handlers = self._handlers.get(event, [])
+        if not handlers:
+            return
+        tasks = [asyncio.create_task(handler(**data)) for handler in handlers]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.error("Event handler for '%s' failed: %s", event, result)
 
     def get_events(self) -> list[str]:
         return list(self._handlers.keys())

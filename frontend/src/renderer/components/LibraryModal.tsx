@@ -14,7 +14,7 @@ const TYPE_TABS = [
   { label: "Arpeggios", value: "arpeggio" },
 ] as const;
 
-export default function LibraryModal({ onClose }: { onClose: () => void }) {
+export default function LibraryModal({ onClose, onLoad }: { onClose: () => void; onLoad?: (item: SavedProgression) => void }) {
   const [items, setItems] = useState<SavedProgression[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -141,6 +141,7 @@ export default function LibraryModal({ onClose }: { onClose: () => void }) {
                       Saved{sortArrow("created_at")}
                     </th>
                     <th className="pb-3 pr-4">MIDI</th>
+                    {onLoad && <th className="pb-3" />}
                     <th className="pb-3" />
                   </tr>
                 </thead>
@@ -172,6 +173,14 @@ export default function LibraryModal({ onClose }: { onClose: () => void }) {
                           MIDI
                         </a>
                       </td>
+                      {onLoad && (
+                        <td className="py-3 pr-2">
+                          <button onClick={() => onLoad(p)}
+                            className="px-2.5 py-1 rounded bg-green-900/40 text-green-300 text-xs hover:bg-green-900/60 transition-colors">
+                            Load
+                          </button>
+                        </td>
+                      )}
                       <td className="py-3">
                         <button onClick={() => handleDelete(p.id)} disabled={deleting === p.id}
                           className="px-2.5 py-1 rounded bg-red-900/40 text-red-300 text-xs hover:bg-red-900/60 transition-colors disabled:opacity-50">

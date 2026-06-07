@@ -28,29 +28,34 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<ApiRespons
   }
 }
 
-async function get<T>(path: string, params?: Record<string, string>): Promise<ApiResponse<T>> {
+async function get<T>(path: string, params?: Record<string, string>, signal?: AbortSignal): Promise<ApiResponse<T>> {
   const qs = params ? `?${new URLSearchParams(params)}` : '';
-  return fetchJson<T>(`${BASE}${path}${qs}`);
+  return fetchJson<T>(`${BASE}${path}${qs}`, signal ? { signal } : undefined);
 }
 
-async function post<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
+async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promise<ApiResponse<T>> {
   return fetchJson<T>(`${BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    ...(signal ? { signal } : {}),
   });
 }
 
-async function put<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
+async function put<T>(path: string, body: unknown, signal?: AbortSignal): Promise<ApiResponse<T>> {
   return fetchJson<T>(`${BASE}${path}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    ...(signal ? { signal } : {}),
   });
 }
 
-async function del<T>(path: string): Promise<ApiResponse<T>> {
-  return fetchJson<T>(`${BASE}${path}`, { method: 'DELETE' });
+async function del<T>(path: string, signal?: AbortSignal): Promise<ApiResponse<T>> {
+  return fetchJson<T>(`${BASE}${path}`, {
+    method: 'DELETE',
+    ...(signal ? { signal } : {}),
+  });
 }
 
 export async function uploadFile(file: File): Promise<ApiResponse<UploadResult>> {
@@ -63,12 +68,13 @@ export async function analyzeSample(
   filePath: string,
   minBpm = 0,
   maxBpm = 0,
+  signal?: AbortSignal,
 ): Promise<ApiResponse<SampleAnalysisResult>> {
   return post<SampleAnalysisResult>('/plugins/sample_analyzer/execute', {
     file_path: filePath,
     min_bpm: minBpm,
     max_bpm: maxBpm,
-  });
+  }, signal);
 }
 
 export async function theoryEngine(
@@ -182,10 +188,11 @@ export async function chordGenerator(
   genre: string,
   length = 4,
   complexity = 'simple',
+  signal?: AbortSignal,
 ): Promise<ApiResponse<TheoryProgression>> {
   return post<TheoryProgression>('/plugins/chord_generator/execute', {
     key, mood: mood.toLowerCase(), genre, length, complexity,
-  });
+  }, signal);
 }
 
 export async function melodyGenerator(
@@ -195,10 +202,11 @@ export async function melodyGenerator(
   genre: string,
   length = 8,
   complexity = 'simple',
+  signal?: AbortSignal,
 ): Promise<ApiResponse<{ notes: Note[]; length_bars: number }>> {
   return post<{ notes: Note[]; length_bars: number }>('/plugins/melody_generator/execute', {
     key, scale, mood, genre, length, complexity,
-  });
+  }, signal);
 }
 
 export async function basslineGenerator(
@@ -207,10 +215,11 @@ export async function basslineGenerator(
   genre: string,
   length = 8,
   pattern = 'auto',
+  signal?: AbortSignal,
 ): Promise<ApiResponse<{ notes: Note[]; length_bars: number }>> {
   return post<{ notes: Note[]; length_bars: number }>('/plugins/bassline_generator/execute', {
     key, scale, genre, length, pattern,
-  });
+  }, signal);
 }
 
 export async function saveArrangement(

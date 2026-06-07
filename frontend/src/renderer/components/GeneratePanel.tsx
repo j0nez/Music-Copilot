@@ -3,13 +3,29 @@ import { chordGenerator, melodyGenerator, basslineGenerator } from '../api';
 import ReferencePopover from './ReferencePopover';
 import type { GeneratorSettings, Note, ProgressionChord } from '../types';
 
+const PITCH_CLASSES: Record<string, number> = { "C":0, "C#":1, "Db":1, "D":2, "D#":3, "Eb":3, "E":4, "F":5, "F#":6, "Gb":6, "G":7, "G#":8, "Ab":8, "A":9, "A#":10, "Bb":10, "B":11 };
+function chordNotesToMidi(chords: ProgressionChord[], startBeat: number): Note[] {
+  const notes: Note[] = [];
+  chords.forEach((chord, i) => {
+    chord.notes.forEach((noteStr) => {
+      const cleanNote = noteStr.replace(/\d+$/, '');
+      const pitch = 60 + (PITCH_CLASSES[cleanNote] ?? 0);
+      notes.push({ pitch, velocity: 100, start_beat: startBeat + i * 4, duration_in_beats: 4 });
+    });
+  });
+  return notes;
+}
+
 const API_TIMEOUT = 30_000;
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms)),
-  ]);
+async function withAbort<T>(fn: (signal: AbortSignal) => Promise<T>, ms: number): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fn(controller.signal);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 interface GeneratePanelProps {
@@ -86,14 +102,9 @@ export default function GeneratePanel({
     setLoading('chords');
     setError(null);
     const s = resolveSettings();
-    const res = await withTimeout(chordGenerator(s.key, s.mood, s.genre, s.length, s.complexity), API_TIMEOUT);
+    const res = await withAbort(signal => chordGenerator(s.key, s.mood, s.genre, s.length, s.complexity, signal), API_TIMEOUT);
     if (res.success && res.data) {
-      const notes: Note[] = res.data.chords.map((_, i) => ({
-        pitch: 60,
-        velocity: 100,
-        start_beat: 1 + i * 4,
-        duration_in_beats: 4,
-      }));
+      const notes = chordNotesToMidi(res.data.chords, 1);
       onPushHistory('chords', notes);
       onGenerateChords(res.data.chords, notes, res.data.voice_leading?.score);
     } else {
@@ -106,7 +117,7 @@ export default function GeneratePanel({
     setLoading('melody');
     setError(null);
     const s = resolveSettings();
-    const res = await withTimeout(melodyGenerator(s.key, s.scale, s.mood, s.genre, s.length, s.complexity), API_TIMEOUT);
+    const res = await withAbort(signal => melodyGenerator(s.key, s.scale, s.mood, s.genre, s.length, s.complexity, signal), API_TIMEOUT);
     if (res.success && res.data) {
       onPushHistory('melody', res.data.notes);
       onGenerateMelody(res.data.notes);
@@ -120,7 +131,7 @@ export default function GeneratePanel({
     setLoading('bassline');
     setError(null);
     const s = resolveSettings();
-    const res = await withTimeout(basslineGenerator(s.key, s.scale, s.genre, s.length), API_TIMEOUT);
+    const res = await withAbort(signal => basslineGenerator(s.key, s.scale, s.genre, s.length, 'auto', signal), API_TIMEOUT);
     if (res.success && res.data) {
       onPushHistory('bassline', res.data.notes);
       onGenerateBassline(res.data.notes);

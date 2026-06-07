@@ -6,18 +6,9 @@ import pretty_midi
 
 from backend.app.core.config import settings
 from backend.app.services.midi.models import MidiFile
+from shared.music_theory import NOTE_TO_SEMITONE
 
 logger = logging.getLogger("music_copilot.midi")
-
-NOTE_TO_SEMITONE = {
-    "C": 0, "C#": 1, "Db": 1,
-    "D": 2, "D#": 3, "Eb": 3,
-    "E": 4, "Fb": 4,
-    "F": 5, "F#": 6, "Gb": 6,
-    "G": 7, "G#": 8, "Ab": 8,
-    "A": 9, "A#": 10, "Bb": 10,
-    "B": 11, "Cb": 11,
-}
 
 
 def _note_name_to_midi(note: str, octave: int = 4) -> int:

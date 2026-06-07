@@ -11,35 +11,15 @@ from plugins.chord_generator.substitutions import (
     maybe_deceptive_cadence,
 )
 from plugins.chord_generator.templates import get_fallback, get_templates
+from shared.music_theory import (
+    NOTE_TO_SEMITONE,
+    SEMITONE_TO_NOTE as SHARED_SEMITONE_TO_NOTE,
+    CHORD_INTERVALS,
+    DIATONIC_QUALITIES_MAJOR,
+    DIATONIC_QUALITIES_MINOR,
+)
 
 logger = logging.getLogger("music_copilot.chord_generator")
-
-NOTE_TO_SEMITONE = {
-    "C": 0, "C#": 1, "Db": 1,
-    "D": 2, "D#": 3, "Eb": 3,
-    "E": 4, "Fb": 4,
-    "F": 5, "F#": 6, "Gb": 6,
-    "G": 7, "G#": 8, "Ab": 8,
-    "A": 9, "A#": 10, "Bb": 10,
-    "B": 11, "Cb": 11,
-}
-
-SEMITONE_TO_NOTE = {v: k for k, v in NOTE_TO_SEMITONE.items()}
-
-CHORD_INTERVALS = {
-    "major": [0, 4, 7],
-    "minor": [0, 3, 7],
-    "diminished": [0, 3, 6],
-    "augmented": [0, 4, 8],
-    "major 7th": [0, 4, 7, 11],
-    "minor 7th": [0, 3, 7, 10],
-    "dominant 7th": [0, 4, 7, 10],
-    "sus2": [0, 2, 7],
-    "sus4": [0, 5, 7],
-}
-
-DIATONIC_QUALITIES_MAJOR = ["major", "minor", "minor", "major", "major", "minor", "diminished"]
-DIATONIC_QUALITIES_MINOR = ["minor", "diminished", "major", "minor", "minor", "major", "major"]
 
 ROMAN_SCALE = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
 
@@ -89,7 +69,7 @@ class ChordGeneratorPlugin(Plugin):
 
     def _semitone_to_note(self, semitone: int, prefer: str = "C") -> str:
         normalized = semitone % 12
-        note = SEMITONE_TO_NOTE.get(normalized, "C")
+        note = SHARED_SEMITONE_TO_NOTE.get(normalized, "C")
         if normalized in ACCIDENTAL_PREFERENCES.values():
             for pref_key, pref_val in ACCIDENTAL_PREFERENCES.items():
                 if pref_val == note:

@@ -12,6 +12,19 @@ import type { Note, GeneratorSettings, ProgressionChord, GenerationHistory } fro
 import { SWING_PRESETS } from "../types";
 import { chordGenerator, melodyGenerator, basslineGenerator, exportArrangement, saveArrangement } from "../api";
 
+const PITCH_CLASSES: Record<string, number> = { "C":0, "C#":1, "Db":1, "D":2, "D#":3, "Eb":3, "E":4, "F":5, "F#":6, "Gb":6, "G":7, "G#":8, "Ab":8, "A":9, "A#":10, "Bb":10, "B":11 };
+function chordNotesToMidi(chords: ProgressionChord[], startBeat: number): Note[] {
+  const notes: Note[] = [];
+  chords.forEach((chord, i) => {
+    chord.notes.forEach((noteStr) => {
+      const cleanNote = noteStr.replace(/\d+$/, '');
+      const pitch = 60 + (PITCH_CLASSES[cleanNote] ?? 0);
+      notes.push({ pitch, velocity: 100, start_beat: startBeat + i * 4, duration_in_beats: 4 });
+    });
+  });
+  return notes;
+}
+
 const MAX_HISTORY = 5;
 const DEFAULT_SETTINGS: GeneratorSettings = {
   key: "Auto", scale: "major", mood: "Auto", genre: "Auto",
@@ -96,9 +109,7 @@ export default function Dashboard() {
       setProgChords(res.data.chords);
       const vl = res.data.voice_leading?.score;
       setVlScore(vl);
-      const notes: Note[] = res.data.chords.map((_, i) => ({
-        pitch: 60, velocity: 100, start_beat: 1 + i * 4, duration_in_beats: 4,
-      }));
+      const notes = chordNotesToMidi(res.data.chords, 1);
       setChords(notes);
       pushHistory('chords', notes);
       if (vl != null) showVlToast(vl);
@@ -126,9 +137,7 @@ export default function Dashboard() {
         setProgChords(res.data.chords);
         const vl = res.data.voice_leading?.score;
         setVlScore(vl);
-        const notes: Note[] = res.data.chords.map((_, i) => ({
-          pitch: 60, velocity: 100, start_beat: 1 + i * 4, duration_in_beats: 4,
-        }));
+        const notes = chordNotesToMidi(res.data.chords, 1);
         setChords(notes);
         pushHistory('chords', notes);
         if (vl != null) showVlToast(vl);
@@ -167,6 +176,13 @@ export default function Dashboard() {
       { project_id: project.id, name },
     );
   }, [project, chords, melody, bassline, settings, bars]);
+
+  const handleLoadFromLibrary = useCallback((item: { data: ProgressionChord[] }) => {
+    const notes = chordNotesToMidi(item.data, 1);
+    setProgChords(item.data);
+    setChords(notes);
+    pushHistory('chords', notes);
+  }, []);
 
   const prevGenreRef = useRef(settings.genre);
   useEffect(() => {
@@ -218,7 +234,7 @@ export default function Dashboard() {
   return (
     <div className="h-full flex flex-col gap-3 p-3">
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onSelectIdea={() => setLibraryOpen(true)} />}
-      {libraryOpen && <LibraryModal onClose={() => setLibraryOpen(false)} />}
+      {libraryOpen && <LibraryModal onClose={() => setLibraryOpen(false)} onLoad={handleLoadFromLibrary} />}
       {hubOpen && (
         <GenerationHub
           chords={chords} melody={melody} bassline={bassline}
@@ -311,6 +327,7 @@ export default function Dashboard() {
             swing={swing} onSwingChange={setSwing}
             onRegenerate={handleRegenerate}
             onClear={handleClear}
+            onSaveToLibrary={handleSaveArrangement}
             historyCounts={{ chords: _history.chords.length, melody: _history.melody.length, bassline: _history.bassline.length }}
             onCycleHistory={cycleHistory}
           />
@@ -353,7 +370,7 @@ function TopBar({ projectName, onNewProject, onOpenLibrary, onSearchOpen, onHubO
 
       {hasAny && (
         <button onClick={onHubOpen} className="text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded border border-surface-700/50">
-          Overview
+          Generation Hub
         </button>
       )}
       <button onClick={onSearchOpen} className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-surface-700/50">
@@ -518,7 +535,7 @@ function EditableKey({ keyVal, onSave }: { keyVal: string; onSave: (v: string) =
           <span className="text-gray-500">Key</span>
           <select autoFocus value={val} onChange={e => setVal(e.target.value)} onBlur={() => commit()}
             onKeyDown={e => { if (e.key === "Escape") cancel(); if (e.key === "Enter") commit(); }}
-            className="bg-transparent font-mono font-semibold text-accent-300 outline-none"
+            className="bg-surface-800 text-accent-300 font-mono font-semibold outline-none rounded p-1"
           >{NOTES.map(n => <option key={n} value={n}>{n}</option>)}</select>
         </span>
       )}
@@ -541,7 +558,7 @@ function EditableScale({ scale, onSave }: { scale: string; onSave: (v: string) =
           <span className="text-gray-500">Scale</span>
           <select autoFocus value={val} onChange={e => setVal(e.target.value)} onBlur={() => commit()}
             onKeyDown={e => { if (e.key === "Escape") cancel(); if (e.key === "Enter") commit(); }}
-            className="bg-transparent font-mono font-semibold text-accent-300 outline-none"
+            className="bg-surface-800 text-accent-300 font-mono font-semibold outline-none rounded p-1"
           >{SCALE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}</select>
         </span>
       )}

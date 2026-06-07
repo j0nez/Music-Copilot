@@ -17,6 +17,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef<string>('');
+  const projectIdRef = useRef<number | undefined>(undefined);
 
   const refreshProject = useCallback(async () => {
     try {
@@ -37,6 +38,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     refreshProject();
   }, [refreshProject]);
 
+  useEffect(() => {
+    projectIdRef.current = project?.id;
+  }, [project?.id]);
+
   const createProject = useCallback(async (name: string, bpm = 120, key = 'C', scale = 'Major') => {
     try {
       const res = await apiCreateProject(name, bpm, key, scale);
@@ -56,27 +61,30 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const updateProject = useCallback(async (updates: Partial<Pick<Project, 'name' | 'bpm' | 'key' | 'scale'>>) => {
     if (!project) return;
 
+    const pid = project.id;
+    projectIdRef.current = pid;
+
     setProject((prev) => prev ? { ...prev, ...updates } : prev);
 
     const serialized = JSON.stringify(updates);
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(async () => {
+      if (projectIdRef.current !== pid) return;
       if (serialized === lastSavedRef.current) return;
       lastSavedRef.current = serialized;
 
       try {
-        const res = await apiUpdateProject(project.id, updates);
+        const res = await apiUpdateProject(pid, updates);
         if (res.success && res.data?.project) {
           setProject(res.data.project);
         }
       } catch {
-        // Revert optimistic update on save failure
         lastSavedRef.current = '';
         refreshProject();
       }
     }, 500);
-  }, [project]);
+  }, [project, refreshProject]);
 
   return (
     <ProjectContext.Provider value={{ project, isLoading, createProject, updateProject, refreshProject }}>

@@ -18,6 +18,7 @@ from backend.app.core.logging import setup_logging
 from backend.app.db.database import init_db
 from backend.app.models.shared import ApiResponse
 from plugins import discover_plugins
+from providers import configure as configure_provider
 from providers.openai_provider import OpenAIProvider  # noqa: F401
 from providers.groq_provider import GroqProvider  # noqa: F401
 from providers.glm_provider import GLMProvider  # noqa: F401
@@ -32,6 +33,8 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Music Copilot v%s", settings.app_version)
     init_db()
     discover_plugins()
+    if settings.ai_api_key:
+        configure_provider(settings.ai_provider, settings.ai_api_key, model=settings.ai_model)
     yield
     logger.info("Shutting down Music Copilot")
 

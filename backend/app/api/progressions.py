@@ -20,7 +20,7 @@ router = APIRouter(prefix="/progressions", tags=["progressions"])
 
 
 @router.post("/")
-async def create_progression(payload: dict):
+def create_progression(payload: dict):
     key = payload.get("key")
     if not key or not isinstance(key, str):
         raise InputValidationError("'key' is required and must be a string")
@@ -43,7 +43,7 @@ async def create_progression(payload: dict):
 
 
 @router.get("/")
-async def get_progressions(
+def get_progressions(
     sort_by: str = "created_at",
     sort_order: str = "DESC",
     type: str | None = Query(default=None, alias="type"),
@@ -57,7 +57,7 @@ async def get_progressions(
 
 
 @router.get("/{progression_id}")
-async def api_get_progression(progression_id: int):
+def api_get_progression(progression_id: int):
     try:
         item = get_progression(progression_id)
     except Exception as exc:
@@ -74,7 +74,7 @@ async def api_get_progression(progression_id: int):
 
 
 @router.delete("/{progression_id}")
-async def remove_progression(progression_id: int):
+def remove_progression(progression_id: int):
     try:
         deleted = delete_progression(progression_id)
     except Exception as exc:
@@ -91,7 +91,7 @@ async def remove_progression(progression_id: int):
 
 
 @router.get("/{progression_id}/midi")
-async def download_progression_midi(progression_id: int, bpm: int = 120):
+def download_progression_midi(progression_id: int, bpm: int = 120):
     try:
         row = get_progression(progression_id)
     except Exception as exc:

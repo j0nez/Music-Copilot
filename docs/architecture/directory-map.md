@@ -87,7 +87,7 @@ E:\Projects\Music-Copilot\
 │
 ├── shared/                    # Cross-boundary types & constants
 │   ├── types.py               # Shared Pydantic models (used by both API & plugins)
-│   └── constants.py           # Enums, magic numbers, config keys
+│   └── music_theory.py        # Music theory constants (NOTE_TO_SEMITONE, CHORD_INTERVALS, DIATONIC_QUALITIES)
 │
 ├── data/                      # Local runtime data (gitignored)
 │   ├── db/                    # SQLite database files

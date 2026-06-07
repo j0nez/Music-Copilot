@@ -1,5 +1,14 @@
-import { useRef, useEffect } from 'react';
+import { useRef, forwardRef, useImperativeHandle } from 'react';
 import type { Note } from '../types';
+
+export const HEADER_WIDTH = 32;
+export const BEAT_WIDTH = 20;
+
+export interface NoteGridHandle {
+  setPlayheadPosition(x: number): void;
+  showPlayhead(x: number): void;
+  hidePlayhead(): void;
+}
 
 interface NoteGridProps {
   chords: Note[];
@@ -8,31 +17,43 @@ interface NoteGridProps {
   bpm: number;
   bars: number;
   compact?: boolean;
-  playheadBeat?: number | null;
 }
 
 const BEATS_PER_BAR = 4;
 const ROW_HEIGHT = 24;
-const HEADER_WIDTH = 32;
-const BEAT_WIDTH = 20;
 
 function noteToLabel(pitch: number): string {
   const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   return `${names[pitch % 12]}${Math.floor(pitch / 12) - 1}`;
 }
 
-export default function NoteGrid({ chords, melody, bassline, bars, compact, playheadBeat }: NoteGridProps) {
+const NoteGrid = forwardRef<NoteGridHandle, NoteGridProps>(function NoteGrid({ chords, melody, bassline, bars, compact }, ref) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const playheadRef = useRef<SVGLineElement>(null);
   const totalBeats = bars * BEATS_PER_BAR;
   const width = totalBeats * BEAT_WIDTH + HEADER_WIDTH;
   const height = compact ? ROW_HEIGHT * 3 + 4 : ROW_HEIGHT * 6 + 8;
 
-  useEffect(() => {
-    if (playheadBeat != null && scrollRef.current) {
-      const scrollX = playheadBeat * BEAT_WIDTH + HEADER_WIDTH - 100;
-      scrollRef.current.scrollLeft = Math.max(0, scrollX);
-    }
-  }, [playheadBeat]);
+  useImperativeHandle(ref, () => ({
+    setPlayheadPosition(x: number) {
+      if (playheadRef.current) {
+        playheadRef.current.setAttribute('x1', String(x));
+        playheadRef.current.setAttribute('x2', String(x));
+      }
+    },
+    showPlayhead(x: number) {
+      if (playheadRef.current) {
+        playheadRef.current.setAttribute('visibility', 'visible');
+        playheadRef.current.setAttribute('x1', String(x));
+        playheadRef.current.setAttribute('x2', String(x));
+      }
+    },
+    hidePlayhead() {
+      if (playheadRef.current) {
+        playheadRef.current.setAttribute('visibility', 'hidden');
+      }
+    },
+  }));
 
   const hasAny = chords.length > 0 || melody.length > 0 || bassline.length > 0;
   if (!hasAny) {
@@ -125,18 +146,20 @@ export default function NoteGrid({ chords, melody, bassline, bars, compact, play
           );
         })}
 
-        {playheadBeat != null && (
-          <line
-            x1={HEADER_WIDTH + (playheadBeat - 1) * BEAT_WIDTH}
-            y1={0}
-            x2={HEADER_WIDTH + (playheadBeat - 1) * BEAT_WIDTH}
-            y2={height}
-            stroke="#ef4444"
-            strokeWidth={2}
-            className="pointer-events-none"
-          />
-        )}
+        <line
+          ref={playheadRef}
+          visibility="hidden"
+          x1={0}
+          y1={0}
+          x2={0}
+          y2={height}
+          stroke="#ef4444"
+          strokeWidth={2}
+          className="pointer-events-none"
+        />
       </svg>
     </div>
   );
-}
+});
+
+export default NoteGrid;

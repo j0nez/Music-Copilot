@@ -7,7 +7,7 @@
 **Batch C (P2) done:** GeneratePanel receives `project` prop — `resolveSettings()` uses project key/scale when set to `Auto`, preset chips use project key as fallback. Preset chips now auto-trigger chord generation immediately after setting dropdowns (calls `onAutoGenerate`). MIDIPlayer has separate `onClear` prop — `clearAll()` clears state to `[]` instead of regenerating.  
 **Batch D (P3) done:** Generation Hub fully expanded — Melody section (6 dropdowns + Generate), Bassline section (genre/pattern/length + Generate), Preview note grid with inline Play/Stop (Web Audio API), MIDI All export, Save to Library with editable name, Esc/click-outside dismiss. Ctrl+S now saves full arrangement (all 3 parts) via new POST /arrangement/save endpoint. Voice-leading score badge (green ≥7, amber <7) shown for 4s after chord generation. Generation history ring buffer (max 5 per part) wired with ⬆/⬇ cycle arrows in MIDIPlayer footer. 154 tests pass.  
 **Target:** v0.1 MVP completion (Phase A–E done, Phase E — AI Studio deferred)  
-**Last updated:** 2026-06-07 (v9 — Batch E done)
+**Last updated:** 2026-06-07 (v9 — Batch E done + infrastructure polish)
 
 ---
 
@@ -432,8 +432,8 @@ interface PlayerState {
 │ [✕] [Peek]  [Send to Player]  [MIDI ▼]  [Save]  (history ⬆/⬇)│
 ├──────────────────────────────────────────────────────────────────┤
 │  ┌─ Melody ───────────────────────────────────────────────────┐  │
- │  │ Key: [Auto ▼] Scale: [Natural Minor ▼]                     │  │
- │  │ Mood: [Auto ▼] Genre: [Auto ▼] Length: [8 bars ▼]        │  │
+│  │ Key: [Auto ▼] Scale: [Natural Minor ▼]                     │  │
+│  │ Mood: [Auto ▼] Genre: [Auto ▼] Length: [8 bars ▼]        │  │
 │  │ Complexity: [Simple ▼]  [Generate]   ⬆/⬇ history           │  │
 │  └──────────────────────────────────────────────────────────────┘  │
 │  ┌─ Bassline ─────────────────────────────────────────────────┐  │
@@ -541,7 +541,7 @@ Panel inputs        → Generator          → Expression Engine → MIDI Player
 Sample (via SA)       Chord Generator      velocity_by_role    Row: Chords   oscillators
 Preset Chips          Melody Generator     voicing (chords)    Row: Melody   per note
 Manual select         Bassline Generator   articulation/gate   Row: Bassline at BPM time
-                                           swing + humanize
+                                            swing + humanize
 
 Preset Chip flow: click [Dark Techno] → fills key/mood/genre/length + triggers generate
   Surprise Me: randomizes all params → triggers generate
@@ -899,4 +899,22 @@ Batch E (P4) — Polish (DONE)
 
 **Estimated total effort:** 0h remaining  
 **Estimated batches:** 0  
-**Next:** Phase E — AI Studio
+**Next:** Phase E — AI Studio  
+
+## 18. Infrastructure & Polish (2026-06-07)
+
+A set of cross-cutting infrastructure improvements and UI polish items were applied after Batch E:
+
+| Area | Change |
+|------|--------|
+| **Shared module** | `shared/music_theory.py` created. Consolidates `NOTE_TO_SEMITONE`, `CHORD_INTERVALS`, `DIATONIC_QUALITIES` from `backend/app/services/midi/generator.py`, `backend/app/services/midi/theory.py`, `plugins/chord_generator/plugin.py`, `plugins/theory_engine/plugin.py`, and `frontend/src/renderer/components/GeneratePanel.tsx`. All import from single source. |
+| **Provider layer** | Decoupled from `backend.app.core.config`. `configure(provider_name, api_key)` receives credentials explicitly at startup via `main.py` lifespan. `generate()` raises if unconfigured (no auto-init). |
+| **EventBus** | `emit()` runs handlers concurrently via `asyncio.gather` with `return_exceptions=True`. Errors logged per-handler, never propagate. |
+| **Sample Analyzer** | `DeepRhythmPredictor` moved to lazy getter (delayed import). `librosa.load` and `librosa.get_duration` wrapped in `asyncio.to_thread`. `bpm_val` variable extraction fixed. Frontend double-analysis guard via `analyzingRef`. |
+| **AbortController** | Replaced `Promise.race` timeout pattern with `AbortController` throughout `api.ts` and `GeneratePanel.tsx`. All fetch helpers accept optional `AbortSignal`. |
+| **ErrorBoundary** | New `frontend/src/renderer/components/ErrorBoundary.tsx` wraps entire app in `App.tsx`. Catches errors, shows reload button. |
+| **Playhead** | Refactored from React state (`playheadBeat` → re-render every frame) to imperative SVG API via `useImperativeHandle`/`NoteGridHandle`. Playhead updates no longer trigger component re-renders. |
+| **Chord notes** | `chordNotesToMidi()` converts chord note names (C, E, G) to proper MIDI pitches using `PITCH_CLASSES` mapping. Replaces all-C4 hardcode in both `GeneratePanel.tsx` and `Dashboard.tsx`. |
+| **Mute buttons** | Per-part mute toggles in `MIDIPlayer.tsx` title bar. Muted parts excluded from playback and swing. |
+| **Library Load** | `LibraryModal` accepts optional `onLoad` callback. Renders "Load" button per row. `Dashboard` wires `handleLoadFromLibrary` to restore chord data. |
+| **ReferencePopover** | `ChordTool` and `IntervalTool` components added (previously all three types showed ScaleTool). Shows chord qualities + interval names. |

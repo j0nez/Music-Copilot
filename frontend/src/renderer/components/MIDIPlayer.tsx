@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import NoteGrid from './NoteGrid';
+import NoteGrid, { HEADER_WIDTH, BEAT_WIDTH, type NoteGridHandle } from './NoteGrid';
 import type { Note } from '../types';
 
 function midiToFreq(pitch: number): number {
@@ -28,6 +28,7 @@ interface MIDIPlayerProps {
   onSwingChange: (v: number) => void;
   onRegenerate: (type: 'chords' | 'melody' | 'bassline') => void;
   onClear: (type: 'chords' | 'melody' | 'bassline') => void;
+  onSaveToLibrary?: () => void;
   historyCounts?: { chords: number; melody: number; bassline: number };
   onCycleHistory?: (type: 'chords' | 'melody' | 'bassline', direction: -1 | 1) => void;
 }
@@ -38,14 +39,15 @@ const PART_CONFIG = [
   { type: 'bassline' as const, label: 'Bassline', color: 'text-blue-400' as const },
 ];
 
-export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing, onSwingChange, onRegenerate, onClear, historyCounts, onCycleHistory }: MIDIPlayerProps) {
+export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing, onSwingChange, onRegenerate, onClear, onSaveToLibrary, historyCounts, onCycleHistory }: MIDIPlayerProps) {
   const [playing, setPlaying] = useState(false);
-  const [playheadBeat, setPlayheadBeat] = useState<number | null>(null);
+  const [mutes, setMutes] = useState({ chords: false, melody: false, bassline: false });
   const animRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const scheduledRef = useRef<{ stop: () => void }[]>([]);
   const [loading, setLoading] = useState<'none' | 'chords' | 'melody' | 'bassline'>('none');
+  const noteGridRef = useRef<NoteGridHandle>(null);
 
   const parts = [
     { type: 'chords' as const, notes: chords },
@@ -58,8 +60,8 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
 
   const stop = useCallback(() => {
     setPlaying(false);
-    setPlayheadBeat(null);
     if (animRef.current) cancelAnimationFrame(animRef.current);
+    if (noteGridRef.current) noteGridRef.current.hidePlayhead();
     scheduledRef.current.forEach(s => s.stop());
     scheduledRef.current = [];
   }, []);
@@ -78,9 +80,9 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
     const beatDuration = 60 / bpm;
 
     const allParts = [
-      applySwing(chords, swing),
-      applySwing(melody, swing),
-      applySwing(bassline, swing),
+      !mutes.chords ? applySwing(chords, swing) : [],
+      !mutes.melody ? applySwing(melody, swing) : [],
+      !mutes.bassline ? applySwing(bassline, swing) : [],
     ];
 
     for (const partNotes of allParts) {
@@ -118,9 +120,9 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
     }
 
     startTimeRef.current = performance.now();
-    setPlayheadBeat(1);
+    if (noteGridRef.current) noteGridRef.current.showPlayhead(HEADER_WIDTH + 0 * BEAT_WIDTH);
     setPlaying(true);
-  }, [chords, melody, bassline, bpm, swing]);
+  }, [chords, melody, bassline, bpm, swing, mutes]);
 
   useEffect(() => {
     if (!playing) return;
@@ -132,7 +134,9 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
         stop();
         return;
       }
-      setPlayheadBeat(beat);
+      if (noteGridRef.current) {
+        noteGridRef.current.setPlayheadPosition(HEADER_WIDTH + (beat - 1) * BEAT_WIDTH);
+      }
       animRef.current = requestAnimationFrame(tick);
     }
     animRef.current = requestAnimationFrame(tick);
@@ -189,6 +193,24 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
           <span className="text-sm font-semibold text-gray-200">
             {parts.find(p => p.notes.length > 0)?.type ?? ''} — {bars} bars
           </span>
+          {PART_CONFIG.map(p => {
+            const hasNotes = p.type === 'chords' ? chords.length > 0 : p.type === 'melody' ? melody.length > 0 : bassline.length > 0;
+            if (!hasNotes) return null;
+            return (
+              <button
+                key={p.type}
+                onClick={() => setMutes(prev => ({ ...prev, [p.type]: !prev[p.type] }))}
+                className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                  mutes[p.type]
+                    ? 'bg-red-900/30 border-red-700/50 text-red-400'
+                    : 'bg-gray-700/50 border-gray-600/50 text-gray-400 hover:text-white'
+                }`}
+                title={mutes[p.type] ? `Unmute ${p.label}` : `Mute ${p.label}`}
+              >
+                {mutes[p.type] ? `\u2715 ${p.label}` : p.label}
+              </button>
+            );
+          })}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-500 text-[10px]">Swing: {Math.round(swing * 100)}%</span>
@@ -205,12 +227,12 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
 
       <div className="flex-1 overflow-y-auto px-3 py-2">
         <NoteGrid
+          ref={noteGridRef}
           chords={chords}
           melody={melody}
           bassline={bassline}
           bpm={bpm}
           bars={bars}
-          playheadBeat={playheadBeat}
         />
       </div>
 
@@ -252,7 +274,12 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
             </div>
           );
         })}
-        <button onClick={clearAll} className="ml-auto text-xs text-red-400 hover:text-red-300">
+        {onSaveToLibrary && (
+          <button onClick={onSaveToLibrary} className="text-xs text-green-400 hover:text-green-300">
+            Save to Library
+          </button>
+        )}
+        <button onClick={clearAll} className="text-xs text-red-400 hover:text-red-300">
           Clear All
         </button>
       </div>

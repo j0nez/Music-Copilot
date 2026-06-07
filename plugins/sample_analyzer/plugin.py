@@ -1,10 +1,10 @@
+import asyncio
 import logging
 from collections import Counter
 from pathlib import Path
 
 import librosa
 import numpy as np
-from deeprhythm import DeepRhythmPredictor
 from music21 import note, stream
 from music21.analysis.discrete import (
     AardenEssen,
@@ -20,7 +20,15 @@ from plugins.events import event_bus
 
 logger = logging.getLogger("music_copilot.sample_analyzer")
 
-_bpm_model = DeepRhythmPredictor()
+_bpm_model: "DeepRhythmPredictor | None" = None
+
+
+def get_bpm_model():
+    global _bpm_model
+    if _bpm_model is None:
+        from deeprhythm import DeepRhythmPredictor
+        _bpm_model = DeepRhythmPredictor()
+    return _bpm_model
 
 
 class SampleAnalyzerInput(BaseModel):
@@ -58,9 +66,9 @@ class SampleAnalyzerPlugin(Plugin):
             )
 
         try:
-            y, sr = librosa.load(str(path))
+            y, sr = await asyncio.to_thread(librosa.load, str(path))
 
-            duration = float(librosa.get_duration(y=y, sr=sr))
+            duration = float(await asyncio.to_thread(librosa.get_duration, y=y, sr=sr))
 
             if duration < SHORT_AUDIO_THRESHOLD:
                 return PluginResult(
@@ -80,13 +88,14 @@ class SampleAnalyzerPlugin(Plugin):
             spectral_flatness = float(np.mean(librosa.feature.spectral_flatness(y=y)))
             warning = "high_noise" if spectral_flatness > NOISE_FLATNESS_THRESHOLD else None
 
-            bpm_result = self._detect_bpm(y, sr, min_bpm=min_bpm, max_bpm=max_bpm)
+            bpm_result = await asyncio.to_thread(self._detect_bpm, y, sr, min_bpm, max_bpm)
 
             key_name, scale_type, key_results, key_confidence = self._detect_key(y, sr)
             scale = f"{key_name} {scale_type}" if key_name and scale_type else None
 
+            bpm_val = bpm_result.get("bpm")
             result = {
-                "bpm": round(bpm_result["bpm"], 1) if bpm_result["bpm"] else None,
+                "bpm": round(bpm_val, 1) if bpm_val is not None else None,
                 "key": key_name,
                 "scale": scale,
                 "length_seconds": round(duration, 2),
@@ -115,7 +124,8 @@ class SampleAnalyzerPlugin(Plugin):
                 repeats = int(np.ceil(clip_samples / len(y)))
                 y = np.tile(y, repeats)[:clip_samples]
 
-            tempo, confidence = _bpm_model.predict_from_audio(
+            model = get_bpm_model()
+            tempo, confidence = model.predict_from_audio(
                 y, sr, include_confidence=True,
             )
             bpm_val = float(tempo)

@@ -12,7 +12,7 @@ router = APIRouter(prefix="/search", tags=["search"])
 
 
 @router.get("/")
-async def search(
+def search(
     q: str = Query(..., min_length=1, description="Search query"),
     limit: int = Query(20, ge=1, le=100, description="Max results"),
 ):
