@@ -1,10 +1,14 @@
 import type {
+  ActivePartsSummary,
   ApiResponse,
   ArrangementExportResult,
+  ChatMessage,
+  ChatResult,
   MidiExportResult,
   Note,
   ProgressionChord,
   Project,
+  ProviderInfo,
   SampleAnalysisResult,
   SavedProgression,
   SearchResult,
@@ -282,4 +286,56 @@ export async function downloadFromUrl(downloadUrl: string, filename: string, sig
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(blobUrl);
+}
+
+/* ── Chat ──────────────────────────── */
+
+export async function sendChat(
+  message: string,
+  activeParts: Record<string, ActivePartsSummary>,
+  project: { key: string; scale: string; bpm: number; mood?: string; genre?: string } | null,
+  signal?: AbortSignal,
+): Promise<ApiResponse<ChatResult>> {
+  return post<ChatResult>('/chat/', {
+    message,
+    project_context: project ? {
+      key: project.key,
+      scale: project.scale,
+      bpm: project.bpm,
+      mood: project.mood ?? '',
+      genre: project.genre ?? '',
+      active_parts: activeParts,
+    } : null,
+  }, signal);
+}
+
+export async function getChatHistory(limit = 20, signal?: AbortSignal): Promise<ApiResponse<{ history: ChatMessage[] }>> {
+  return get<{ history: ChatMessage[] }>('/chat/history', { limit: String(limit) }, signal);
+}
+
+export async function clearChatHistory(signal?: AbortSignal): Promise<ApiResponse<{ cleared: boolean }>> {
+  return del<{ cleared: boolean }>('/chat/history', signal);
+}
+
+/* ── Provider Config ───────────────── */
+
+export async function listProviders(signal?: AbortSignal): Promise<ApiResponse<{ providers: ProviderInfo[]; priority: string[] }>> {
+  return get<{ providers: ProviderInfo[]; priority: string[] }>('/providers/', undefined, signal);
+}
+
+export async function configureProvider(
+  name: string,
+  apiKey: string,
+  model?: string,
+  signal?: AbortSignal,
+): Promise<ApiResponse<{ configured: boolean }>> {
+  return post<{ configured: boolean }>('/providers/configure', { name, api_key: apiKey, model }, signal);
+}
+
+export async function setProviderPriority(priority: string[], signal?: AbortSignal): Promise<ApiResponse<{ priority: string[] }>> {
+  return post<{ priority: string[] }>('/providers/priority', { priority }, signal);
+}
+
+export async function testProvider(name: string, signal?: AbortSignal): Promise<ApiResponse<{ healthy: boolean; latency_ms: number }>> {
+  return post<{ healthy: boolean; latency_ms: number }>('/providers/test', { name }, signal);
 }

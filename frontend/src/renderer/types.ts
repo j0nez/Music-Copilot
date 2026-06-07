@@ -159,6 +159,38 @@ export interface ArrangementExportResult {
   filename: string;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  provider?: string;
+  model?: string;
+  tokens_used?: number;
+  timestamp: number;
+}
+
+export interface ActivePartsSummary {
+  count: number;
+  bars: number;
+  root_notes?: string[];
+  range?: string;
+}
+
+export interface ProviderInfo {
+  name: string;
+  configured: boolean;
+  model: string | null;
+  available_models: string[];
+  healthy: boolean;
+  key_hint: string | null;
+}
+
+export interface ChatResult {
+  reply: string;
+  model_used: string;
+  provider_used: string;
+  tokens_used: number;
+}
+
 export const SWING_PRESETS: Record<string, number> = {
   house: 0.30,
   techno: 0.20,
