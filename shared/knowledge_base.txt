@@ -1,4 +1,4 @@
-# Last updated: 2026-06-07 | Version: 0.1
+# Last updated: 2026-06-07 | Version: 0.2
 
 === Architecture ===
 Music Copilot is a desktop app (Electron + React + FastAPI + SQLite) for FL Studio producers.
@@ -37,9 +37,62 @@ Chord intervals (semitones from root):
 Diatonic qualities (major): [major, minor, minor, major, major, minor, diminished]
 Diatonic qualities (minor): [minor, diminished, major, minor, minor, major, major]
 
+=== FL Studio Workflow ===
+MIDI Export: Click "Export MIDI" in MIDI Player or Generation Hub → downloads .mid file.
+  Drag the .mid file from your downloads folder into FL Studio's Channel Rack or Piano Roll.
+  Each part (chords/melody/bassline) exports as a separate track in the MIDI file.
+Matching Tempo: Set your project BPM in Music Copilot's Project panel to match FL Studio.
+  The generated MIDI will align perfectly when you drag it in.
+Using Generated Content:
+  Chords → Piano Roll (layer multiple chord notes per beat).
+  Melody → Channel Rack (assign to a synth like Sytrus, Harmor, or Serum).
+  Bassline → Channel Rack (assign to a sub-bass patch or 808).
+Swing: Use the swing slider (0-100%) to add groove before exporting.
+  House/DnB: 20-40%. Techno: 0-10%. Deep House: 30-50%.
+
+=== Genre Production Tips ===
+House (Deep / Progressive):
+  Use 4-on-the-floor kick, offbeat hi-hats, clap on 2 and 4.
+  Chords: I-IV-V-I or vi-IV-I-V, 7th chords for lushness.
+  Bass: Root notes on beats 1 and 3, syncopation between.
+Techno:
+  Kick on every beat, hi-hats with shuffle, minimal percussion.
+  Chords: Minor vamps (i-iv-vII-i), dark ambience between hits.
+  Bass: Low-pass filtered, root-fifth pattern with distortion.
+Trance:
+  Kick on 1, rolling hi-hats (16th notes), snare/clap on 2 and 4.
+  Chords: Arpeggiated majestic progressions (I-V-vi-IV).
+  Bass: Octave-jumping root-fifth pattern, side-chained to kick.
+Drum & Bass:
+  Kick on 1, snare on 3 (half-time feel), fast hi-hats (32nd notes).
+  Chords: Minor and diminished, atmospheric pads.
+  Bass: Heavy sub-bass, mid-range Reese bass with detuned saws.
+
+=== Arrangement Structure ===
+Common 128-BPM House Structure (8-bar sections):
+  Intro (16 bars) — Kick, hats, atmosphere, build FX.
+  Breakdown (16 bars) — Melody intro, filtered chords.
+  Build (8 bars) — Rising white noise, snare roll every 2 bars.
+  Drop (16 bars) — Full elements, main hook.
+  Bridge (16 bars) — Filtered, fewer elements, tension release.
+  Second Drop (16 bars) — Full energy, possible variation.
+  Outro (16 bars) — Strip back, reverb tail, fade.
+Techno Structure: 16-bar loops with subtle variations every 8 bars.
+  Minimal intro (no kick) → Kick enters → Layer by layer → Drop → Strip → Rebuild.
+DnB Structure: Double-time tempo (174 BPM), half-time feel.
+  Intro → Atmospheric pad → Drums enter → Bass → Drop → Breakdown → Second Drop.
+
+=== How to Use the Chat ===
+Ask about music theory: intervals, chords, scales, key changes, voice leading.
+Ask about arrangement: song structure, section transitions, tension building.
+Ask for sound design: "How do I make a Reese bass?" or "What synth for pluck leads?"
+Ask about production workflow: "How should I layer my kick and sub-bass?"
+The AI CANNOT execute tools or generate MIDI from chat. Use the Generate panel for that.
+The AI has no internet access — it answers from its training + this knowledge base.
+
 === Key Actions ===
 Ctrl+K — Global search (Library, samples)
 Ctrl+Enter — Auto-generate (chords → melody → bassline)
 Ctrl+Shift+M — Export all MIDI
 Ctrl+S — Save arrangement to Library
-Ctrl+Enter in chat — Send message
+Enter in chat — Send message (Shift+Enter for newline)

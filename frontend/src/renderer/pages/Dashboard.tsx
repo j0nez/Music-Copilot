@@ -327,9 +327,9 @@ export default function Dashboard() {
         hasAny={hasChords || hasMelody || hasBassline}
       />
 
-      <div className="flex-1 flex gap-3 min-h-0">
+      <div className="flex-1 flex flex-col gap-3 min-h-0 lg:flex-row">
         {/* Left column 45% */}
-        <div className="w-[45%] flex flex-col gap-3 min-h-0 overflow-y-auto">
+        <div className="w-full lg:w-[45%] flex flex-col gap-3 min-h-0 overflow-y-auto">
           <ProjectAnchor
             project={project}
             showNewProject={showNewProject}
@@ -373,7 +373,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right column 55% — Chat (hero panel) */}
-        <div className="w-[55%] min-h-0">
+        <div className="w-full lg:w-[55%] min-h-0">
           <Panel title="Chat" className="h-full">
             <AiStudio project={project} activeParts={activeParts} />
           </Panel>
@@ -381,7 +381,7 @@ export default function Dashboard() {
       </div>
 
       {/* Bottom row */}
-      <div className="h-48 flex gap-3 shrink-0">
+      <div className="flex flex-col gap-3 shrink-0 lg:flex-row lg:h-48">
         <Panel title="MIDI Player" className="flex-1">
           <MIDIPlayer
             chords={chords} melody={melody} bassline={bassline}
@@ -415,34 +415,34 @@ function TopBar({ projectName, onNewProject, onOpenLibrary, onSearchOpen, onHubO
   onHubOpen: () => void; hasAny: boolean;
 }) {
   return (
-    <div className="flex items-center gap-4 px-4 py-3 bg-surface-800/50 rounded-xl border border-surface-700/50 shrink-0">
+    <div className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 py-3 bg-surface-800/50 rounded-xl border border-surface-700/50 shrink-0 flex-wrap">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-accent-400" />
         <span className="font-heading font-bold text-sm tracking-wide text-accent-300">Music Copilot</span>
       </div>
-      <span className="text-xs text-gray-600">v0.1.0</span>
+      <span className="text-[10px] sm:text-xs text-gray-600">v0.1.0</span>
 
-      <div className="flex items-center gap-1 ml-2">
+      <div className="hidden sm:flex items-center gap-1 ml-2">
         <ReferencePopover type="scale" />
         <ReferencePopover type="chord" />
         <ReferencePopover type="interval" />
       </div>
 
-      <div className="flex-1" />
+      <div className="flex-1 min-w-[8px]" />
 
       {hasAny && (
-        <button onClick={onHubOpen} className="text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded border border-surface-700/50">
-          Generation Hub
+        <button onClick={onHubOpen} className="text-[10px] sm:text-xs text-gray-400 hover:text-white transition-colors px-1.5 sm:px-2 py-1 rounded border border-surface-700/50">
+          Hub
         </button>
       )}
-      <button onClick={onSearchOpen} className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-surface-700/50">
-        Ctrl+K Search
+      <button onClick={onSearchOpen} className="text-[10px] sm:text-xs text-gray-500 hover:text-gray-300 transition-colors px-1.5 sm:px-2 py-1 rounded border border-surface-700/50">
+        Search
       </button>
-      <button onClick={onOpenLibrary} className="text-xs text-gray-400 hover:text-white transition-colors px-3 py-1 rounded border border-surface-700/50 hover:border-surface-600">
+      <button onClick={onOpenLibrary} className="text-[10px] sm:text-xs text-gray-400 hover:text-white transition-colors px-1.5 sm:px-3 py-1 rounded border border-surface-700/50 hover:border-surface-600">
         Library
       </button>
-      <button onClick={onNewProject} className="text-xs bg-accent-500/20 text-accent-300 px-3 py-1.5 rounded-lg border border-accent-500/30 hover:bg-accent-500/30 transition-colors">
-        {projectName ? "Switch Project" : "New Project"}
+      <button onClick={onNewProject} className="text-[10px] sm:text-xs bg-accent-500/20 text-accent-300 px-2 sm:px-3 py-1.5 rounded-lg border border-accent-500/30 hover:bg-accent-500/30 transition-colors whitespace-nowrap">
+        {projectName ? "Switch" : "New"}
       </button>
     </div>
   );
@@ -643,20 +643,23 @@ function ProjectAnchor({ project, showNewProject, setShowNewProject, onCreatePro
   onCreateProject: (name: string, bpm?: number, key?: string, scale?: string) => Promise<unknown>;
   updateProject: (updates: Partial<{ name: string; bpm: number; key: string; scale: string }>) => Promise<void>;
 }) {
+  if (showNewProject) {
+    return (
+      <Panel title="Project">
+        <NewProjectForm
+          onCreate={async (name, bpm, key, scale) => { await onCreateProject(name, bpm, key, scale); setShowNewProject(false); }}
+          onCancel={() => setShowNewProject(false)}
+        />
+      </Panel>
+    );
+  }
   if (!project) {
     return (
       <Panel title="Project">
-        {showNewProject ? (
-          <NewProjectForm
-            onCreate={async (name, bpm, key, scale) => { await onCreateProject(name, bpm, key, scale); setShowNewProject(false); }}
-            onCancel={() => setShowNewProject(false)}
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-500 py-8">
-            <p className="text-sm">No project loaded</p>
-            <p className="text-xs text-gray-600">Click <span className="text-accent-400/80">New Project</span> in the top bar</p>
-          </div>
-        )}
+        <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-500 py-8">
+          <p className="text-sm">No project loaded</p>
+          <p className="text-xs text-gray-600">Click <span className="text-accent-400/80">New Project</span> in the top bar</p>
+        </div>
       </Panel>
     );
   }

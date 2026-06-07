@@ -19,6 +19,11 @@ export default function AiStudio({ project, activeParts }: AiStudioProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [loadedHistory, setLoadedHistory] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef(input);
+  inputRef.current = input;
+  const msgHistoryRef = useRef<string[]>([]);
+  const historyIdxRef = useRef(-1);
 
   const loadProviders = useCallback(async () => {
     const res = await listProviders();
@@ -56,8 +61,11 @@ export default function AiStudio({ project, activeParts }: AiStudioProps) {
   }, [messages]);
 
   const handleSend = useCallback(async () => {
-    const text = input.trim();
+    const text = inputRef.current.trim();
     if (!text || loading) return;
+    msgHistoryRef.current.push(text);
+    if (msgHistoryRef.current.length > 50) msgHistoryRef.current.shift();
+    historyIdxRef.current = -1;
     setInput("");
     setError(null);
 
@@ -81,7 +89,7 @@ export default function AiStudio({ project, activeParts }: AiStudioProps) {
       setError(res.error?.message ?? "Chat failed. Check your provider API key.");
     }
     setLoading(false);
-  }, [input, loading, activeParts, project]);
+  }, [loading, activeParts, project]);
 
   const handleNewChat = useCallback(async () => {
     await clearChatHistory();
@@ -96,9 +104,35 @@ export default function AiStudio({ project, activeParts }: AiStudioProps) {
   }, [providers]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+      return;
+    }
+    if (e.key === "ArrowUp" && !e.shiftKey) {
+      const idx = historyIdxRef.current;
+      if (idx < 0) {
+        const last = msgHistoryRef.current.length - 1;
+        if (last >= 0) {
+          historyIdxRef.current = last;
+          setInput(msgHistoryRef.current[last]);
+        }
+      } else if (idx > 0) {
+        historyIdxRef.current = idx - 1;
+        setInput(msgHistoryRef.current[historyIdxRef.current]);
+      }
+      e.preventDefault();
+    }
+    if (e.key === "ArrowDown" && !e.shiftKey) {
+      const idx = historyIdxRef.current;
+      if (idx >= 0 && idx < msgHistoryRef.current.length - 1) {
+        historyIdxRef.current = idx + 1;
+        setInput(msgHistoryRef.current[historyIdxRef.current]);
+      } else {
+        historyIdxRef.current = -1;
+        setInput("");
+      }
+      e.preventDefault();
     }
   }, [handleSend]);
 
@@ -162,13 +196,19 @@ export default function AiStudio({ project, activeParts }: AiStudioProps) {
       {/* Input */}
       <div className="shrink-0 border-t border-surface-700/30 p-2 space-y-2">
         <div className="flex gap-2">
-          <input
+          <textarea
+            ref={textareaRef}
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={e => {
+              setInput(e.target.value);
+              const el = textareaRef.current;
+              if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+            }}
             onKeyDown={handleKeyDown}
             placeholder="Ask about music theory, arrangement, or production..."
             disabled={loading}
-            className="flex-1 bg-surface-900 border border-surface-700 rounded px-3 py-2 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-accent-500/50 disabled:opacity-50"
+            rows={1}
+            className="flex-1 bg-surface-900 border border-surface-700 rounded px-3 py-2 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-accent-500/50 disabled:opacity-50 resize-none overflow-hidden"
           />
           <button onClick={handleSend} disabled={!input.trim() || loading}
             className="px-3 py-2 rounded text-xs font-medium bg-accent-500/20 text-accent-300 border border-accent-500/30 hover:bg-accent-500/30 disabled:opacity-50 transition-colors"
