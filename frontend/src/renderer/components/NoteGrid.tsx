@@ -84,7 +84,7 @@ const NoteGrid = forwardRef<NoteGridHandle, NoteGridProps>(function NoteGrid({ c
       <svg width={width} height={height} className="block">
         {beatLines.map((beat) => {
           const x = HEADER_WIDTH + beat * BEAT_WIDTH;
-          const isBar = beat % BEAT_WIDTH === 0;
+          const isBar = beat % BEATS_PER_BAR === 0;
           return (
             <line
               key={beat}

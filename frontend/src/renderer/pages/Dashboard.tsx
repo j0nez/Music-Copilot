@@ -117,10 +117,10 @@ export default function Dashboard() {
 
   const handleRegenerate = useCallback(async (type: 'chords' | 'melody' | 'bassline') => {
     const s = settings;
-    const resolvedKey = s.key === 'Auto' ? 'C' : s.key;
+    const resolvedKey = s.key === 'Auto' ? (project?.key ?? 'C') : s.key;
     const resolvedMood = s.mood === 'Auto' ? 'uplifting' : s.mood;
     const resolvedGenre = s.genre === 'Auto' ? 'house' : s.genre;
-    const resolvedScale = s.scale === 'Auto' ? 'major' : s.scale;
+    const resolvedScale = s.scale === 'Auto' ? (project?.scale?.toLowerCase() ?? 'major') : s.scale;
     const resolvedLength = s.length > 0 ? s.length : 8;
     const resolvedComplexity = s.complexity === 'Auto' ? 'simple' : s.complexity;
 
@@ -148,7 +148,7 @@ export default function Dashboard() {
         pushHistory('bassline', res.data.notes);
       }
     }
-  }, [settings]);
+  }, [settings, project]);
 
   const handleExportMidi = useCallback(async () => {
     if (!project) return;

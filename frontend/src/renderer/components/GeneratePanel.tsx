@@ -175,6 +175,7 @@ export default function GeneratePanel({
             onChange={e => onChange({ ...settings, scale: e.target.value })}
             className="w-full px-1.5 py-1 rounded bg-gray-700 text-gray-200 text-xs"
           >
+            <option>Auto</option>
             <option>major</option>
             <option>minor</option>
           </select>

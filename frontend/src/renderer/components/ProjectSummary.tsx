@@ -1,4 +1,4 @@
-import { exportArrangement } from '../api';
+import { downloadFromUrl, exportArrangement } from '../api';
 import type { Note, Project } from '../types';
 
 interface ProjectSummaryProps {
@@ -29,7 +29,7 @@ export default function ProjectSummary({ project, chords, melody, bassline, solo
       bassline: solo.bassline,
     });
     if (res.success && res.data) {
-      window.open(res.data.download_url, '_blank');
+      await downloadFromUrl(res.data.download_url, res.data.filename);
     }
   }
 
