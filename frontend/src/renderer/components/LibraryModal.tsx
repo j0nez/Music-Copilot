@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { deleteProgression, downloadFromUrl, downloadMidiUrl, exportArrangement, exportSinglePart, listProgressions } from "../api";
 import type { Note, SavedProgression } from "../types";
+import { midiPitchToName } from "../music/pitch";
 
 type SortField = "key" | "mood" | "genre" | "name" | "created_at";
 type SortDir = "ASC" | "DESC";
@@ -160,7 +161,7 @@ export default function LibraryModal({ onClose, onLoad }: { onClose: () => void;
                         {p.type === 'arrangement' ? (
                           <ArrangementDataCell data={p.data as unknown as { chords: Note[]; melody: Note[]; bassline: Note[] }} />
                         ) : p.type === 'arrangement_chords' || p.type === 'melody' || p.type === 'bassline' ? (
-                          <span className="text-gray-400 text-xs">{(p.data as unknown as Note[]).length} notes</span>
+                          <NoteNameBadges type={p.type} notes={p.data as unknown as Note[]} />
                         ) : (
                           <div className="flex flex-wrap gap-1">
                             {(p.data as { roman: string }[]).map((c, i) => (
@@ -243,6 +244,33 @@ function NoteListMidiButton({ bpm, type, notes }: { bpm: number | null; type: st
       className="px-2.5 py-1 rounded bg-blue-900/40 text-blue-300 text-xs hover:bg-blue-900/60 transition-colors disabled:opacity-50 inline-block">
       {busy ? '...' : 'MIDI'}
     </button>
+  );
+}
+
+const NOTE_TYPE_COLORS: Record<string, string> = {
+  arrangement_chords: 'bg-purple-800/30 text-purple-200 border-purple-700/40',
+  melody: 'bg-green-800/30 text-green-200 border-green-700/40',
+  bassline: 'bg-blue-800/30 text-blue-200 border-blue-700/40',
+};
+
+function NoteNameBadges({ type, notes }: { type: string; notes: Note[] }) {
+  const MAX_VISIBLE = 20;
+  const visible = notes.slice(0, MAX_VISIBLE);
+  const remaining = notes.length - MAX_VISIBLE;
+  const colorClass = NOTE_TYPE_COLORS[type] ?? 'bg-gray-800/30 text-gray-200 border-gray-700/40';
+  return (
+    <div className="flex flex-wrap gap-1">
+      {visible.map((n, i) => (
+        <span key={i} className={`px-1.5 py-0.5 rounded text-[10px] border ${colorClass}`}>
+          {midiPitchToName(n.pitch)}
+        </span>
+      ))}
+      {remaining > 0 && (
+        <span className="px-1.5 py-0.5 rounded text-[10px] bg-surface-700 text-gray-500 border border-surface-600">
+          +{remaining}
+        </span>
+      )}
+    </div>
   );
 }
 
