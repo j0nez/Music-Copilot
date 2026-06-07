@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS ideas (
     name TEXT,
     data TEXT NOT NULL DEFAULT '{}',
     key TEXT,
+    scale TEXT,
     mood TEXT,
     genre TEXT,
     bpm INTEGER,
@@ -107,6 +108,7 @@ def init_db() -> None:
         conn.executescript(SCHEMA_SQL)
         _migrate_progressions_to_ideas(conn)
         _migrate_ideas_type_constraint(conn)
+        _migrate_ideas_add_scale(conn)
         conn.commit()
     finally:
         conn.close()
@@ -155,15 +157,49 @@ def _migrate_ideas_type_constraint(conn: sqlite3.Connection) -> None:
                 name TEXT,
                 data TEXT NOT NULL DEFAULT '{}',
                 key TEXT,
+                scale TEXT,
                 mood TEXT,
                 genre TEXT,
                 bpm INTEGER,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-            INSERT INTO ideas_v2 SELECT * FROM ideas;
+            INSERT INTO ideas_v2 (id, project_id, type, name, data, key, mood, genre, bpm, created_at, updated_at) SELECT id, project_id, type, name, data, key, mood, genre, bpm, created_at, updated_at FROM ideas;
             DROP TABLE ideas;
             ALTER TABLE ideas_v2 RENAME TO ideas;
+        """)
+        conn.commit()
+    finally:
+        conn.execute("PRAGMA foreign_keys=ON")
+
+
+def _migrate_ideas_add_scale(conn: sqlite3.Connection) -> None:
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(ideas)").fetchall()}
+    if 'scale' in cols:
+        return
+    conn.execute("PRAGMA foreign_keys=OFF")
+    try:
+        conn.executescript("""
+            CREATE TABLE ideas_v3 (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+                type TEXT NOT NULL DEFAULT 'progression' CHECK(type IN (
+                    'progression', 'melody', 'bassline', 'drum_pattern', 'arpeggio', 'phrase',
+                    'arrangement', 'arrangement_chords'
+                )),
+                name TEXT,
+                data TEXT NOT NULL DEFAULT '{}',
+                key TEXT,
+                scale TEXT,
+                mood TEXT,
+                genre TEXT,
+                bpm INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            INSERT INTO ideas_v3 SELECT * FROM ideas;
+            DROP TABLE ideas;
+            ALTER TABLE ideas_v3 RENAME TO ideas;
         """)
         conn.commit()
     finally:

@@ -45,13 +45,14 @@ def save_idea(
     project_id: int | None = None,
     name: str | None = None,
     bpm: int | None = None,
+    scale: str | None = None,
 ) -> int:
     conn = get_connection()
     try:
         cur = conn.execute(
-            """INSERT INTO ideas (project_id, type, name, data, key, mood, genre, bpm)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (project_id, idea_type, name or "", json.dumps(data, ensure_ascii=False), key, mood, genre, bpm),
+            """INSERT INTO ideas (project_id, type, name, data, key, scale, mood, genre, bpm)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (project_id, idea_type, name or "", json.dumps(data, ensure_ascii=False), key, scale, mood, genre, bpm),
         )
         conn.commit()
         row_id = cur.lastrowid
@@ -69,17 +70,19 @@ def save_arrangement(
     project_id: int | None = None,
     name: str | None = None,
     bpm: int | None = None,
+    scale: str | None = None,
 ) -> int:
     conn = get_connection()
     try:
         cur = conn.execute(
-            """INSERT INTO ideas (project_id, type, name, data, key, mood, genre, bpm)
-               VALUES (?, 'arrangement', ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO ideas (project_id, type, name, data, key, scale, mood, genre, bpm)
+               VALUES (?, 'arrangement', ?, ?, ?, ?, ?, ?, ?)""",
             (
                 project_id,
                 name or "",
                 json.dumps(data, ensure_ascii=False),
                 key,
+                scale,
                 mood,
                 genre,
                 bpm,
@@ -110,7 +113,7 @@ def list_progressions(
     conn = get_connection()
     try:
         rows = conn.execute(
-            f"SELECT id, project_id, type, name, data, key, mood, genre, bpm, created_at FROM ideas {type_filter} ORDER BY {sort_by} {sort_order}",
+            f"SELECT id, project_id, type, name, data, key, scale, mood, genre, bpm, created_at FROM ideas {type_filter} ORDER BY {sort_by} {sort_order}",
             params,
         ).fetchall()
         result = []
@@ -128,7 +131,7 @@ def get_progression(progression_id: int) -> dict | None:
     conn = get_connection()
     try:
         row = conn.execute(
-            "SELECT id, project_id, type, name, data, key, mood, genre, bpm, created_at FROM ideas WHERE id = ? AND type = 'progression'",
+            "SELECT id, project_id, type, name, data, key, scale, mood, genre, bpm, created_at FROM ideas WHERE id = ? AND type = 'progression'",
             (progression_id,),
         ).fetchone()
         if row is None:
@@ -144,7 +147,7 @@ def get_any_idea(idea_id: int) -> dict | None:
     conn = get_connection()
     try:
         row = conn.execute(
-            "SELECT id, project_id, type, name, data, key, mood, genre, bpm, created_at FROM ideas WHERE id = ?",
+            "SELECT id, project_id, type, name, data, key, scale, mood, genre, bpm, created_at FROM ideas WHERE id = ?",
             (idea_id,),
         ).fetchone()
         if row is None:

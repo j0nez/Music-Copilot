@@ -78,6 +78,7 @@ export interface SavedProgression {
   name: string;
   data: ProgressionChord[];  // same as old `chords`
   key: string;
+  scale: string | null;
   mood: string | null;
   genre: string | null;
   bpm: number | null;

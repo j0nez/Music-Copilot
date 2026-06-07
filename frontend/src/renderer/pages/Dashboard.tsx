@@ -164,6 +164,7 @@ export default function Dashboard() {
     if (!project || !hasChords && !hasMelody && !hasBassline) return;
     const name = `Arrangement - ${project.key} - ${settings.genre} - ${bars} bars`;
     await saveArrangement(chords, melody, bassline, project.key,
+      settings.scale,
       settings.mood !== 'Auto' ? settings.mood : null,
       settings.genre !== 'Auto' ? settings.genre : null,
       project.bpm,

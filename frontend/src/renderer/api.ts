@@ -227,13 +227,14 @@ export async function saveArrangement(
   melody: Note[],
   bassline: Note[],
   key: string,
+  scale: string | null,
   mood: string | null,
   genre: string | null,
   bpm: number | null,
   opts?: { project_id?: number; name?: string },
 ): Promise<ApiResponse<{ id: number }>> {
   return post<{ id: number }>('/arrangement/save', {
-    chords, melody, bassline, key, mood, genre, bpm, ...opts,
+    chords, melody, bassline, key, scale, mood, genre, bpm, ...opts,
   });
 }
 

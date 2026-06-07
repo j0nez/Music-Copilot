@@ -30,6 +30,7 @@ class ArrangementSaveInput(BaseModel):
     melody: list[ArrangementNote] = []
     bassline: list[ArrangementNote] = []
     key: str = "C"
+    scale: str | None = None
     mood: str | None = None
     genre: str | None = None
     project_id: int | None = None
@@ -165,21 +166,21 @@ async def save_arrangement_route(payload: ArrangementSaveInput):
         row_id = save_arrangement(
             key=payload.key, mood=payload.mood, genre=payload.genre,
             data=data, project_id=payload.project_id, name=payload.name,
-            bpm=payload.bpm,
+            bpm=payload.bpm, scale=payload.scale,
         )
         base = payload.name or f"Arrangement - {payload.key}"
         if payload.chords:
             save_idea("arrangement_chords", payload.key, payload.mood, payload.genre,
                        [n.model_dump() for n in payload.chords],
-                       payload.project_id, f"{base} - Chords", bpm=payload.bpm)
+                       payload.project_id, f"{base} - Chords", bpm=payload.bpm, scale=payload.scale)
         if payload.melody:
             save_idea("melody", payload.key, payload.mood, payload.genre,
                        [n.model_dump() for n in payload.melody],
-                       payload.project_id, f"{base} - Melody", bpm=payload.bpm)
+                       payload.project_id, f"{base} - Melody", bpm=payload.bpm, scale=payload.scale)
         if payload.bassline:
             save_idea("bassline", payload.key, payload.mood, payload.genre,
                        [n.model_dump() for n in payload.bassline],
-                       payload.project_id, f"{base} - Bassline", bpm=payload.bpm)
+                       payload.project_id, f"{base} - Bassline", bpm=payload.bpm, scale=payload.scale)
         return ApiResponse(success=True, data={"id": row_id})
     except Exception as exc:
         logger.error("Failed to save arrangement: project_id=%s name=%s exc=%s",

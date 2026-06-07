@@ -130,7 +130,7 @@ export default function LibraryModal({ onClose, onLoad }: { onClose: () => void;
                       Name{sortArrow("name")}
                     </th>
                     <th className="pb-3 pr-4 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort("key")}>
-                      Key{sortArrow("key")}
+                      Key / Scale{sortArrow("key")}
                     </th>
                     <th className="pb-3 pr-4 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort("mood")}>
                       Mood{sortArrow("mood")}
@@ -154,7 +154,7 @@ export default function LibraryModal({ onClose, onLoad }: { onClose: () => void;
                         <span className="px-2 py-0.5 rounded text-xs bg-surface-700 text-gray-300 capitalize">{displayType(p.type)}</span>
                       </td>
                       <td className="py-3 pr-4 font-medium">{p.name || "—"}</td>
-                      <td className="py-3 pr-4 font-medium">{p.key}</td>
+                      <td className="py-3 pr-4 font-medium">{p.key}{p.scale ? ` \u2014 ${p.scale}` : ''}</td>
                       <td className="py-3 pr-4 capitalize text-gray-300">{p.mood ?? "—"}</td>
                       <td className="py-3 pr-4 text-gray-300">{p.genre ?? "—"}</td>
                       <td className="py-3 pr-4">
