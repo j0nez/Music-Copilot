@@ -5,7 +5,7 @@
   "mcp": {
     "tavily": {
       "type": "remote",
-      "url": "https://mcp.tavily.com/mcp/?tavilyApiKey=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",
+      "url": "https://mcp.tavily.com/mcp/?tavilyApiKey=PLACE TAVILY API KEY HERE",
       "enabled": true
     },
     "firecrawl": {
@@ -13,7 +13,7 @@
       "url": "https://mcp.firecrawl.dev/mcp",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer fc-357664869bf04a1cbae6ddd1437054fd"
+        "Authorization": "PLACE FIRECRAWL API KEY HERE"
       }
     },
     "open-websearch": {
