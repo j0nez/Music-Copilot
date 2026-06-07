@@ -248,3 +248,26 @@ export async function exportArrangement(
     chords, melody, bassline, bpm, swing, solo,
   });
 }
+
+export async function exportSinglePart(
+  part: 'chords' | 'melody' | 'bassline',
+  notes: Note[],
+  bpm = 120,
+): Promise<ApiResponse<ArrangementExportResult>> {
+  return post<ArrangementExportResult>('/arrangement/per-part', { part, notes, bpm });
+}
+
+export async function downloadFromUrl(downloadUrl: string, filename: string): Promise<void> {
+  const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `http://localhost:8000${downloadUrl}`;
+  const res = await fetch(fullUrl);
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);
+}

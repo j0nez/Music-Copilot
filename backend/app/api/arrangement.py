@@ -10,7 +10,7 @@ from backend.app.core.exceptions import InputValidationError, DatabaseError
 from backend.app.services.midi.generator import write_midi
 from backend.app.services.midi.models import MidiFile, MidiNote, MidiTrack
 from backend.app.models.shared import ApiResponse, ErrorDetail
-from backend.app.db.progressions import save_arrangement
+from backend.app.db.progressions import save_arrangement, save_idea
 from plugins.midi_export.expression.swing import apply_swing
 
 logger = logging.getLogger("music_copilot.arrangement_api")
@@ -113,9 +113,10 @@ async def export_arrangement(payload: ArrangementExportInput):
 
 
 @router.post("/per-part")
-async def export_single_part(payload: dict, bpm: int = 120):
+async def export_single_part(payload: dict):
     part_name = payload.get("part", "")
     notes_data = payload.get("notes", [])
+    bpm = payload.get("bpm", 120)
 
     if not part_name or not notes_data:
         return ApiResponse(
@@ -163,6 +164,19 @@ async def save_arrangement_route(payload: ArrangementSaveInput):
             key=payload.key, mood=payload.mood, genre=payload.genre,
             data=data, project_id=payload.project_id, name=payload.name,
         )
+        base = payload.name or f"Arrangement - {payload.key}"
+        if payload.chords:
+            save_idea("progression", payload.key, payload.mood, payload.genre,
+                       [n.model_dump() for n in payload.chords],
+                       payload.project_id, f"{base} - Chords")
+        if payload.melody:
+            save_idea("melody", payload.key, payload.mood, payload.genre,
+                       [n.model_dump() for n in payload.melody],
+                       payload.project_id, f"{base} - Melody")
+        if payload.bassline:
+            save_idea("bassline", payload.key, payload.mood, payload.genre,
+                       [n.model_dump() for n in payload.bassline],
+                       payload.project_id, f"{base} - Bassline")
         return ApiResponse(success=True, data={"id": row_id})
     except Exception as exc:
         logger.error("Failed to save arrangement: project_id=%s name=%s exc=%s",

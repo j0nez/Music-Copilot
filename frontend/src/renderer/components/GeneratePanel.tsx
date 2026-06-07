@@ -52,6 +52,7 @@ export default function GeneratePanel({
       genre: p.genre === 'random' ? randomGenre() : p.genre,
       length: randomize ? randomLength() : settings.length > 0 ? settings.length : 8,
       complexity: p.complexity === 'random' ? randomComplexity() : p.complexity,
+      pattern: 'auto',
     };
     onChange(s);
     onAutoGenerate(s);
@@ -72,6 +73,7 @@ export default function GeneratePanel({
       genre: settings.genre === 'Auto' ? 'house' : settings.genre,
       length: settings.length > 0 ? settings.length : 8,
       complexity: settings.complexity === 'Auto' ? 'simple' : settings.complexity,
+      pattern: 'auto',
     };
   }
 
@@ -79,7 +81,7 @@ export default function GeneratePanel({
     setLoading('chords');
     setError(null);
     const s = resolveSettings();
-    const res = await withAbort(signal => chordGenerator(s.key, s.mood, s.genre, s.length, s.complexity, signal), API_TIMEOUT);
+    const res = await withAbort(signal => chordGenerator(s.key, s.mood, s.genre, s.length, s.complexity, signal));
     if (res.success && res.data) {
       const notes = chordNotesToMidi(res.data.chords, 1);
       onPushHistory('chords', notes);
@@ -94,7 +96,7 @@ export default function GeneratePanel({
     setLoading('melody');
     setError(null);
     const s = resolveSettings();
-    const res = await withAbort(signal => melodyGenerator(s.key, s.scale, s.mood, s.genre, s.length, s.complexity, signal), API_TIMEOUT);
+    const res = await withAbort(signal => melodyGenerator(s.key, s.scale, s.mood, s.genre, s.length, s.complexity, signal));
     if (res.success && res.data) {
       onPushHistory('melody', res.data.notes);
       onGenerateMelody(res.data.notes);
@@ -108,7 +110,7 @@ export default function GeneratePanel({
     setLoading('bassline');
     setError(null);
     const s = resolveSettings();
-    const res = await withAbort(signal => basslineGenerator(s.key, s.scale, s.genre, s.length, 'auto', signal), API_TIMEOUT);
+    const res = await withAbort(signal => basslineGenerator(s.key, s.scale, s.genre, s.length, 'auto', signal));
     if (res.success && res.data) {
       onPushHistory('bassline', res.data.notes);
       onGenerateBassline(res.data.notes);

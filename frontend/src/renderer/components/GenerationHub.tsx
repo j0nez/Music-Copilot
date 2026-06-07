@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import NoteGrid from './NoteGrid';
-import { melodyGenerator, basslineGenerator, exportArrangement, saveArrangement } from '../api';
+import { melodyGenerator, basslineGenerator, exportArrangement, saveArrangement, downloadFromUrl } from '../api';
 import { withAbort } from '../utils/async';
 import type { Note, GeneratorSettings } from '../types';
 
@@ -170,7 +170,7 @@ export default function GenerationHub({
       chords: true, melody: true, bassline: true,
     });
     if (res.success && res.data) {
-      window.open(res.data.download_url, '_blank');
+      await downloadFromUrl(res.data.download_url, res.data.filename);
     }
   }
 

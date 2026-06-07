@@ -36,6 +36,30 @@ def save_progression(
         conn.close()
 
 
+def save_idea(
+    idea_type: str,
+    key: str,
+    mood: str | None,
+    genre: str | None,
+    data: dict | list,
+    project_id: int | None = None,
+    name: str | None = None,
+) -> int:
+    conn = get_connection()
+    try:
+        cur = conn.execute(
+            """INSERT INTO ideas (project_id, type, name, data, key, mood, genre)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (project_id, idea_type, name or "", json.dumps(data, ensure_ascii=False), key, mood, genre),
+        )
+        conn.commit()
+        row_id = cur.lastrowid
+        logger.info("Saved %s %d: %s", idea_type, row_id, name)
+        return row_id
+    finally:
+        conn.close()
+
+
 def save_arrangement(
     key: str,
     mood: str | None,

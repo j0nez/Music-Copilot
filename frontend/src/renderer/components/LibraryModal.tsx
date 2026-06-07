@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { deleteProgression, downloadMidiUrl, listProgressions } from "../api";
-import type { SavedProgression } from "../types";
+import { deleteProgression, downloadMidiUrl, downloadFromUrl, exportArrangement, listProgressions } from "../api";
+import type { Note, SavedProgression } from "../types";
 
 type SortField = "key" | "mood" | "genre" | "name" | "created_at";
 type SortDir = "ASC" | "DESC";
@@ -10,6 +10,7 @@ const TYPE_TABS = [
   { label: "Progressions", value: "progression" },
   { label: "Melodies", value: "melody" },
   { label: "Basslines", value: "bassline" },
+  { label: "Arrangements", value: "arrangement" },
   { label: "Drums", value: "drum_pattern" },
   { label: "Arpeggios", value: "arpeggio" },
 ] as const;
@@ -156,29 +157,47 @@ export default function LibraryModal({ onClose, onLoad }: { onClose: () => void;
                       <td className="py-3 pr-4 capitalize text-gray-300">{p.mood ?? "—"}</td>
                       <td className="py-3 pr-4 text-gray-300">{p.genre ?? "—"}</td>
                       <td className="py-3 pr-4">
-                        <div className="flex flex-wrap gap-1">
-                          {p.data.map((c, i) => (
-                            <span key={i} className="px-2 py-0.5 rounded bg-purple-800/30 text-purple-200 text-xs border border-purple-700/40">
-                              {c.roman}
-                            </span>
-                          ))}
-                        </div>
+                        {p.type === 'arrangement' ? (
+                          <ArrangementDataCell data={p.data as unknown as { chords: Note[]; melody: Note[]; bassline: Note[] }} />
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {(p.data as { roman: string }[]).map((c, i) => (
+                              <span key={i} className="px-2 py-0.5 rounded bg-purple-800/30 text-purple-200 text-xs border border-purple-700/40">
+                                {c.roman}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 pr-4 text-gray-500 text-xs" title={p.created_at}>
                         {new Date(p.created_at).toLocaleDateString()}
                       </td>
                       <td className="py-3 pr-4">
-                        <a href={downloadMidiUrl(p.id)} download
-                          className="px-2.5 py-1 rounded bg-blue-900/40 text-blue-300 text-xs hover:bg-blue-900/60 transition-colors inline-block">
-                          MIDI
-                        </a>
+                        {p.type === 'arrangement' ? (
+                          <ArrangementMidiButton data={p.data as unknown as { chords: Note[]; melody: Note[]; bassline: Note[] }} />
+                        ) : (
+                          <a href={downloadMidiUrl(p.id)} download
+                            className="px-2.5 py-1 rounded bg-blue-900/40 text-blue-300 text-xs hover:bg-blue-900/60 transition-colors inline-block">
+                            MIDI
+                          </a>
+                        )}
                       </td>
                       {onLoad && (
                         <td className="py-3 pr-2">
-                          <button onClick={() => onLoad(p)}
-                            className="px-2.5 py-1 rounded bg-green-900/40 text-green-300 text-xs hover:bg-green-900/60 transition-colors">
-                            Load
-                          </button>
+                          {p.type === 'arrangement' ? (
+                            <div className="flex flex-col gap-1">
+                              <button onClick={() => onLoad(p)}
+                                className="px-2 py-0.5 rounded bg-green-900/40 text-green-300 text-xs hover:bg-green-900/60 transition-colors whitespace-nowrap">
+                                Load All
+                              </button>
+                              <ArrangementPartLoadButtons item={p} onLoad={onLoad} />
+                            </div>
+                          ) : (
+                            <button onClick={() => onLoad(p)}
+                              className="px-2.5 py-1 rounded bg-green-900/40 text-green-300 text-xs hover:bg-green-900/60 transition-colors">
+                              Load
+                            </button>
+                          )}
                         </td>
                       )}
                       <td className="py-3">
@@ -195,6 +214,58 @@ export default function LibraryModal({ onClose, onLoad }: { onClose: () => void;
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ── Arrangement helpers ─────────────────────── */
+
+function ArrangementDataCell({ data }: { data: { chords: Note[]; melody: Note[]; bassline: Note[] } }) {
+  const count = (arr: Note[]) => arr?.length ?? 0;
+  return (
+    <div className="flex flex-col gap-0.5 text-xs">
+      <span className="text-purple-400">Chords: {count(data.chords)}</span>
+      <span className="text-green-400">Melody: {count(data.melody)}</span>
+      <span className="text-blue-400">Bassline: {count(data.bassline)}</span>
+    </div>
+  );
+}
+
+function ArrangementMidiButton({ data }: { data: { chords: Note[]; melody: Note[]; bassline: Note[] } }) {
+  const [busy, setBusy] = useState(false);
+  async function handleClick() {
+    setBusy(true);
+    const res = await exportArrangement(
+      data.chords ?? [], data.melody ?? [], data.bassline ?? [],
+      120, 0, { chords: true, melody: true, bassline: true },
+    );
+    if (res.success && res.data) {
+      await downloadFromUrl(res.data.download_url, res.data.filename);
+    }
+    setBusy(false);
+  }
+  return (
+    <button onClick={handleClick} disabled={busy}
+      className="px-2.5 py-1 rounded bg-blue-900/40 text-blue-300 text-xs hover:bg-blue-900/60 transition-colors disabled:opacity-50 inline-block">
+      {busy ? '...' : 'MIDI'}
+    </button>
+  );
+}
+
+function ArrangementPartLoadButtons({ item, onLoad }: { item: SavedProgression; onLoad: (item: SavedProgression & { _part?: string }) => void }) {
+  const parts = [
+    { key: 'chords', label: 'Chords', color: 'text-purple-400' },
+    { key: 'melody', label: 'Melody', color: 'text-green-400' },
+    { key: 'bassline', label: 'Bassline', color: 'text-blue-400' },
+  ] as const;
+  return (
+    <div className="flex flex-col gap-0.5">
+      {parts.map(p => (
+        <button key={p.key} onClick={() => onLoad({ ...item, _part: p.key })}
+          className={`${p.color} hover:text-white text-[10px] text-left leading-none px-0.5`}>
+          Load {p.label}
+        </button>
+      ))}
     </div>
   );
 }

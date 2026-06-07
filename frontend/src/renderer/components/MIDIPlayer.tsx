@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import NoteGrid, { HEADER_WIDTH, BEAT_WIDTH, type NoteGridHandle } from './NoteGrid';
 import type { Note } from '../types';
+import { exportSinglePart, downloadFromUrl } from '../api';
 
 function midiToFreq(pitch: number): number {
   return 440 * Math.pow(2, (pitch - 69) / 12);
@@ -171,6 +172,15 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
     setLoading('none');
   }
 
+  async function handleExportPart(type: 'chords' | 'melody' | 'bassline') {
+    const notes = type === 'chords' ? chords : type === 'melody' ? melody : bassline;
+    if (notes.length === 0) return;
+    const res = await exportSinglePart(type, notes, bpm);
+    if (res.success && res.data) {
+      await downloadFromUrl(res.data.download_url, res.data.filename);
+    }
+  }
+
   function clearAll() {
     onClear('chords');
     onClear('melody');
@@ -263,14 +273,19 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
                     onClick={() => onCycleHistory(p.type, -1)}
                     className="text-gray-500 hover:text-white text-[10px] leading-none px-0.5"
                     title="Previous"
-                  >\u25B2</button>
+                  >{'\u25B2'}</button>
                   <button
                     onClick={() => onCycleHistory(p.type, 1)}
                     className="text-gray-500 hover:text-white text-[10px] leading-none px-0.5"
                     title="Next"
-                  >\u25BC</button>
+                  >{'\u25BC'}</button>
                 </span>
               )}
+              <button
+                onClick={() => handleExportPart(p.type)}
+                className="text-gray-500 hover:text-white text-[10px] leading-none px-1"
+                title={`Download ${p.label} MIDI`}
+              >MIDI</button>
             </div>
           );
         })}

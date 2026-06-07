@@ -10,7 +10,7 @@ import SearchOverlay from "../components/SearchOverlay";
 import ReferencePopover from "../components/ReferencePopover";
 import type { Note, GeneratorSettings, ProgressionChord, GenerationHistory } from "../types";
 import { SWING_PRESETS } from "../types";
-import { chordGenerator, melodyGenerator, basslineGenerator, exportArrangement, saveArrangement } from "../api";
+import { chordGenerator, melodyGenerator, basslineGenerator, exportArrangement, saveArrangement, downloadFromUrl } from "../api";
 import { chordNotesToMidi } from "../music/pitch";
 
 const MAX_HISTORY = 5;
@@ -156,7 +156,7 @@ export default function Dashboard() {
       chords: true, melody: true, bassline: true,
     });
     if (res.success && res.data) {
-      window.open(res.data.download_url, '_blank');
+      await downloadFromUrl(res.data.download_url, res.data.filename);
     }
   }, [chords, melody, bassline, project, swing]);
 
@@ -170,11 +170,37 @@ export default function Dashboard() {
     );
   }, [project, chords, melody, bassline, settings, bars]);
 
-  const handleLoadFromLibrary = useCallback((item: { data: ProgressionChord[] }) => {
-    const notes = chordNotesToMidi(item.data, 1);
-    setProgChords(item.data);
-    setChords(notes);
-    pushHistory('chords', notes);
+  const handleLoadFromLibrary = useCallback((item: { data: ProgressionChord[] | { chords: Note[]; melody: Note[]; bassline: Note[] }; _part?: string }) => {
+    if (item._part) {
+      const arrData = item.data as { chords: Note[]; melody: Note[]; bassline: Note[] };
+      const part = item._part as 'chords' | 'melody' | 'bassline';
+      const notes = arrData[part] ?? [];
+      if (part === 'chords') setChords(notes);
+      else if (part === 'melody') setMelody(notes);
+      else if (part === 'bassline') setBassline(notes);
+      pushHistory(part, notes);
+      return;
+    }
+    if (Array.isArray(item.data)) {
+      const notes = chordNotesToMidi(item.data, 1);
+      setProgChords(item.data);
+      setChords(notes);
+      pushHistory('chords', notes);
+    } else {
+      const arrData = item.data as { chords: Note[]; melody: Note[]; bassline: Note[] };
+      if (arrData.chords?.length) {
+        setChords(arrData.chords);
+        pushHistory('chords', arrData.chords);
+      }
+      if (arrData.melody?.length) {
+        setMelody(arrData.melody);
+        pushHistory('melody', arrData.melody);
+      }
+      if (arrData.bassline?.length) {
+        setBassline(arrData.bassline);
+        pushHistory('bassline', arrData.bassline);
+      }
+    }
   }, []);
 
   const prevGenreRef = useRef(settings.genre);
