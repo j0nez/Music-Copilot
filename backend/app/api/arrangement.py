@@ -25,6 +25,17 @@ class ArrangementNote(BaseModel):
     duration_in_beats: float = 1.0
 
 
+class ArrangementSaveInput(BaseModel):
+    chords: list[ArrangementNote] = []
+    melody: list[ArrangementNote] = []
+    bassline: list[ArrangementNote] = []
+    key: str = "C"
+    mood: str | None = None
+    genre: str | None = None
+    project_id: int | None = None
+    name: str | None = None
+
+
 class ArrangementExportInput(BaseModel):
     chords: list[ArrangementNote] = []
     melody: list[ArrangementNote] = []
@@ -138,29 +149,22 @@ async def export_single_part(payload: dict, bpm: int = 120):
 
 
 @router.post("/save")
-async def save_arrangement_route(payload: dict):
-    chords = payload.get("chords", [])
-    melody = payload.get("melody", [])
-    bassline = payload.get("bassline", [])
-    key = payload.get("key", "C")
-    mood = payload.get("mood")
-    genre = payload.get("genre")
-    project_id = payload.get("project_id")
-    name = payload.get("name")
+async def save_arrangement_route(payload: ArrangementSaveInput):
+    if not payload.chords and not payload.melody and not payload.bassline:
+        raise InputValidationError("At least one part (chords, melody, bassline) is required")
 
-    if not chords and not melody and not bassline:
-        return ApiResponse(
-            success=False,
-            data=None,
-            error=ErrorDetail(code="EMPTY", message="No parts to save"),
-        )
-
-    data = {"chords": chords, "melody": melody, "bassline": bassline}
+    data = {
+        "chords": [n.model_dump() for n in payload.chords],
+        "melody": [n.model_dump() for n in payload.melody],
+        "bassline": [n.model_dump() for n in payload.bassline],
+    }
     try:
         row_id = save_arrangement(
-            key=key, mood=mood, genre=genre, data=data,
-            project_id=project_id, name=name,
+            key=payload.key, mood=payload.mood, genre=payload.genre,
+            data=data, project_id=payload.project_id, name=payload.name,
         )
         return ApiResponse(success=True, data={"id": row_id})
     except Exception as exc:
+        logger.error("Failed to save arrangement: project_id=%s name=%s exc=%s",
+                      payload.project_id, payload.name, exc)
         raise DatabaseError(f"Failed to save arrangement: {exc}") from exc
