@@ -9,12 +9,14 @@ from backend.app.api import arrangement as arrangement_routes
 from backend.app.api import exports as export_routes
 from backend.app.api import plugins as plugin_routes
 from backend.app.api import progressions as progression_routes
+from backend.app.api import providers as provider_routes
 from backend.app.api import projects as project_routes
 from backend.app.api import search as search_routes
 from backend.app.api import upload as upload_routes
 from backend.app.core.config import settings
 from backend.app.core.exceptions import MusicCopilotError
 from backend.app.core.logging import setup_logging
+from backend.app.api.providers import load_persisted_config
 from backend.app.db.database import init_db
 from backend.app.models.shared import ApiResponse
 from plugins import discover_plugins
@@ -54,6 +56,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Music Copilot v%s", settings.app_version)
     init_db()
     discover_plugins()
+    load_persisted_config()
     if settings.ai_api_key:
         configure_provider(settings.ai_provider, settings.ai_api_key, model=settings.ai_model)
     _configure_provider_priority()
@@ -79,6 +82,7 @@ app.include_router(arrangement_routes.router, prefix="/api")
 app.include_router(export_routes.router, prefix="/api")
 app.include_router(plugin_routes.router, prefix="/api")
 app.include_router(progression_routes.router, prefix="/api")
+app.include_router(provider_routes.router)
 app.include_router(project_routes.router, prefix="/api")
 app.include_router(search_routes.router, prefix="/api")
 app.include_router(upload_routes.router, prefix="/api")
