@@ -39,6 +39,9 @@ export default function Dashboard() {
   const [_vlScore, setVlScore] = useState<number | undefined>(undefined);
   const [vlToast, setVlToast] = useState<number | null>(null);
   const [_history, setHistory] = useState<GenerationHistory>(emptyHistory);
+  const historyIndexRef = useRef<{ chords: number; melody: number; bassline: number }>({
+    chords: -1, melody: -1, bassline: -1,
+  });
   const vlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bars = settings.length;
@@ -53,14 +56,16 @@ export default function Dashboard() {
       if (arr.length > MAX_HISTORY) arr.shift();
       return { ...prev, [key]: arr };
     });
+    historyIndexRef.current[type] = _history[type].length;
   }
 
   function cycleHistory(type: 'chords' | 'melody' | 'bassline', direction: -1 | 1) {
     const arr = _history[type];
     if (arr.length < 2) return;
-    const current = type === 'chords' ? chords : type === 'melody' ? melody : bassline;
-    const idx = Math.max(0, arr.indexOf(current));
+    let idx = historyIndexRef.current[type];
+    if (idx < 0 || idx >= arr.length) idx = arr.length - 1;
     const nextIdx = (idx + direction + arr.length) % arr.length;
+    historyIndexRef.current[type] = nextIdx;
     const nextNotes = arr[nextIdx];
     if (type === 'chords') setChords(nextNotes);
     else if (type === 'melody') setMelody(nextNotes);
