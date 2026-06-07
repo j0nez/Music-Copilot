@@ -213,6 +213,20 @@ export async function basslineGenerator(
   });
 }
 
+export async function saveArrangement(
+  chords: Note[],
+  melody: Note[],
+  bassline: Note[],
+  key: string,
+  mood: string | null,
+  genre: string | null,
+  opts?: { project_id?: number; name?: string },
+): Promise<ApiResponse<{ id: number }>> {
+  return post<{ id: number }>('/arrangement/save', {
+    chords, melody, bassline, key, mood, genre, ...opts,
+  });
+}
+
 export async function exportArrangement(
   chords: Note[],
   melody: Note[],

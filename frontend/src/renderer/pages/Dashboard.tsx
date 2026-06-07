@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useProject } from "../store/projectContext";
 import GeneratePanel from "../components/GeneratePanel";
 import SampleAnalysisPanel from "../components/SampleAnalysisPanel";
@@ -8,14 +8,19 @@ import GenerationHub from "../components/GenerationHub";
 import LibraryModal from "../components/LibraryModal";
 import SearchOverlay from "../components/SearchOverlay";
 import ReferencePopover from "../components/ReferencePopover";
-import type { Note, GeneratorSettings, ProgressionChord } from "../types";
+import type { Note, GeneratorSettings, ProgressionChord, GenerationHistory } from "../types";
 import { SWING_PRESETS } from "../types";
-import { chordGenerator, melodyGenerator, basslineGenerator, exportArrangement, saveProgression } from "../api";
+import { chordGenerator, melodyGenerator, basslineGenerator, exportArrangement, saveArrangement } from "../api";
 
+const MAX_HISTORY = 5;
 const DEFAULT_SETTINGS: GeneratorSettings = {
   key: "Auto", scale: "major", mood: "Auto", genre: "Auto",
   length: 8, complexity: "Auto",
 };
+
+function emptyHistory(): GenerationHistory {
+  return { chords: [], melody: [], bassline: [] };
+}
 
 export default function Dashboard() {
   const { project, createProject, updateProject } = useProject();
@@ -29,37 +34,74 @@ export default function Dashboard() {
   const [melody, setMelody] = useState<Note[]>([]);
   const [bassline, setBassline] = useState<Note[]>([]);
   const [swing, setSwing] = useState(0);
-  const [progChords, setProgChords] = useState<ProgressionChord[]>([]);
+  const [_progChords, setProgChords] = useState<ProgressionChord[]>([]);
   const [_vlScore, setVlScore] = useState<number | undefined>(undefined);
+  const [vlToast, setVlToast] = useState<number | null>(null);
+  const [_history, setHistory] = useState<GenerationHistory>(emptyHistory);
+  const vlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bars = settings.length;
   const hasChords = chords.length > 0;
   const hasMelody = melody.length > 0;
   const hasBassline = bassline.length > 0;
 
+  function pushHistory(type: 'chords' | 'melody' | 'bassline', notes: Note[]) {
+    setHistory(prev => {
+      const key = type as keyof GenerationHistory;
+      const arr = [...prev[key], notes];
+      if (arr.length > MAX_HISTORY) arr.shift();
+      return { ...prev, [key]: arr };
+    });
+  }
+
+  function cycleHistory(type: 'chords' | 'melody' | 'bassline', direction: -1 | 1) {
+    const arr = _history[type];
+    if (arr.length < 2) return;
+    const current = type === 'chords' ? chords : type === 'melody' ? melody : bassline;
+    const idx = Math.max(0, arr.indexOf(current));
+    const nextIdx = (idx + direction + arr.length) % arr.length;
+    const nextNotes = arr[nextIdx];
+    if (type === 'chords') setChords(nextNotes);
+    else if (type === 'melody') setMelody(nextNotes);
+    else setBassline(nextNotes);
+  }
+
+  function showVlToast(score: number) {
+    setVlToast(score);
+    if (vlTimerRef.current) clearTimeout(vlTimerRef.current);
+    vlTimerRef.current = setTimeout(() => setVlToast(null), 4000);
+  }
+
   const handleGenerateChords = useCallback((pchords: ProgressionChord[], notes: Note[], vl?: number) => {
     setProgChords(pchords);
     setVlScore(vl);
     setChords(notes);
+    pushHistory('chords', notes);
+    if (vl != null) showVlToast(vl);
   }, []);
 
   const handleGenerateMelody = useCallback((notes: Note[]) => {
     setMelody(notes);
+    pushHistory('melody', notes);
   }, []);
 
   const handleGenerateBassline = useCallback((notes: Note[]) => {
     setBassline(notes);
+    pushHistory('bassline', notes);
   }, []);
 
   const handleAutoGenerate = useCallback(async (s: GeneratorSettings) => {
     const res = await chordGenerator(s.key, s.mood, s.genre, s.length, s.complexity);
     if (res.success && res.data) {
       setProgChords(res.data.chords);
-      setVlScore(res.data.voice_leading?.score);
+      const vl = res.data.voice_leading?.score;
+      setVlScore(vl);
       const notes: Note[] = res.data.chords.map((_, i) => ({
         pitch: 60, velocity: 100, start_beat: 1 + i * 4, duration_in_beats: 4,
       }));
       setChords(notes);
+      pushHistory('chords', notes);
+      if (vl != null) showVlToast(vl);
     }
   }, []);
 
@@ -82,21 +124,26 @@ export default function Dashboard() {
       const res = await chordGenerator(resolvedKey, resolvedMood, resolvedGenre, resolvedLength, resolvedComplexity);
       if (res.success && res.data) {
         setProgChords(res.data.chords);
-        setVlScore(res.data.voice_leading?.score);
+        const vl = res.data.voice_leading?.score;
+        setVlScore(vl);
         const notes: Note[] = res.data.chords.map((_, i) => ({
           pitch: 60, velocity: 100, start_beat: 1 + i * 4, duration_in_beats: 4,
         }));
         setChords(notes);
+        pushHistory('chords', notes);
+        if (vl != null) showVlToast(vl);
       }
     } else if (type === 'melody') {
       const res = await melodyGenerator(resolvedKey, resolvedScale, resolvedMood, resolvedGenre, resolvedLength, resolvedComplexity);
       if (res.success && res.data) {
         setMelody(res.data.notes);
+        pushHistory('melody', res.data.notes);
       }
     } else if (type === 'bassline') {
       const res = await basslineGenerator(resolvedKey, resolvedScale, resolvedGenre, resolvedLength);
       if (res.success && res.data) {
         setBassline(res.data.notes);
+        pushHistory('bassline', res.data.notes);
       }
     }
   }, [settings]);
@@ -111,12 +158,26 @@ export default function Dashboard() {
     }
   }, [chords, melody, bassline, project, swing]);
 
+  const handleSaveArrangement = useCallback(async () => {
+    if (!project || !hasChords && !hasMelody && !hasBassline) return;
+    const name = `Arrangement - ${project.key} - ${settings.genre} - ${bars} bars`;
+    await saveArrangement(chords, melody, bassline, project.key,
+      settings.mood !== 'Auto' ? settings.mood : null,
+      settings.genre !== 'Auto' ? settings.genre : null,
+      { project_id: project.id, name },
+    );
+  }, [project, chords, melody, bassline, settings, bars]);
+
   useEffect(() => {
     if (settings.genre !== 'Auto' && swing === 0) {
       const preset = SWING_PRESETS[settings.genre as keyof typeof SWING_PRESETS];
       if (preset !== undefined) setSwing(preset);
     }
   }, [settings.genre]);
+
+  useEffect(() => {
+    return () => { if (vlTimerRef.current) clearTimeout(vlTimerRef.current); };
+  }, []);
 
   useEffect(() => {
     function handler(e: KeyboardEvent) {
@@ -143,20 +204,14 @@ export default function Dashboard() {
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        if (hasChords) {
-          const name = `Chords - ${project?.key ?? '?'} - ${settings.mood} - ${bars} bars`;
-          saveProgression(
-            project?.key ?? 'C', settings.mood !== 'Auto' ? settings.mood : null,
-            settings.genre !== 'Auto' ? settings.genre : null,
-            progChords,
-            { project_id: project?.id, name },
-          );
+        if (hasChords || hasMelody || hasBassline) {
+          handleSaveArrangement();
         }
       }
     }
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [hubOpen, searchOpen, libraryOpen, hasChords, hasMelody, hasBassline, handleExportMidi, project, settings, bars, progChords]);
+  }, [hubOpen, searchOpen, libraryOpen, hasChords, hasMelody, hasBassline, handleExportMidi, handleSaveArrangement]);
 
   return (
     <div className="h-full flex flex-col gap-3 p-3">
@@ -166,6 +221,14 @@ export default function Dashboard() {
         <GenerationHub
           chords={chords} melody={melody} bassline={bassline}
           bpm={project?.bpm ?? 120} bars={bars}
+          swing={swing}
+          settings={settings}
+          onSettingsChange={setSettings}
+          onSetMelody={handleGenerateMelody}
+          onSetBassline={handleGenerateBassline}
+          projectKey={project?.key ?? 'C'}
+          projectScale={project?.scale ?? 'Major'}
+          projectId={project?.id}
           open={hubOpen} onClose={() => setHubOpen(false)}
         />
       )}
@@ -192,13 +255,20 @@ export default function Dashboard() {
           {project ? (
             <Panel title="Generate">
               <div className="p-3">
+                {vlToast != null && (
+                  <div className="mb-2 px-2 py-1 rounded text-xs font-medium text-center transition-opacity"
+                    style={{ backgroundColor: vlToast >= 7 ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)', color: vlToast >= 7 ? '#4ade80' : '#facc15' }}
+                  >
+                    Voice Leading: {vlToast}/10
+                  </div>
+                )}
                 <GeneratePanel
                   settings={settings}
                   onChange={setSettings}
                   onGenerateChords={handleGenerateChords}
                   onGenerateMelody={handleGenerateMelody}
                   onGenerateBassline={handleGenerateBassline}
-                  onPushHistory={() => {}}
+                  onPushHistory={pushHistory}
                   onAutoGenerate={handleAutoGenerate}
                   project={project ? { key: project.key, scale: project.scale, bpm: project.bpm } : null}
                   disabled={false}
@@ -239,6 +309,8 @@ export default function Dashboard() {
             swing={swing} onSwingChange={setSwing}
             onRegenerate={handleRegenerate}
             onClear={handleClear}
+            historyCounts={{ chords: _history.chords.length, melody: _history.melody.length, bassline: _history.bassline.length }}
+            onCycleHistory={cycleHistory}
           />
         </Panel>
         <Panel title="Session Notes" className="flex-1">

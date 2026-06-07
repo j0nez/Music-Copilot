@@ -28,6 +28,8 @@ interface MIDIPlayerProps {
   onSwingChange: (v: number) => void;
   onRegenerate: (type: 'chords' | 'melody' | 'bassline') => void;
   onClear: (type: 'chords' | 'melody' | 'bassline') => void;
+  historyCounts?: { chords: number; melody: number; bassline: number };
+  onCycleHistory?: (type: 'chords' | 'melody' | 'bassline', direction: -1 | 1) => void;
 }
 
 const PART_CONFIG = [
@@ -36,7 +38,7 @@ const PART_CONFIG = [
   { type: 'bassline' as const, label: 'Bassline', color: 'text-blue-400' as const },
 ];
 
-export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing, onSwingChange, onRegenerate, onClear }: MIDIPlayerProps) {
+export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing, onSwingChange, onRegenerate, onClear, historyCounts, onCycleHistory }: MIDIPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [playheadBeat, setPlayheadBeat] = useState<number | null>(null);
   const animRef = useRef<number | null>(null);
@@ -212,7 +214,7 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
         />
       </div>
 
-      <div className="flex items-center gap-2 px-3 py-1.5 border-t border-gray-700">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 border-t border-gray-700">
         <button
           onClick={() => { if (playing) stop(); else play(); }}
           disabled={!hasAny}
@@ -222,16 +224,32 @@ export default function MIDIPlayer({ chords, melody, bassline, bpm, bars, swing,
         </button>
         {PART_CONFIG.map(p => {
           const isLoading = loading === p.type;
+          const count = historyCounts?.[p.type] ?? 0;
           return (
-            <button
-              key={p.type}
-              onClick={() => handleRegenerate(p.type)}
-              disabled={isLoading}
-              className={`text-xs ${p.color} hover:text-white disabled:opacity-40`}
-              title={`Regenerate ${p.label}`}
-            >
-              {isLoading ? '\u27F3' : `\u21BB ${p.label}`}
-            </button>
+            <div key={p.type} className="flex items-center gap-0.5">
+              <button
+                onClick={() => handleRegenerate(p.type)}
+                disabled={isLoading}
+                className={`text-xs ${p.color} hover:text-white disabled:opacity-40`}
+                title={`Regenerate ${p.label}`}
+              >
+                {isLoading ? '\u27F3' : `\u21BB ${p.label}`}
+              </button>
+              {count > 1 && onCycleHistory && (
+                <span className="flex gap-0.5 ml-0.5">
+                  <button
+                    onClick={() => onCycleHistory(p.type, -1)}
+                    className="text-gray-500 hover:text-white text-[10px] leading-none px-0.5"
+                    title="Previous"
+                  >\u25B2</button>
+                  <button
+                    onClick={() => onCycleHistory(p.type, 1)}
+                    className="text-gray-500 hover:text-white text-[10px] leading-none px-0.5"
+                    title="Next"
+                  >\u25BC</button>
+                </span>
+              )}
+            </div>
           );
         })}
         <button onClick={clearAll} className="ml-auto text-xs text-red-400 hover:text-red-300">

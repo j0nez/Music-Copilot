@@ -24,34 +24,35 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: DeepRhythm BPM detects half-time correctly (87 for 174 BPM) — needs tempo-doubling heuristic to prefer the beat rate when autocorrelation supports it
-- **Recent Decisions**: 2026-06-03 — Sample Analyzer plugin (plugins/sample_analyzer/plugin.py) uses librosa 0.11.0 chroma_cqt + music21 10.3.0 s.analyze('key') for Krumhansl-Schmuckler key detection. Upload endpoint (backend/app/api/upload.py) validates file extension + mimetype before saving. EventBus fires 'sample.analyzed' only after successful analysis. Frontend api.ts as single HTTP boundary with separate types.ts. Tests use scipy.io.wavfile for synthetic audio generation.
-- **Recent Decisions**: 2026-06-03 — librosa 0.11.0 beat_track returns np.ndarray (not scalar) — use float(np.atleast_1d(tempo)[0]). music21 10.3.0 KrumhanslSchmuckler uses s.analyze('key') returning Key object with .tonic (Pitch) and .mode (str) — not .solution.
-- **Recent Decisions**: 2026-06-03 — BPM detection switched from librosa.beat.beat_track to librosa.feature.rhythm.tempo with std_bpm=2.0. beat_track's dynamic-programming beat tracker introduced errors for off-center tempos (174→107.7) by deriving BPM from median inter-beat-interval of poorly tracked beats. Direct autocorrelation via tempo() avoids this entirely. Click-track tests at 143 and 174 BPM added to prevent regression.
-- **Recent Decisions**: 2026-06-03 — BPM detection further improved by switching from single-band onset envelope to multi-band onset (librosa.onset.onset_strength_multi) with per-band normalization to [0,1] before averaging. This gives quiet high-frequency bands (hi-hats carrying beat-rate periodicity) equal influence as loud low-frequency bands (kicks carrying half-time groove). Also increased frame rate (hop_length=512→256) for finer autocorrelation resolution. Click-track tests at 143 and 174 BPM confirmed no regression.
-- **Recent Decisions**: 2026-06-03 — BPM detection replaced entirely with DeepRhythm CNN (deeprhythm 0.0.13, PyTorch-based). Achieves 95.91% Acc1 on CPU at 0.12s — significantly more accurate than librosa's signal-processing approach (66.84% Acc1). Falls back to librosa.feature.rhythm.tempo when confidence < 0.5. Model weights (~7 MB) cached at ~/.cache/deeprhythm/ on first use. Key/scale detection untouched.
-- **Recent Decisions**: 2026-06-03 — Short audio (< 8s) tiled with np.tile to meet DeepRhythm's 8-second clip minimum. Prevents AttributeError crash in split_audio when audio is shorter than clip_length. The repeating preserves periodicity so DeepRhythm still detects the correct tempo. New test added for 3-second audio. Confidence-based fallback still active.
-- **Next Up**: Tempo-doubling heuristic — after DeepRhythm returns a BPM < 140, compute onset autocorrelation at the doubled BPM lag. If ≥ 50% of primary peak strength, prefer the doubled value. Catches 87→174 half-time groove without hallucinating for genuinely slow audio.
+- **Current Focus**: All feature implementations complete through Batch D. Remaining: Batch E polish (preset corrections, bassline velocity, swing defaults) then Phase E (AI Studio).
+- **Recent Decisions**: 2026-06-06 — All 7 original implementation batches done + all 13 post-audit fixes. Batches A–D (P0–P3) completed: audio playback (Web Audio API), Expression Engine integration (phrase arc velocity, articulation gate), swing pipeline, _map_range centering fix, bassline octave_jump fix, project state auto-fill, preset chip auto-trigger, clear vs regenerate separation, Generation Hub full controls, Ctrl+S arrangement save, VL score badge, generation history ring buffer. 154 tests pass (131 backend + 23 frontend).
 - **Blockers**: None
 
 ## Task History
 | Date | Task | Outcome |
 |------|------|---------|
 | 2026-06-03 | Initial project scaffold | Done — folders, VISION.md, AGENTS.md, README.md, ARCHITECTURE docs, git init |
-| 2026-06-03 | Add opencode.json with instructions & compaction config | Done — AGENTS.md + VISION.md loaded as instructions, tail_turns=20 |
-| 2026-06-03 | Backend scaffold (FastAPI, plugins, providers, DB, config) | Done — app starts, health endpoint returns OK, all layers wired |
-| 2026-06-03 | Plugin system + EventBus + data contracts + schema routes | Done — input_schema on Plugin ABC, EventBus with on/off/emit, shared/types.py data contracts, GET/POST plugin API routes verified |
-| 2026-06-03 | Error handling + logging | Done — exceptions.py, logging.py with rotating files, hybrid exception/result pattern, global handlers in main.py |
-| 2026-06-03 | Frontend scaffold (Electron + React + TypeScript + Vite + Tailwind) | Done — 7 placeholder pages, sidebar layout, routing, Electron main/preload, all verified |
-| 2026-06-03 | UI consolidation — AI Studio + Music Theory + Samples | Done — merged 7 pages into 4, AI Studio with context panel, Music Theory with tabs, docs/design/decisions.md created |
-| 2026-06-03 | Sample Analyzer plugin + upload endpoint + Samples page + tests | Done — plugins/sample_analyzer/plugin.py with librosa BPM + Krumhansl-Schmuckler key detection via music21, upload endpoint with extension/mimetype validation, event emission (sample.analyzed), frontend api.ts/types.ts, drag-and-drop Samples page with result cards, 14 backend tests all passing |
-| 2026-06-03 | BPM detection: beat_track → tempo() → multi-band onset → DeepRhythm CNN | Done — three iterative improvements: (1) beat_track → tempo() fixed 174→107.7 to 174→123, (2) multi-band onset normalization added no further improvement, (3) DeepRhythm CNN replaces signal-processing entirely. Short audio (<8s) tiled to 8s to prevent split_audio crash. 17 tests passing. |
+| 2026-06-03 | Backend scaffold (FastAPI, plugins, providers, DB, config) | Done |
+| 2026-06-03 | Plugin system + EventBus + data contracts + schema routes | Done |
+| 2026-06-03 | UI consolidation + Sample Analyzer + upload endpoint | Done |
+| 2026-06-03 | BPM detection: beat_track → tempo() → multi-band onset → DeepRhythm CNN | Done |
+| 2026-06-06 | Batches 1–7 (Full Melody/Bassline implementation) | Done — isobar generators, GeneratePanel, MIDIPlayer, GenerationHub, swing, tests |
+| 2026-06-06 | Batch A (P0) — Audio Playback + Expression Engine | Done — Web Audio API per-note oscillators, phrase arc velocity, articulation gate |
+| 2026-06-06 | Batch B (P1) — Swing + Bugfixes | Done — swing in export, _map_range centering, bassline octave_jump PSequence fix |
+| 2026-06-06 | Batch C (P2) — Preset + Auto behavior | Done — project auto-fill in GeneratePanel, auto-trigger on preset click, clear vs regenerate |
+| 2026-06-06 | Batch D (P3) — Hub + Save + History | Done — GenerationHub full controls, Ctrl+S arrangement save, VL badge, history ring buffer with cycle arrows |
 
 ## Feature Status (v0.1)
 - [x] Samples (analyze BPM, key, scale)
-- [ ] Theory Engine (scales, chords, intervals)
-- [ ] Chord Progression Generator
-- [ ] MIDI Export Engine
+- [x] Chord Progression Generator
+- [x] Melody Generator (isobar, phrase arc, articulation gate)
+- [x] Bassline Generator (isobar, 4 patterns, trance octave_jump)
+- [x] MIDI Export + Swing + Expression Engine
+- [x] Generate Panel (Preset Chips, Auto defaults, loading spinners)
+- [x] MIDI Player (Web Audio playback, playhead, per-part regenerate, history, swing slider)
+- [x] Generation Hub (full controls, NoteGrid preview, Play/Stop, MIDI export, Save to Library)
+- [x] Project Summary + Ctrl+S arrangement save
+- [x] Voice-leading score badge
 - [ ] AI Studio (chat + analysis + composition assistant)
 
 ## Infrastructure Status
@@ -63,15 +64,10 @@ Built with Electron + React + FastAPI + SQLite.
 - [x] Plugin API routes (list, execute, schema)
 - [x] Provider ABC + 4 stubs (OpenAI, Groq, GLM, OpenRouter)
 - [x] Git + GitHub remote (<https://github.com/j0nez/Music-Copilot>)
-- [x] opencode.json with instructions + compaction config
 - [x] Error handling (exception hierarchy + rotating file logger + global handlers)
 - [x] Frontend scaffold (Electron + React + TypeScript + Vite + Tailwind)
-- [x] File upload endpoint (POST /api/upload with extension/mimetype validation)
-- [x] Sample Analyzer plugin (BPM, key, scale, duration via librosa + music21 K-S)
-- [x] Event emission (sample.analyzed) with async event_bus.emit()
-- [x] Frontend api.ts (thin fetch wrapper) + types.ts (shared result types)
-- [x] Samples page (drag-and-drop upload + result cards UI)
-- [x] Backend tests (17 tests: event bus, plugin discovery, sample analyzer)
+- [x] Frontend api.ts + types.ts
+- [x] Backend tests (131 tests)
 
 ## Git Workflow
 - `git add -A && git commit -m "scope: message"` after every meaningful change.
@@ -81,7 +77,16 @@ Built with Electron + React + FastAPI + SQLite.
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
 
 ## Next Actions
-1. Tempo-doubling heuristic in _detect_bpm — autocorrelation check when DeepRhythm returns BPM < 140
-2. Theory Engine plugin (scale/chord/interval analysis)
-3. Wire Music Theory page to Theory Engine plugin via api.ts
-4. Chord Progression Generator plugin
+1. ✅ Batch 1 — Prerequisites (isobar, bug fixes, imports, Pydantic v2, revert-on-failure)
+2. ✅ Batch 2 — Backend Plugins (swing, bassline_generator, melody_generator, arrangement endpoint)
+3. ✅ Batch 3 — Backend Tests
+4. ✅ Batch 4 — Frontend Components (NoteGrid, GeneratePanel, MIDIPlayer, GenerationHub, etc.)
+5. ✅ Batch 5 — Dashboard Wiring (45/55 layout, component tree)
+6. ✅ Batch 6 — Frontend Tests
+7. ✅ Batch 7 — Documentation
+8. ✅ Batch A (P0) — Audio Playback + Expression Engine
+9. ✅ Batch B (P1) — Swing + Bugfixes
+10. ✅ Batch C (P2) — Preset + Auto behavior
+11. ✅ Batch D (P3) — Hub + Save + History
+12. ⬜ Batch E (P4) — Preset value corrections, bassline velocity polish, swing preset-driven defaults
+13. ⬜ Phase E — AI Studio (last)

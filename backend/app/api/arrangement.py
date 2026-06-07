@@ -6,9 +6,11 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from backend.app.core.config import settings
+from backend.app.core.exceptions import InputValidationError, DatabaseError
 from backend.app.services.midi.generator import write_midi
 from backend.app.services.midi.models import MidiFile, MidiNote, MidiTrack
-from backend.app.models.shared import ApiResponse
+from backend.app.models.shared import ApiResponse, ErrorDetail
+from backend.app.db.progressions import save_arrangement
 from plugins.midi_export.expression.swing import apply_swing
 
 logger = logging.getLogger("music_copilot.arrangement_api")
@@ -133,3 +135,32 @@ async def export_single_part(payload: dict, bpm: int = 120):
             data=None,
             error={"code": "EXPORT_FAILED", "message": str(e)},
         )
+
+
+@router.post("/save")
+async def save_arrangement_route(payload: dict):
+    chords = payload.get("chords", [])
+    melody = payload.get("melody", [])
+    bassline = payload.get("bassline", [])
+    key = payload.get("key", "C")
+    mood = payload.get("mood")
+    genre = payload.get("genre")
+    project_id = payload.get("project_id")
+    name = payload.get("name")
+
+    if not chords and not melody and not bassline:
+        return ApiResponse(
+            success=False,
+            data=None,
+            error=ErrorDetail(code="EMPTY", message="No parts to save"),
+        )
+
+    data = {"chords": chords, "melody": melody, "bassline": bassline}
+    try:
+        row_id = save_arrangement(
+            key=key, mood=mood, genre=genre, data=data,
+            project_id=project_id, name=name,
+        )
+        return ApiResponse(success=True, data={"id": row_id})
+    except Exception as exc:
+        raise DatabaseError(f"Failed to save arrangement: {exc}") from exc

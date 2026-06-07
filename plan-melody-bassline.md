@@ -4,9 +4,10 @@
 **Audit status:** Plan vs implementation cross-reference completed (Section 16). 15 remaining discrepancies found (2 HIGH, 8 MEDIUM, 5 LOW). Fix plan prioritized (Section 17, 5 batches, ~21h estimated).  
 **Batch A (P0) done:** Audio playback (Web Audio API oscillator scheduling) wired in MIDIPlayer. Expression Engine integrated into melody_generator and bassline_generator (phrase arc velocity, articulation gate). DnB offbeat min velocity raised from 78 to 80.  
 **Batch B (P1) done:** Swing wired into arrangement export endpoint (swing field on ArrangementExportInput, applied before MIDI conversion). SWING_PRESETS defined in types.ts with genre-based defaults; auto-sets slider when genre changes. _map_range fixed — centering replaces clamping, so energetic mood (72–96) distributes notes across full range instead of clamping all to C5. Bassline octave_jump fixed — alternating root/octave via PSequence replaces chromatic ascent. Trance test added.  
-**Batch C (P2) done:** GeneratePanel receives `project` prop — `resolveSettings()` uses project key/scale when set to `Auto`, preset chips use project key as fallback. Preset chips now auto-trigger chord generation immediately after setting dropdowns (calls `onAutoGenerate`). MIDIPlayer has separate `onClear` prop — `clearAll()` clears state to `[]` instead of regenerating. 154 tests still pass (131 backend + 23 frontend).  
+**Batch C (P2) done:** GeneratePanel receives `project` prop — `resolveSettings()` uses project key/scale when set to `Auto`, preset chips use project key as fallback. Preset chips now auto-trigger chord generation immediately after setting dropdowns (calls `onAutoGenerate`). MIDIPlayer has separate `onClear` prop — `clearAll()` clears state to `[]` instead of regenerating.  
+**Batch D (P3) done:** Generation Hub fully expanded — Melody section (6 dropdowns + Generate), Bassline section (genre/pattern/length + Generate), Preview note grid with inline Play/Stop (Web Audio API), MIDI All export, Save to Library with editable name, Esc/click-outside dismiss. Ctrl+S now saves full arrangement (all 3 parts) via new POST /arrangement/save endpoint. Voice-leading score badge (green ≥7, amber <7) shown for 4s after chord generation. Generation history ring buffer (max 5 per part) wired with ⬆/⬇ cycle arrows in MIDIPlayer footer. 154 tests pass.  
 **Target:** v0.1 MVP completion (Phase A–D done, Phase E deferred)  
-**Last updated:** 2026-06-06 (v7 — Batch C done)
+**Last updated:** 2026-06-06 (v8 — Batch D done)
 
 ---
 
@@ -892,6 +893,8 @@ Batch E (P4) — Polish
 
 **Batch C (DONE):** Preset + Auto behavior completed 2026-06-06. GeneratePanel receives `project` prop, uses project key/scale in resolveSettings() when Auto. applyPreset() calls onAutoGenerate() after onChange() — preset chips now auto-trigger chord generation. MIDIPlayer has separate onClear prop — clearAll() clears state to [] instead of calling onRegenerate(). All 154 tests pass.
 
-**Estimated total effort:** ~10h remaining  
-**Estimated batches:** 2 (D–E)  
-**Tests to add:** ~10 (GenerationHub, NoteGrid, voice-leading badge, history ring, Ctrl+S arrangement, Surprise Me click → API)
+**Batch D (DONE):** Hub + Save + History completed 2026-06-06. GenerationHub fully expanded: Melody section (6 dropdowns + Generate), Bassline section (genre/pattern/length + Generate), Preview with inline Play/Stop (Web Audio API), MIDI All export, Save to Library with editable name input, Esc/click-outside dismiss. Ctrl+S now saves full arrangement as type='arrangement' idea via POST /arrangement/save. Voice-leading score badge appears for 4s after chord generation (green ≥7, amber <7). Generation history ring buffer (max 5 per part) pushes on every generate, MIDIPlayer shows ⬆/⬇ arrows for parts with >1 history entry. 154 tests pass.
+
+**Estimated total effort:** ~5h remaining  
+**Estimated batches:** 1 (E)  
+**Tests to add:** ~5 (GenerationHub, NoteGrid, Surprise Me click → API)
