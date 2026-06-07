@@ -1,5 +1,14 @@
 import math
 
+from shared.music_theory import (
+    NOTE_TO_SEMITONE,
+    SEMITONE_TO_NOTE,
+    GATE_BY_ARTICULATION,
+    GATE_BY_GENRE,
+    resolve_gate_length,
+    resolve_phrase_multiplier,
+)
+
 CHORD_TONE_WEIGHTS: dict[str, float] = {
     "root": 1.0,
     "third": 0.88,
@@ -26,23 +35,6 @@ GENRE_BEAT_MODIFIERS: dict[str, dict[int, float]] = {
     "progressive house": {1: 1.0, 2: 0.84, 3: 0.94, 4: 0.80},
 }
 
-GATE_BY_ARTICULATION: dict[str, float] = {
-    "legato": 0.95,
-    "tenuto": 0.85,
-    "staccato": 0.45,
-    "staccatissimo": 0.25,
-    "auto": 0.85,
-}
-
-GATE_BY_GENRE: dict[str, float] = {
-    "house": 0.75,
-    "techno": 0.40,
-    "trance": 0.55,
-    "melodic techno": 0.80,
-    "deep house": 0.80,
-    "progressive house": 0.70,
-}
-
 CHORD_TONE_ROLES: list[tuple[int, str]] = [
     (0, "root"),
     (4, "third"),
@@ -50,8 +42,6 @@ CHORD_TONE_ROLES: list[tuple[int, str]] = [
     (11, "seventh"),
     (14, "ninth"),
 ]
-
-from shared.music_theory import NOTE_TO_SEMITONE, SEMITONE_TO_NOTE
 
 
 def note_name_to_semitone(note: str) -> int:
@@ -102,7 +92,7 @@ def resolve_velocity(
     beat_modifier = GENRE_BEAT_MODIFIERS.get(genre, BEAT_WEIGHTS).get(beat_in_bar, 0.85)
     beat_weight = BEAT_WEIGHTS.get(beat_in_bar, 0.85) * beat_modifier
 
-    phrase_mult = _resolve_phrase_multiplier(bar_index, total_bars, genre)
+    phrase_mult = resolve_phrase_multiplier(bar_index, total_bars, genre)
 
     mood_modifier = 1.05 if mood == "uplifting" else 0.95 if mood in ("dark", "melancholic") else 1.0
 
@@ -115,37 +105,6 @@ def resolve_velocity(
 
     velocity = max(30, min(127, round(velocity)))
     return velocity
-
-
-def _resolve_phrase_multiplier(bar_index: int, total_bars: int, genre: str = "house") -> float:
-    if total_bars <= 1:
-        return 1.0
-
-    progress = bar_index / (total_bars - 1)
-
-    if genre in ("techno",):
-        valley = 0.85
-    elif genre in ("trance", "melodic techno", "progressive house"):
-        valley = 0.80
-    else:
-        valley = 0.87
-
-    mid_point = 0.4
-
-    if progress < mid_point:
-        t = progress / mid_point
-        multiplier = 1.0 - (1.0 - valley) * t
-    else:
-        t = (progress - mid_point) / (1.0 - mid_point)
-        multiplier = valley + (1.05 - valley) * t
-
-    return multiplier
-
-
-def resolve_gate_length(genre: str, articulation: str = "auto") -> float:
-    if articulation != "auto":
-        return GATE_BY_ARTICULATION.get(articulation, 0.85)
-    return GATE_BY_GENRE.get(genre, 0.85)
 
 
 def resolve_voicing(notes: list[str], root: str, style: str = "close") -> list[int]:

@@ -4,8 +4,8 @@ import logging
 from isobar import PDegree, PMarkov, PRandomWalk, Scale
 from pydantic import BaseModel
 
-from backend.app.services.midi.theory import _resolve_phrase_multiplier, resolve_gate_length
 from plugins.base import Plugin, PluginResult
+from shared.music_theory import resolve_phrase_multiplier, resolve_gate_length, _SCALE_NAMES
 
 logger = logging.getLogger("music_copilot.melody_generator")
 
@@ -19,20 +19,6 @@ class MelodyGeneratorInput(BaseModel):
     complexity: str = "simple"
     articulation: str = "auto"
 
-
-_SCALE_NAMES: dict[str, Scale] = {
-    "Natural Minor": Scale.minor,
-    "Harmonic Minor": Scale([0, 2, 3, 5, 7, 8, 11]),
-    "Melodic Minor": Scale([0, 2, 3, 5, 7, 9, 11]),
-    "Major": Scale.major,
-    "Dorian": Scale.dorian,
-    "Phrygian": Scale.phrygian,
-    "Lydian": Scale.lydian,
-    "Mixolydian": Scale.mixolydian,
-    "Locrian": Scale.locrian,
-    "Pentatonic Major": Scale.majorPenta,
-    "Pentatonic Minor": Scale.minorPenta,
-}
 
 _MOOD_RANGE: dict[str, tuple[int, int]] = {
     "dark": (48, 72),
@@ -164,6 +150,6 @@ def _velocity_sequence(total: int, notes_per_bar: int, mood: str, complexity: st
     total_bars = total / max(1, notes_per_bar)
     for i, vel in enumerate(result):
         bar_idx = int(i / notes_per_bar)
-        mult = _resolve_phrase_multiplier(bar_idx, round(total_bars), genre)
+        mult = resolve_phrase_multiplier(bar_idx, round(total_bars), genre)
         result[i] = max(30, min(127, round(vel * mult)))
     return result
