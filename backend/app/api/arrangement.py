@@ -135,9 +135,6 @@ async def export_single_part(payload: PerPartExportInput):
         track = MidiTrack(program=program)
         track.notes = [_note_to_midi(n) for n in payload.notes]
         midi_file = MidiFile(tracks=[track], bpm=payload.bpm)
-        track = MidiTrack(program=program)
-        track.notes = [_note_to_midi(n) for n in notes]
-        midi_file = MidiFile(tracks=[track], bpm=bpm)
         dest = write_midi(midi_file)
 
         return ApiResponse(success=True, data={
