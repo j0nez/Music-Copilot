@@ -146,28 +146,22 @@ def _migrate_ideas_type_constraint(conn: sqlite3.Connection) -> None:
         return
     conn.execute("PRAGMA foreign_keys=OFF")
     try:
-        conn.executescript("""
-            CREATE TABLE ideas_v2 (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
-                type TEXT NOT NULL DEFAULT 'progression' CHECK(type IN (
-                    'progression', 'melody', 'bassline', 'drum_pattern', 'arpeggio', 'phrase',
-                    'arrangement', 'arrangement_chords'
-                )),
-                name TEXT,
-                data TEXT NOT NULL DEFAULT '{}',
-                key TEXT,
-                scale TEXT,
-                mood TEXT,
-                genre TEXT,
-                bpm INTEGER,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            INSERT INTO ideas_v2 (id, project_id, type, name, data, key, mood, genre, bpm, created_at, updated_at) SELECT id, project_id, type, name, data, key, mood, genre, bpm, created_at, updated_at FROM ideas;
-            DROP TABLE ideas;
-            ALTER TABLE ideas_v2 RENAME TO ideas;
-        """)
+        conn.execute("CREATE TABLE IF NOT EXISTS ideas_v2 ("
+                     "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                     "project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,"
+                     "type TEXT NOT NULL DEFAULT 'progression' CHECK(type IN ("
+                     "'progression','melody','bassline','drum_pattern','arpeggio','phrase',"
+                     "'arrangement','arrangement_chords')),"
+                     "name TEXT,data TEXT NOT NULL DEFAULT '{}',key TEXT,scale TEXT,"
+                     "mood TEXT,genre TEXT,bpm INTEGER,"
+                     "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+                     "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+        has_data = conn.execute("SELECT COUNT(*) FROM ideas_v2").fetchone()[0] > 0
+        if not has_data:
+            conn.execute("INSERT INTO ideas_v2 (id,project_id,type,name,data,key,mood,genre,bpm,created_at,updated_at) "
+                         "SELECT id,project_id,type,name,data,key,mood,genre,bpm,created_at,updated_at FROM ideas")
+        conn.execute("DROP TABLE ideas")
+        conn.execute("ALTER TABLE ideas_v2 RENAME TO ideas")
         conn.commit()
     finally:
         conn.execute("PRAGMA foreign_keys=ON")
@@ -179,28 +173,22 @@ def _migrate_ideas_add_scale(conn: sqlite3.Connection) -> None:
         return
     conn.execute("PRAGMA foreign_keys=OFF")
     try:
-        conn.executescript("""
-            CREATE TABLE ideas_v3 (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
-                type TEXT NOT NULL DEFAULT 'progression' CHECK(type IN (
-                    'progression', 'melody', 'bassline', 'drum_pattern', 'arpeggio', 'phrase',
-                    'arrangement', 'arrangement_chords'
-                )),
-                name TEXT,
-                data TEXT NOT NULL DEFAULT '{}',
-                key TEXT,
-                scale TEXT,
-                mood TEXT,
-                genre TEXT,
-                bpm INTEGER,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            INSERT INTO ideas_v3 SELECT * FROM ideas;
-            DROP TABLE ideas;
-            ALTER TABLE ideas_v3 RENAME TO ideas;
-        """)
+        conn.execute("CREATE TABLE IF NOT EXISTS ideas_v3 ("
+                     "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                     "project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,"
+                     "type TEXT NOT NULL DEFAULT 'progression' CHECK(type IN ("
+                     "'progression','melody','bassline','drum_pattern','arpeggio','phrase',"
+                     "'arrangement','arrangement_chords')),"
+                     "name TEXT,data TEXT NOT NULL DEFAULT '{}',key TEXT,scale TEXT,"
+                     "mood TEXT,genre TEXT,bpm INTEGER,"
+                     "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+                     "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+        has_data = conn.execute("SELECT COUNT(*) FROM ideas_v3").fetchone()[0] > 0
+        if not has_data:
+            conn.execute("INSERT INTO ideas_v3 (id,project_id,type,name,data,key,mood,genre,bpm,created_at,updated_at) "
+                         "SELECT id,project_id,type,name,data,key,mood,genre,bpm,created_at,updated_at FROM ideas")
+        conn.execute("DROP TABLE ideas")
+        conn.execute("ALTER TABLE ideas_v3 RENAME TO ideas")
         conn.commit()
     finally:
         conn.execute("PRAGMA foreign_keys=ON")
