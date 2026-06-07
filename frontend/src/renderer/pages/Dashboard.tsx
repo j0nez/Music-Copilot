@@ -1,14 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useProject } from "../store/projectContext";
+import AiStudio from "../components/AiStudio";
 import GeneratePanel from "../components/GeneratePanel";
-import SampleAnalysisPanel from "../components/SampleAnalysisPanel";
-import ProjectSummary from "../components/ProjectSummary";
 import MIDIPlayer from "../components/MIDIPlayer";
+import ProjectSummary from "../components/ProjectSummary";
+import SampleAnalysisPanel from "../components/SampleAnalysisPanel";
 import GenerationHub from "../components/GenerationHub";
 import LibraryModal from "../components/LibraryModal";
 import SearchOverlay from "../components/SearchOverlay";
 import ReferencePopover from "../components/ReferencePopover";
-import type { Note, GeneratorSettings, ProgressionChord, GenerationHistory } from "../types";
+import type { Note, GeneratorSettings, ProgressionChord, GenerationHistory, ActivePartsSummary } from "../types";
 import { SWING_PRESETS } from "../types";
 import { chordGenerator, melodyGenerator, basslineGenerator, exportArrangement, saveArrangement, downloadFromUrl } from "../api";
 import { chordNotesToMidi } from "../music/pitch";
@@ -51,6 +52,27 @@ export default function Dashboard() {
   const hasChords = chords.length > 0;
   const hasMelody = melody.length > 0;
   const hasBassline = bassline.length > 0;
+
+  const activeParts = useMemo((): Record<string, ActivePartsSummary> => {
+    const semitoneNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const pitchToName = (p: number) => semitoneNames[p % 12] + Math.floor(p / 12);
+    const pitches = (notes: Note[]) => notes.map(n => n.pitch);
+    return {
+      chords: {
+        count: chords.length,
+        bars,
+        root_notes: [...new Set(chords.map(n => semitoneNames[n.pitch % 12]))],
+      },
+      melody: {
+        count: melody.length,
+        bars,
+        range: melody.length > 0
+          ? `${pitchToName(Math.min(...pitches(melody)))}-${pitchToName(Math.max(...pitches(melody)))}`
+          : "",
+      },
+      bassline: { count: bassline.length, bars },
+    };
+  }, [chords, melody, bassline, bars]);
 
   function pushHistory(type: 'chords' | 'melody' | 'bassline', notes: Note[]) {
     setHistory(prev => {
@@ -350,21 +372,16 @@ export default function Dashboard() {
           </Panel>
         </div>
 
-        {/* Right column 55% */}
+        {/* Right column 55% — Chat (hero panel) */}
         <div className="w-[55%] min-h-0">
-          <Panel title="Project Summary" className="h-full">
-            <ProjectSummary
-              project={project}
-              chords={chords} melody={melody} bassline={bassline}
-              solo={{ chords: true, melody: true, bassline: true }}
-              swing={swing} onSwingChange={setSwing}
-            />
+          <Panel title="Chat" className="h-full">
+            <AiStudio project={project} activeParts={activeParts} />
           </Panel>
         </div>
       </div>
 
       {/* Bottom row */}
-      <div className="h-52 flex gap-3 shrink-0">
+      <div className="h-48 flex gap-3 shrink-0">
         <Panel title="MIDI Player" className="flex-1">
           <MIDIPlayer
             chords={chords} melody={melody} bassline={bassline}
@@ -377,13 +394,13 @@ export default function Dashboard() {
             onCycleHistory={cycleHistory}
           />
         </Panel>
-        <Panel title="Session Notes" className="flex-1">
-          <div className="flex flex-col h-full p-2">
-            <textarea
-              placeholder="Jot down ideas, notes, or reminders..."
-              className="flex-1 bg-transparent text-xs text-gray-400 placeholder-gray-600 resize-none outline-none"
-            />
-          </div>
+        <Panel title="Project Summary" className="flex-1">
+          <ProjectSummary
+            project={project}
+            chords={chords} melody={melody} bassline={bassline}
+            solo={{ chords: true, melody: true, bassline: true }}
+            swing={swing} onSwingChange={setSwing}
+          />
         </Panel>
       </div>
     </div>
