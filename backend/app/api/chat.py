@@ -56,7 +56,7 @@ class ChatResponse(BaseModel):
     tokens_used: int
 
 
-@router.post("")
+@router.post("/")
 async def chat(req: ChatRequest):
     ctx = req.project_context or ProjectContext()
     kb = _load_knowledge_base()
