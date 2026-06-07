@@ -89,11 +89,13 @@ CREATE TABLE ideas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
     type TEXT NOT NULL DEFAULT 'progression' CHECK(type IN (
-        'progression', 'melody', 'bassline', 'drum_pattern', 'arpeggio', 'phrase'
+        'progression', 'melody', 'bassline', 'drum_pattern', 'arpeggio', 'phrase',
+        'arrangement', 'arrangement_chords'
     )),
     name TEXT,
     data TEXT NOT NULL DEFAULT '{}',
     key TEXT,
+    scale TEXT,
     mood TEXT,
     genre TEXT,
     bpm INTEGER,

@@ -64,6 +64,14 @@ GET    /api/progressions/{id}                # Get single idea
 DELETE /api/progressions/{id}                # Delete idea
 GET    /api/progressions/{id}/midi           # Download as MIDI
 
+# Arrangements
+POST   /api/arrangement/save                 # Save full arrangement + auto-split parts
+POST   /api/arrangement/export               # Export arrangement MIDI with swing
+POST   /api/arrangement/per-part             # Export single part (chords/melody/bassline) MIDI
+
+# Exports
+GET    /api/exports/{filename}               # Download exported MIDI file
+
 # Projects
 POST   /api/projects/                        # Create project
 GET    /api/projects/                        # List projects

@@ -58,10 +58,10 @@ async function del<T>(path: string, signal?: AbortSignal): Promise<ApiResponse<T
   });
 }
 
-export async function uploadFile(file: File): Promise<ApiResponse<UploadResult>> {
+export async function uploadFile(file: File, signal?: AbortSignal): Promise<ApiResponse<UploadResult>> {
   const form = new FormData();
   form.append('file', file);
-  return fetchJson<UploadResult>(`${BASE}/upload/`, { method: 'POST', body: form });
+  return fetchJson<UploadResult>(`${BASE}/upload/`, { method: 'POST', body: form, signal });
 }
 
 export async function analyzeSample(
@@ -80,11 +80,12 @@ export async function analyzeSample(
 export async function theoryEngine(
   mode: string,
   params: Record<string, unknown>,
+  signal?: AbortSignal,
 ): Promise<ApiResponse<TheoryResult>> {
   return post<TheoryResult>('/plugins/theory_engine/execute', {
     mode,
     ...params,
-  });
+  }, signal);
 }
 
 export async function saveProgression(
@@ -93,22 +94,24 @@ export async function saveProgression(
   genre: string | null,
   chords: ProgressionChord[],
   opts?: { project_id?: number; name?: string },
+  signal?: AbortSignal,
 ): Promise<ApiResponse<{ id: number }>> {
-  return post<{ id: number }>('/progressions/', { key, mood, genre, chords, ...opts });
+  return post<{ id: number }>('/progressions/', { key, mood, genre, chords, ...opts }, signal);
 }
 
 export async function listProgressions(
   sortBy = 'created_at',
   sortOrder = 'DESC',
   type: string | null = null,
+  signal?: AbortSignal,
 ): Promise<ApiResponse<{ progressions: SavedProgression[] }>> {
   const params: Record<string, string> = { sort_by: sortBy, sort_order: sortOrder };
   if (type !== null) params.type = type;
-  return get<{ progressions: SavedProgression[] }>('/progressions/', params);
+  return get<{ progressions: SavedProgression[] }>('/progressions/', params, signal);
 }
 
-export async function deleteProgression(id: number): Promise<ApiResponse<{ deleted: boolean }>> {
-  return del<{ deleted: boolean }>(`/progressions/${id}`);
+export async function deleteProgression(id: number, signal?: AbortSignal): Promise<ApiResponse<{ deleted: boolean }>> {
+  return del<{ deleted: boolean }>(`/progressions/${id}`, signal);
 }
 
 export async function exportMidi(
@@ -124,6 +127,7 @@ export async function exportMidi(
     articulation?: string;
     base_velocity?: number;
   },
+  signal?: AbortSignal,
 ): Promise<ApiResponse<MidiExportResult>> {
   return post<MidiExportResult>('/plugins/midi_export/execute', {
     key,
@@ -136,7 +140,7 @@ export async function exportMidi(
     arpeggio_pattern: opts?.arpeggio_pattern ?? 'up',
     articulation: opts?.articulation ?? 'auto',
     base_velocity: opts?.base_velocity ?? 100,
-  });
+  }, signal);
 }
 
 export function downloadMidiUrl(progressionId: number, bpm = 120): string {
@@ -148,38 +152,41 @@ export async function createProject(
   bpm = 120,
   key = 'C',
   scale = 'Major',
+  signal?: AbortSignal,
 ): Promise<ApiResponse<{ id: number }>> {
-  return post<{ id: number }>('/projects/', { name, bpm, key, scale });
+  return post<{ id: number }>('/projects/', { name, bpm, key, scale }, signal);
 }
 
-export async function listProjects(): Promise<ApiResponse<{ projects: Project[] }>> {
-  return get<{ projects: Project[] }>('/projects/');
+export async function listProjects(signal?: AbortSignal): Promise<ApiResponse<{ projects: Project[] }>> {
+  return get<{ projects: Project[] }>('/projects/', undefined, signal);
 }
 
-export async function getProject(id: number): Promise<ApiResponse<{ project: Project }>> {
-  return get<{ project: Project }>(`/projects/${id}`);
+export async function getProject(id: number, signal?: AbortSignal): Promise<ApiResponse<{ project: Project }>> {
+  return get<{ project: Project }>(`/projects/${id}`, undefined, signal);
 }
 
-export async function getLastProject(): Promise<ApiResponse<{ project: Project | null }>> {
-  return get<{ project: Project | null }>('/projects/last');
+export async function getLastProject(signal?: AbortSignal): Promise<ApiResponse<{ project: Project | null }>> {
+  return get<{ project: Project | null }>('/projects/last', undefined, signal);
 }
 
 export async function updateProject(
   id: number,
   updates: Partial<Pick<Project, 'name' | 'bpm' | 'key' | 'scale'>>,
+  signal?: AbortSignal,
 ): Promise<ApiResponse<{ project: Project }>> {
-  return put<{ project: Project }>(`/projects/${id}`, updates);
+  return put<{ project: Project }>(`/projects/${id}`, updates, signal);
 }
 
-export async function deleteProject(id: number): Promise<ApiResponse<{ deleted: boolean }>> {
-  return del<{ deleted: boolean }>(`/projects/${id}`);
+export async function deleteProject(id: number, signal?: AbortSignal): Promise<ApiResponse<{ deleted: boolean }>> {
+  return del<{ deleted: boolean }>(`/projects/${id}`, signal);
 }
 
 export async function searchAll(
   q: string,
   limit = 20,
+  signal?: AbortSignal,
 ): Promise<ApiResponse<{ results: SearchResult[] }>> {
-  return get<{ results: SearchResult[] }>('/search/', { q, limit: String(limit) });
+  return get<{ results: SearchResult[] }>('/search/', { q, limit: String(limit) }, signal);
 }
 
 export async function chordGenerator(
@@ -232,10 +239,11 @@ export async function saveArrangement(
   genre: string | null,
   bpm: number | null,
   opts?: { project_id?: number; name?: string },
+  signal?: AbortSignal,
 ): Promise<ApiResponse<{ id: number }>> {
   return post<{ id: number }>('/arrangement/save', {
     chords, melody, bassline, key, scale, mood, genre, bpm, ...opts,
-  });
+  }, signal);
 }
 
 export async function exportArrangement(
@@ -245,23 +253,25 @@ export async function exportArrangement(
   bpm = 120,
   swing = 0,
   solo = { chords: true, melody: true, bassline: true },
+  signal?: AbortSignal,
 ): Promise<ApiResponse<ArrangementExportResult>> {
   return post<ArrangementExportResult>('/arrangement/export', {
     chords, melody, bassline, bpm, swing, solo,
-  });
+  }, signal);
 }
 
 export async function exportSinglePart(
   part: 'chords' | 'melody' | 'bassline',
   notes: Note[],
   bpm = 120,
+  signal?: AbortSignal,
 ): Promise<ApiResponse<ArrangementExportResult>> {
-  return post<ArrangementExportResult>('/arrangement/per-part', { part, notes, bpm });
+  return post<ArrangementExportResult>('/arrangement/per-part', { part, notes, bpm }, signal);
 }
 
-export async function downloadFromUrl(downloadUrl: string, filename: string): Promise<void> {
+export async function downloadFromUrl(downloadUrl: string, filename: string, signal?: AbortSignal): Promise<void> {
   const fullUrl = `${BASE.replace('/api', '')}${downloadUrl}`;
-  const res = await fetch(fullUrl, { credentials: 'include' });
+  const res = await fetch(fullUrl, { credentials: 'include', signal });
   if (!res.ok) throw new Error(`Download failed: ${res.status}`);
   const blob = await res.blob();
   const blobUrl = URL.createObjectURL(blob);

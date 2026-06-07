@@ -64,22 +64,20 @@ frontend/
 ## Component Tree (v0.1)
 
 ```
-App (wrapped in ProjectProvider)
+App (wrapped in ProjectProvider, wrapped in ErrorBoundary)
 └── Dashboard
     ├── SearchOverlay (modal, Ctrl+K)
-    ├── LibraryModal (overlay)
-    ├── TopBar (logo, Ctrl+K btn, Library btn, New/Switch Project)
-    ├── Left Column
-    │   ├── ProjectAnchor (compact: name, BPM, key, scale, FL Studio badge)
-    │   └── MusicTheoryPanel (collapsible, 4 tabs)
-    │       ├── ScaleGenerator
-    │       ├── ChordBuilder
-    │       ├── IntervalAnalyzer
-    │       └── Progressions (generator + voice-leading badge)
-    ├── Right Column (Co-Producer Chat — placeholder)
+    ├── LibraryModal (overlay, type-filtered tabs, Load per-part)
+    ├── GenerationHub (overlay, full controls + NoteGrid preview)
+    ├── TopBar (logo, ReferencePopover, Generation Hub btn, Library btn, Search btn)
+    ├── Left Column (45%)
+    │   ├── ProjectAnchor (name, BPM, key, scale, editable inline)
+    │   ├── GeneratePanel (preset chips, per-type generators, spinners)
+    │   └── SampleAnalysisPanel (drop zone, BPM range, results)
+    ├── Right Column (55%)
+    │   └── ProjectSummary (key/BPM/scale, note counts, swing slider, MIDI download)
     └── Bottom Row
-        ├── ChordPads (Web Audio playback, drag reorder, MIDI export)
-        ├── SampleAnalysisPanel (drop zone, BPM range, results, Apply)
+        ├── MIDIPlayer (Web Audio playback, per-part mute, history cycling, swing, export, save)
         └── Session Notes (textarea)
 ```
 

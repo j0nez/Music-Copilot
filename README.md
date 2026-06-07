@@ -60,9 +60,7 @@ npm run dev
 - Theory Engine — scales, chords, intervals, functions
 - Chord Progression Generator
 - MIDI Export Engine
-- Producer Chat — AI-powered production advice
-- Why Does This Sound Good? — educational analysis
-- Finish My Idea (basic) — structure suggestions
+- AI Studio — Producer Chat, educational analysis, composition assistant (in progress)
 
 ## Plugin System
 

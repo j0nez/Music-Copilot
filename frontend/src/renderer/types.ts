@@ -85,19 +85,6 @@ export interface SavedProgression {
   created_at: string;
 }
 
-export interface Idea {
-  id: number;
-  project_id: number | null;
-  type: 'progression' | 'melody' | 'bassline' | 'drum_pattern' | 'arpeggio' | 'phrase';
-  name: string;
-  data: ProgressionChord[];
-  key: string | null;
-  mood: string | null;
-  genre: string | null;
-  bpm: number | null;
-  created_at: string;
-}
-
 export interface MidiExportResult {
   file_path: string;
   filename: string;
