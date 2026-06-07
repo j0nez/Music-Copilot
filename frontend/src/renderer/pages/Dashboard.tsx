@@ -168,11 +168,13 @@ export default function Dashboard() {
     );
   }, [project, chords, melody, bassline, settings, bars]);
 
+  const prevGenreRef = useRef(settings.genre);
   useEffect(() => {
-    if (settings.genre !== 'Auto' && swing === 0) {
+    if (settings.genre !== 'Auto' && settings.genre !== prevGenreRef.current) {
       const preset = SWING_PRESETS[settings.genre as keyof typeof SWING_PRESETS];
       if (preset !== undefined) setSwing(preset);
     }
+    prevGenreRef.current = settings.genre;
   }, [settings.genre]);
 
   useEffect(() => {

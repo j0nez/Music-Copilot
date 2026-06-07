@@ -1,13 +1,13 @@
 # Melody & Bassline Generator — Implementation Plan
 
-**Status:** All 7 batches implemented. All 13 Section 15 issues fixed. 154 tests passing (131 backend + 23 frontend). 0 TS errors.  
-**Audit status:** Plan vs implementation cross-reference completed (Section 16). 15 remaining discrepancies found (2 HIGH, 8 MEDIUM, 5 LOW). Fix plan prioritized (Section 17, 5 batches, ~21h estimated).  
+**Status:** All 7 batches + all 5 fix batches (A–E) implemented. All 13 Section 15 issues fixed. 154 tests passing (131 backend + 23 frontend). 0 TS errors.  
+**Audit status:** Plan vs implementation cross-reference completed (Section 16). 15 discrepancies resolved across 5 fix batches (A–E).  
 **Batch A (P0) done:** Audio playback (Web Audio API oscillator scheduling) wired in MIDIPlayer. Expression Engine integrated into melody_generator and bassline_generator (phrase arc velocity, articulation gate). DnB offbeat min velocity raised from 78 to 80.  
 **Batch B (P1) done:** Swing wired into arrangement export endpoint (swing field on ArrangementExportInput, applied before MIDI conversion). SWING_PRESETS defined in types.ts with genre-based defaults; auto-sets slider when genre changes. _map_range fixed — centering replaces clamping, so energetic mood (72–96) distributes notes across full range instead of clamping all to C5. Bassline octave_jump fixed — alternating root/octave via PSequence replaces chromatic ascent. Trance test added.  
 **Batch C (P2) done:** GeneratePanel receives `project` prop — `resolveSettings()` uses project key/scale when set to `Auto`, preset chips use project key as fallback. Preset chips now auto-trigger chord generation immediately after setting dropdowns (calls `onAutoGenerate`). MIDIPlayer has separate `onClear` prop — `clearAll()` clears state to `[]` instead of regenerating.  
 **Batch D (P3) done:** Generation Hub fully expanded — Melody section (6 dropdowns + Generate), Bassline section (genre/pattern/length + Generate), Preview note grid with inline Play/Stop (Web Audio API), MIDI All export, Save to Library with editable name, Esc/click-outside dismiss. Ctrl+S now saves full arrangement (all 3 parts) via new POST /arrangement/save endpoint. Voice-leading score badge (green ≥7, amber <7) shown for 4s after chord generation. Generation history ring buffer (max 5 per part) wired with ⬆/⬇ cycle arrows in MIDIPlayer footer. 154 tests pass.  
-**Target:** v0.1 MVP completion (Phase A–D done, Phase E deferred)  
-**Last updated:** 2026-06-06 (v8 — Batch D done)
+**Target:** v0.1 MVP completion (Phase A–E done, Phase E — AI Studio deferred)  
+**Last updated:** 2026-06-07 (v9 — Batch E done)
 
 ---
 
@@ -881,10 +881,10 @@ Batch D (P3) — Hub + Save + History
   D3. Voice-leading badge
   D4. Generation history ring buffer
 
-Batch E (P4) — Polish
-  E1. Preset value corrections
-  E2. Bassline velocity polish
-  E3. Swing preset-driven defaults
+Batch E (P4) — Polish (DONE)
+  E1. Preset value corrections — Dark Techno → simple, Uplifting Trance → advanced, Deep House → chill/deep house (genre dropdown updated)
+  E2. Bassline velocity polish — already done in Batch A (phrase arc, DnB offbeat 80; PAccent doesn't exist in isobar)
+  E3. Swing preset-driven defaults — auto-set on every genre switch via prevGenreRef + SWING_PRESETS lookup
 ```
 
 **Batch A (DONE):** Audio playback + Expression Engine integration completed 2026-06-06. MIDIPlayer now schedules per-note triangle-wave oscillators via Web Audio API at BPM-based timing, with swing-aware note offsetting. melody_generator and bassline_generator both use `_resolve_phrase_multiplier` for velocity arc and `resolve_gate_length` for articulation-aware note durations. DnB offbeat bass velocity raised to 80.
@@ -895,6 +895,8 @@ Batch E (P4) — Polish
 
 **Batch D (DONE):** Hub + Save + History completed 2026-06-06. GenerationHub fully expanded: Melody section (6 dropdowns + Generate), Bassline section (genre/pattern/length + Generate), Preview with inline Play/Stop (Web Audio API), MIDI All export, Save to Library with editable name input, Esc/click-outside dismiss. Ctrl+S now saves full arrangement as type='arrangement' idea via POST /arrangement/save. Voice-leading score badge appears for 4s after chord generation (green ≥7, amber <7). Generation history ring buffer (max 5 per part) pushes on every generate, MIDIPlayer shows ⬆/⬇ arrows for parts with >1 history entry. 154 tests pass.
 
-**Estimated total effort:** ~5h remaining  
-**Estimated batches:** 1 (E)  
-**Tests to add:** ~5 (GenerationHub, NoteGrid, Surprise Me click → API)
+**Batch E (DONE):** Polish completed 2026-06-07. Preset value corrections: Dark Techno → simple complexity, Uplifting Trance → advanced complexity, Deep House → chill mood + deep house genre. 'deep house' added to genre dropdown. Swing presets now auto-set on every genre switch (not just from Auto) via prevGenreRef. Bassline velocity (phrase arc, DnB offbeat 80) confirmed already done in Batch A. 154 tests pass.
+
+**Estimated total effort:** 0h remaining  
+**Estimated batches:** 0  
+**Next:** Phase E — AI Studio

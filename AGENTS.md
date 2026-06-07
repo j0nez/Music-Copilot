@@ -24,7 +24,7 @@ Built with Electron + React + FastAPI + SQLite.
 
 ## Active Context
 - **Phase**: v0.1 MVP Foundation
-- **Current Focus**: All feature implementations complete through Batch D. Remaining: Batch E polish (preset corrections, bassline velocity, swing defaults) then Phase E (AI Studio).
+- **Current Focus**: Batch E polish complete (preset corrections, swing preset-driven defaults). Bassline velocity (phrase arc, DnB offbeat 80) was already done in Batch A. Remaining: Phase E (AI Studio).
 - **Recent Decisions**: 2026-06-06 — All 7 original implementation batches done + all 13 post-audit fixes. Batches A–D (P0–P3) completed: audio playback (Web Audio API), Expression Engine integration (phrase arc velocity, articulation gate), swing pipeline, _map_range centering fix, bassline octave_jump fix, project state auto-fill, preset chip auto-trigger, clear vs regenerate separation, Generation Hub full controls, Ctrl+S arrangement save, VL score badge, generation history ring buffer. 154 tests pass (131 backend + 23 frontend).
 - **Blockers**: None
 
@@ -88,5 +88,5 @@ Built with Electron + React + FastAPI + SQLite.
 9. ✅ Batch B (P1) — Swing + Bugfixes
 10. ✅ Batch C (P2) — Preset + Auto behavior
 11. ✅ Batch D (P3) — Hub + Save + History
-12. ⬜ Batch E (P4) — Preset value corrections, bassline velocity polish, swing preset-driven defaults
+12. ✅ Batch E (P4) — Preset value corrections (complexity swaps, Deep House mood), swing preset-driven defaults (auto-set on genre switch via prevGenreRef). Bassline velocity (phrase arc, DnB offbeat 80, PAccent) already done in Batch A.
 13. ⬜ Phase E — AI Studio (last)

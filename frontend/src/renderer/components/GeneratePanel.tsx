@@ -25,9 +25,9 @@ interface GeneratePanelProps {
 }
 
 const PRESETS = [
-  { label: 'Dark Techno', mood: 'dark', genre: 'techno', complexity: 'advanced' },
-  { label: 'Uplifting Trance', mood: 'uplifting', genre: 'trance', complexity: 'simple' },
-  { label: 'Deep House', mood: 'happy', genre: 'house', complexity: 'simple' },
+  { label: 'Dark Techno', mood: 'dark', genre: 'techno', complexity: 'simple' },
+  { label: 'Uplifting Trance', mood: 'uplifting', genre: 'trance', complexity: 'advanced' },
+  { label: 'Deep House', mood: 'chill', genre: 'deep house', complexity: 'simple' },
   { label: 'Melodic DnB', mood: 'chill', genre: 'dnb', complexity: 'advanced' },
   { label: 'Surprise Me ✨', mood: 'random', genre: 'random', complexity: 'random' },
 ];
@@ -210,7 +210,7 @@ export default function GeneratePanel({
             className="w-full px-1.5 py-1 rounded bg-gray-700 text-gray-200 text-xs"
           >
             <option>Auto</option>
-            {['house','techno','trance','dnb','dubstep','future_bass'].map(g => (
+            {['house','techno','trance','dnb','dubstep','future_bass','deep house'].map(g => (
               <option key={g}>{g}</option>
             ))}
           </select>
