@@ -43,6 +43,9 @@ export default function Dashboard() {
     chords: -1, melody: -1, bassline: -1,
   });
   const vlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
 
   const bars = settings.length;
   const hasChords = chords.length > 0;
@@ -161,16 +164,22 @@ export default function Dashboard() {
   }, [chords, melody, bassline, project, swing]);
 
   const handleSaveArrangement = useCallback(async () => {
-    if (!project || !hasChords && !hasMelody && !hasBassline) return;
+    if (!project || saving || !hasChords && !hasMelody && !hasBassline) return;
+    setSaving(true);
     const name = `Arrangement - ${project.key} - ${settings.genre} - ${bars} bars`;
-    await saveArrangement(chords, melody, bassline, project.key,
+    const res = await saveArrangement(chords, melody, bassline, project.key,
       settings.scale,
       settings.mood !== 'Auto' ? settings.mood : null,
       settings.genre !== 'Auto' ? settings.genre : null,
       project.bpm,
       { project_id: project.id, name },
     );
-  }, [project, chords, melody, bassline, settings, bars]);
+    setSaving(false);
+    const msg = res.success ? 'Saved to Library' : (res.error?.message ?? 'Save failed');
+    setSaveToast(msg);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => setSaveToast(null), 3000);
+  }, [project, chords, melody, bassline, settings, bars, saving]);
 
   const handleLoadFromLibrary = useCallback((item: { data: ProgressionChord[] | { chords: Note[]; melody: Note[]; bassline: Note[] } | Note[]; _part?: string }) => {
     if (item._part) {
@@ -220,7 +229,10 @@ export default function Dashboard() {
   }, [settings.genre]);
 
   useEffect(() => {
-    return () => { if (vlTimerRef.current) clearTimeout(vlTimerRef.current); };
+    return () => {
+      if (vlTimerRef.current) clearTimeout(vlTimerRef.current);
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -259,6 +271,13 @@ export default function Dashboard() {
 
   return (
     <div className="h-full flex flex-col gap-3 p-3">
+      {saveToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg text-xs font-medium shadow-lg transition-opacity"
+          style={{ backgroundColor: saveToast === 'Saved to Library' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)', color: saveToast === 'Saved to Library' ? '#4ade80' : '#f87171' }}
+        >
+          {saveToast}
+        </div>
+      )}
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onSelectIdea={() => setLibraryOpen(true)} />}
       {libraryOpen && <LibraryModal onClose={() => setLibraryOpen(false)} onLoad={handleLoadFromLibrary} />}
       {hubOpen && (

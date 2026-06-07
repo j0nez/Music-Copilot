@@ -176,12 +176,16 @@ export default function GenerationHub({
 
   async function handleSave() {
     setSaving(true);
+    setError(null);
     const name = saveNameRef.current?.value?.trim() ||
       `Arrangement - ${resolveKey()} - ${resolveGenre()} - ${bars} bars`;
-    await saveArrangement(chords, melody, bassline, resolveKey(), resolveScale(), resolveMood(), resolveGenre(), bpm, {
+    const res = await saveArrangement(chords, melody, bassline, resolveKey(), resolveScale(), resolveMood(), resolveGenre(), bpm, {
       project_id: projectId,
       name,
     });
+    if (!res.success) {
+      setError(res.error?.message ?? 'Save failed');
+    }
     setSaving(false);
   }
 
