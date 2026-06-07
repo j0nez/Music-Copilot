@@ -26,7 +26,7 @@ class TestRequest(BaseModel):
     name: str
 
 
-@router.get("")
+@router.get("/")
 async def list_providers():
     from providers import get_provider_info, get_priority
     providers = get_provider_info()

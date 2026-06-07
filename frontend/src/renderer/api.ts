@@ -17,7 +17,7 @@ import type {
   UploadResult,
 } from './types';
 
-const BASE = 'http://localhost:8000/api';
+const BASE = '/api';
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
   try {
