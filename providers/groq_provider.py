@@ -80,7 +80,8 @@ class GroqProvider(Provider):
         if history:
             messages.extend(history)
 
-        messages.append({"role": "user", "content": prompt})
+        if prompt.strip():
+            messages.append({"role": "user", "content": prompt})
         return messages
 
 

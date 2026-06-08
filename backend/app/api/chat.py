@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 
@@ -7,6 +8,9 @@ from pydantic import BaseModel
 from backend.app.core.config import settings
 from backend.app.db.chat import clear_history, get_history, save_message
 from backend.app.models.shared import ApiResponse
+from shared.tools import ToolRegistry
+
+MAX_TOOL_ROUNDS = 5
 
 logger = logging.getLogger("music_copilot.api.chat")
 
@@ -54,6 +58,7 @@ class ChatResponse(BaseModel):
     model_used: str
     provider_used: str
     tokens_used: int
+    tool_data: dict | None = None
 
 
 @router.post("/")
@@ -79,14 +84,53 @@ async def chat(req: ChatRequest):
 
     from providers import generate
 
+    all_messages = [{"role": "system", "content": system_prompt}]
+    all_messages.extend(messages)
+    all_messages.append({"role": "user", "content": req.message})
+
+    tools = ToolRegistry.list()
+    tool_data: dict = {}
+    final_response = None
+
     try:
-        response = await generate(
-            req.message,
-            system_prompt=system_prompt,
-            messages=messages,
-            temperature=0.7,
-            max_tokens=2048,
-        )
+        for _round in range(MAX_TOOL_ROUNDS + 1):
+            response = await generate(
+                prompt="",
+                messages=all_messages,
+                tools=tools,
+                temperature=0.7,
+                max_tokens=2048,
+            )
+
+            if not response.tool_calls:
+                final_response = response
+                break
+
+            assistant_msg = {"role": "assistant", "content": response.content, "tool_calls": response.tool_calls}
+            all_messages.append(assistant_msg)
+
+            for tc in response.tool_calls:
+                func_name = tc["function"]["name"]
+                func_args = tc["function"]["arguments"]
+                result = await ToolRegistry.call(func_name, func_args)
+
+                if isinstance(result, dict) and result.get("type") in ("melody", "bassline", "chords"):
+                    tool_data[result["type"]] = result["notes"]
+
+                all_messages.append({
+                    "role": "tool",
+                    "tool_call_id": tc["id"],
+                    "content": json.dumps(result),
+                })
+
+        if final_response is None:
+            final_response = response if 'response' in locals() else await generate(
+                prompt="",
+                messages=all_messages,
+                temperature=0.7,
+                max_tokens=2048,
+            )
+
     except Exception as e:
         logger.error("Chat generation failed: %s", e)
         return ApiResponse(
@@ -95,15 +139,16 @@ async def chat(req: ChatRequest):
         )
 
     save_message("user", req.message)
-    save_message("assistant", response.content, provider=response.provider or "unknown", model=response.model)
+    save_message("assistant", final_response.content, provider=final_response.provider or "unknown", model=final_response.model)
 
     return ApiResponse(
         success=True,
         data=ChatResponse(
-            reply=response.content,
-            model_used=response.model,
-            provider_used=response.provider,
-            tokens_used=response.tokens_used,
+            reply=final_response.content,
+            model_used=final_response.model,
+            provider_used=final_response.provider,
+            tokens_used=final_response.tokens_used,
+            tool_data=tool_data or None,
         ).model_dump(),
     )
 

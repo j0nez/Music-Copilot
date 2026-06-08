@@ -17,6 +17,7 @@ from backend.app.api import providers as provider_routes
 from backend.app.api import projects as project_routes
 from backend.app.api import search as search_routes
 from backend.app.api import upload as upload_routes
+from backend.app.api import tools as tools_routes  # noqa: F401 — registers tools in ToolRegistry
 from backend.app.core.config import settings
 from backend.app.core.exceptions import MusicCopilotError
 from backend.app.core.logging import setup_logging
