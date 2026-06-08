@@ -8,6 +8,7 @@ class LLMResponse(BaseModel):
     model: str
     provider: str = ""
     tokens_used: int = 0
+    tool_calls: list = []
 
 
 class RateLimitError(Exception):
