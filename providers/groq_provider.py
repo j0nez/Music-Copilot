@@ -1,6 +1,10 @@
+import logging
+
 import httpx
 
 from providers.interface import LLMResponse, Provider, ProviderError, RateLimitError
+
+logger = logging.getLogger("music_copilot.providers.groq")
 
 BASE_URL = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -46,7 +50,9 @@ class GroqProvider(Provider):
             )
 
         if resp.status_code == 429:
-            raise RateLimitError("Groq API rate limited")
+            body = resp.text[:500]
+            logger.error("Groq 429 response body: %s", body)
+            raise RateLimitError(f"Groq API rate limited: {body[:200]}")
         if resp.status_code != 200:
             detail = resp.text[:200]
             raise ProviderError(f"Groq API error {resp.status_code}: {detail}")

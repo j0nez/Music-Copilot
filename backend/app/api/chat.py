@@ -106,7 +106,9 @@ async def chat(req: ChatRequest):
                 final_response = response
                 break
 
-            assistant_msg = {"role": "assistant", "content": response.content, "tool_calls": response.tool_calls}
+            assistant_msg = {"role": "assistant", "tool_calls": response.tool_calls}
+            if response.content:
+                assistant_msg["content"] = response.content
             all_messages.append(assistant_msg)
 
             for tc in response.tool_calls:

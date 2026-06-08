@@ -1,6 +1,10 @@
+import logging
+
 import httpx
 
 from providers.interface import LLMResponse, Provider, ProviderError, RateLimitError
+
+logger = logging.getLogger("music_copilot.providers.openrouter")
 
 BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -45,7 +49,9 @@ class OpenRouterProvider(Provider):
             )
 
         if resp.status_code == 429:
-            raise RateLimitError("OpenRouter API rate limited")
+            body = resp.text[:500]
+            logger.error("OpenRouter 429 response body: %s", body)
+            raise RateLimitError(f"OpenRouter API rate limited: {body[:200]}")
         if resp.status_code != 200:
             detail = resp.text[:200]
             raise ProviderError(f"OpenRouter API error {resp.status_code}: {detail}")

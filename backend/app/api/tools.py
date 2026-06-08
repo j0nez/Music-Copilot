@@ -8,21 +8,21 @@ logger = logging.getLogger("music_copilot.tools")
 _NOTE_SCHEMA = {
     "type": "object",
     "properties": {
-        "pitch": {"type": "integer", "minimum": 0, "maximum": 127, "description": "MIDI note number (60 = middle C)"},
-        "velocity": {"type": "integer", "minimum": 0, "maximum": 127, "default": 100},
-        "start_beat": {"type": "number", "minimum": 0, "description": "Beat position (1.0 = first beat)"},
+        "pitch": {"type": "integer", "minimum": 0, "maximum": 127, "description": "MIDI note (60=C4)"},
+        "velocity": {"type": "integer", "minimum": 0, "maximum": 127},
+        "start_beat": {"type": "number", "minimum": 0, "description": "Beat position"},
         "duration_in_beats": {"type": "number", "minimum": 0.125, "description": "Note length in beats"},
     },
     "required": ["pitch", "start_beat", "duration_in_beats"],
 }
 
-_NOTE_LIST_SCHEMA = {
+_NOTE_LIST = {
     "type": "object",
     "properties": {
         "notes": {
             "type": "array",
             "items": _NOTE_SCHEMA,
-            "description": "Array of notes to create",
+            "description": "Notes to create",
         },
     },
     "required": ["notes"],
@@ -77,32 +77,32 @@ async def handle_web_search(query: str) -> dict:
 
 ToolRegistry.register(Tool(
     name="create_melody",
-    description="Create melody notes. Each note must have pitch (0-127), velocity (0-127, default 100), start_beat (beat position), and duration_in_beats.",
-    parameters=_NOTE_LIST_SCHEMA,
+    description="Create melody notes (pitch, velocity, start_beat, duration_in_beats).",
+    parameters=_NOTE_LIST,
     handler=handle_create_melody,
 ))
 
 ToolRegistry.register(Tool(
     name="create_bassline",
-    description="Create bassline notes. Each note must have pitch (0-127), velocity (0-127, default 100), start_beat (beat position), and duration_in_beats.",
-    parameters=_NOTE_LIST_SCHEMA,
+    description="Create bassline notes (pitch, velocity, start_beat, duration_in_beats).",
+    parameters=_NOTE_LIST,
     handler=handle_create_bassline,
 ))
 
 ToolRegistry.register(Tool(
     name="create_chords",
-    description="Create chord notes. Each note must have pitch (0-127), velocity (0-127, default 100), start_beat (beat position), and duration_in_beats. Use one note per chord tone per beat for chord voicings.",
-    parameters=_NOTE_LIST_SCHEMA,
+    description="Create chord notes (one note per chord tone per beat).",
+    parameters=_NOTE_LIST,
     handler=handle_create_chords,
 ))
 
 ToolRegistry.register(Tool(
     name="web_search",
-    description="Search the web for current information. Use this when you need FL Studio documentation, tutorials, music theory references, or any information not in the knowledge base.",
+    description="Search the web for current information not in the knowledge base.",
     parameters={
         "type": "object",
         "properties": {
-            "query": {"type": "string", "description": "The search query"},
+            "query": {"type": "string", "description": "Search query"},
         },
         "required": ["query"],
     },
