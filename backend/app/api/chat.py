@@ -79,7 +79,7 @@ async def chat(req: ChatRequest):
         knowledge_base=kb,
     )
 
-    history = get_history(limit=10)
+    history = get_history(limit=3)
     messages = [{"role": h["role"], "content": h["message"]} for h in history]
 
     from providers import generate
@@ -97,7 +97,7 @@ async def chat(req: ChatRequest):
             response = await generate(
                 prompt="",
                 messages=all_messages,
-                tools=tools,
+                tools=tools if _round == 0 else None,
                 temperature=0.7,
                 max_tokens=2048,
             )
