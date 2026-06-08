@@ -121,6 +121,12 @@ export default function Dashboard() {
     pushHistory('bassline', notes);
   }, []);
 
+  const handleToolNotes = useCallback((notes: { melody?: Note[]; bassline?: Note[]; chords?: Note[] }) => {
+    if (notes.chords) { setChords(notes.chords); pushHistory('chords', notes.chords); }
+    if (notes.melody) { setMelody(notes.melody); pushHistory('melody', notes.melody); }
+    if (notes.bassline) { setBassline(notes.bassline); pushHistory('bassline', notes.bassline); }
+  }, []);
+
   const handleAutoGenerate = useCallback(async (s: GeneratorSettings) => {
     const res = await chordGenerator(s.key, s.mood, s.genre, s.length, s.complexity);
     if (res.success && res.data) {
@@ -375,7 +381,7 @@ export default function Dashboard() {
         {/* Right column 55% — Chat (hero panel) */}
         <div className="w-full lg:w-[55%] min-h-0">
           <Panel title="Chat" className="h-full">
-            <AiStudio project={project} activeParts={activeParts} />
+            <AiStudio project={project} activeParts={activeParts} onToolNotes={handleToolNotes} />
           </Panel>
         </div>
       </div>

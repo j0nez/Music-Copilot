@@ -44,6 +44,8 @@ Built with Electron + React + FastAPI + SQLite.
 - **Recent Decisions**: 2026-06-07 — Two bug fixes for local-network + local-PC provider list empty. (A) `backend/app/api/providers.py:29`: `@router.get("")` → `@router.get("/")` — the route was registered at `/api/providers` (no trailing slash) but frontend calls `/api/providers/` (with trailing slash), causing 404 on all requests (affects local PC too, confirmed by server log). (B) `frontend/src/renderer/api.ts:20`: `BASE = 'http://localhost:8000/api'` → `BASE = '/api'` — hardcoded localhost URL fails from laptop where `localhost` resolves to itself; relative URL always goes to same-origin server (correct since frontend is served by FastAPI). Frontend rebuilt.
 - **Recent Decisions**: 2026-06-07 — Follow-up: same trailing-slash bug in chat route. `backend/app/api/chat.py:59`: `@router.post("")` → `@router.post("/")` — `POST /api/chat/` was returning 405 because route was at `/api/chat` (no trailing slash).
 - **Recent Decisions**: 2026-06-07 — UX quick fixes batch. (A) Switch Project button bug fixed: `showNewProject` was only checked in `if (!project)` branch; when project was loaded, clicking "Switch Project" did nothing. (B) AiStudio chat: Enter now sends (was Ctrl+Enter only), ArrowUp/Down cycles sent message history, `<textarea>` replaces `<input>` with auto-resize for multi-line. (C) Dashboard responsive layout: `flex-col lg:flex-row` breakpoints, column widths `w-full lg:w-[45/55]%`, bottom row stacks on small screens, TopBar `flex-wrap` with compact button labels. (D) Knowledge base expanded with FL Studio workflow, genre production tips, arrangement structure guide.
+- **Recent Decisions**: 2026-06-07 — Phase F ToolBridge implemented (Steps 1-6). Tool dataclass + ToolRegistry in `shared/tools.py`. Provider layer: `tool_calls` field on LLMResponse, Groq/OpenRouter inject `tools` in payload and parse tool_calls from response. Note-level tools (`create_melody`, `create_bassline`, `create_chords`) + `web_search` (DuckDuckGo) registered via `backend/app/api/tools.py`. Chat dispatch loop handles up to 5 tool rounds, returns `tool_data` in ChatResponse. Frontend: AiStudio `onToolNotes` callback, Dashboard wires to MIDI Player state. `duckduckgo-search` installed. 130 backend + 23 frontend tests pass.
+- **Current Focus**: Phase F — ToolBridge complete. Generator rework (F2) next.
 - **Blockers**: None
 
 ## Task History
@@ -119,3 +121,4 @@ Built with Electron + React + FastAPI + SQLite.
      - ✅ E6 — AiStudio chat UI component (hero panel)
      - ✅ E7 — Provider Settings UI modal
      - ✅ E8 — Dashboard integration + compact Project Summary
+14. ✅ **Phase F — ToolBridge** — See `docs/plans/05-phase-f-toolbridge-generator-rework.md` for full plan

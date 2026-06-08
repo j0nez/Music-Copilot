@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { sendChat, getChatHistory, clearChatHistory, listProviders } from "../api";
 import ProviderSettings from "./ProviderSettings";
-import type { ChatMessage, ProviderInfo, ActivePartsSummary, Project } from "../types";
+import type { ChatMessage, Note, ProviderInfo, ActivePartsSummary, Project } from "../types";
 
 interface AiStudioProps {
   project: Project | null;
   activeParts: Record<string, ActivePartsSummary>;
+  onToolNotes?: (notes: { melody?: Note[]; bassline?: Note[]; chords?: Note[] }) => void;
 }
 
-export default function AiStudio({ project, activeParts }: AiStudioProps) {
+export default function AiStudio({ project, activeParts, onToolNotes }: AiStudioProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -85,11 +86,14 @@ export default function AiStudio({ project, activeParts }: AiStudioProps) {
         timestamp: Date.now(),
       };
       setMessages(prev => [...prev, aiMsg]);
+      if (res.data.tool_data) {
+        onToolNotes?.(res.data.tool_data);
+      }
     } else {
       setError(res.error?.message ?? "Chat failed. Check your provider API key.");
     }
     setLoading(false);
-  }, [loading, activeParts, project]);
+  }, [loading, activeParts, project, onToolNotes]);
 
   const handleNewChat = useCallback(async () => {
     await clearChatHistory();

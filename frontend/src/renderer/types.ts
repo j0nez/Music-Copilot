@@ -198,6 +198,11 @@ export interface ChatResult {
   model_used: string;
   provider_used: string;
   tokens_used: number;
+  tool_data?: {
+    melody?: Note[];
+    bassline?: Note[];
+    chords?: Note[];
+  };
 }
 
 export const SWING_PRESETS: Record<string, number> = {
