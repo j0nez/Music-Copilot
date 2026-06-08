@@ -30,6 +30,9 @@ class OpenRouterProvider(Provider):
             "temperature": kwargs.get("temperature", 0.7),
             "max_tokens": kwargs.get("max_tokens", 2048),
         }
+        tools = kwargs.get("tools")
+        if tools:
+            payload["tools"] = tools
 
         async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.post(
@@ -54,10 +57,15 @@ class OpenRouterProvider(Provider):
         if is_probe:
             return LLMResponse(content="ok", model=self.model, tokens_used=0)
 
+        message = choice["message"]
+        content = message.get("content") or ""
+        tool_calls = message.get("tool_calls", [])
+
         return LLMResponse(
-            content=choice["message"]["content"],
+            content=content,
             model=data.get("model", self.model),
             tokens_used=usage.get("total_tokens", 0),
+            tool_calls=tool_calls,
         )
 
     def _build_messages(self, prompt: str, kwargs: dict) -> list[dict]:
