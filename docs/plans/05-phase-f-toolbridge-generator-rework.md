@@ -234,32 +234,154 @@ such as FL Studio shortcuts, current documentation, or tutorials.
 
 ---
 
-## Track F2 — Generator Rework
+### Known Issue — TPM Rate Limit on Tool Call Rounds
 
-**Will be detailed after ToolBridge is done and user shares MIDI examples.**
+The Groq free tier has a 12,000 tokens-per-minute (TPM) limit. Tool definitions (~2000 tokens) + system prompt + knowledge base + history can consume most of this in one round-trip.
 
-### Planned improvements
+**Applied fixes:**
+- Tools definitions only sent on the first round (`tools=tools if _round == 0 else None`) — saves ~2000 tokens per second round
+- Chat history reduced from 10 to 3 messages — saves ~500-700 tokens per request
+
+**Future idea — split models by role:**
+Use a lightweight/fast model (e.g., `llama-3.1-8b-instant`) for the tool-calling round (it just needs to decide which tool to call) and a heavier model (`llama-3.3-70b-versatile`) for generating the final text response. Benefits:
+- Lightweight tool round uses fewer tokens, lower TPM
+- Heavy model text round doesn't include tool definitions — no wasted tokens
+- Each model stays within its own TPM window
+Enables finer-grained rate-limit management. Implement as a config option in the provider layer.
+
+---
+
+## Track F2 — MIDI Analysis & Generator Rework
+
+**Starting with data-driven analysis of real MIDI files, then rewrite generators from statistics.**
+
+### Philosophy
+
+**Vibe over genre.** A good progression is good regardless of genre label. MIDI files are tagged by character (`_chill`, `_driving`, `_dark`, `_heavy`, `_melodic`, etc.) rather than siloed into genres. Tempo comes from the project, not the MIDI file. Genre/style references (`_dnb`, `_house`, `_techno`) are optional tags for searchability, not hard boundaries.
+
+### MIDI File Naming Convention
+
+```
+<descriptive_name>_<vibe>_<style_ref>.<ext>
+```
+
+Examples: `pianomelody_chill.mid`, `bassline_heavy_dnb.mid`, `chords_melodic_deephouse.mid`, `drums_fast_dnb.mid`, `arp_driving_trance.mid`, `pad_dark_techno.mid`
+
+**Rule:** First underscore-separated segment = name. All remaining segments = freeform tags. No required tags. Everything is optional. Parser handles bare filenames gracefully (`pianomelody.mid` → name=`pianomelody`, tags=[]).
+
+### Folder Structure
+
+```
+data/
+├── midi/
+│   ├── user_picked/          ← User's hand-picked files
+│   ├── bulk_chords/          ← Cloned GitHub chord repo (13k files)
+│   ├── bulk_melodies/        ← User-curated melody/bass downloads
+│   └── any_future_folders/   ← Drop anytime, script walks all
+└── analysis/
+    ├── scan_cache.json        ← Auto-managed (path → last_modified)
+    └── stats.json             ← Per-file + aggregate statistics
+```
+
+### Implementation Steps
+
+#### Step 1 — `scripts/analyze_midi.py` (analysis script)
+
+**Usage:**
+```bash
+python scripts/analyze_midi.py              # scan data/midi/, skip cached files
+python scripts/analyze_midi.py --force       # re-scan everything
+python scripts/analyze_midi.py --data-dir custom/path
+```
+
+**Dependencies:** `pretty_midi`, `json`, `pathlib`, `os` — all already installed or stdlib.
+
+**Cache system:**
+- `data/analysis/scan_cache.json` maps absolute file path → last modified timestamp
+- New files → scan + cache
+- Changed files → re-scan + update timestamp
+- Unchanged files → skip (fast, no re-analysis)
+- Deleted files → auto-removed from cache
+
+**Filename parser:**
+- Split by `_`, first segment = name, rest = tags list
+- No crash on missing tags or unusual characters
+- Returns `{name: str, tags: list[str]}`
+
+**Per-file analysis (pretty_midi):**
+
+| Category | Detection |
+|----------|-----------|
+| chords (polyphonic) | Any beat with ≥2 simultaneous notes |
+| bass (monophonic, ≤60) | Single notes, median pitch ≤ 60 |
+| melody (monophonic, >60) | Single notes, median pitch > 60 |
+
+**Extracted statistics per file:**
+
+| Statistic | Description |
+|-----------|-------------|
+| `pitch_hist` | Count of each MIDI note number (0-127) |
+| `pitch_class` | Count of each pitch class (0-11), normalized |
+| `interval_matrix` | Transition counts between consecutive pitch differences (e.g., `{"+1": 42, "+2": 18, "0": 12, "-1": 30, ...}`) |
+| `vel_profile` | Average velocity per beat-position bucket (1, 1.25, 1.5, 1.75, 2, ...) within a bar |
+| `vel_hist` | Distribution of all velocity values |
+| `duration_hist` | Count of each note length in beats (0.125, 0.25, 0.5, 1.0, 2.0, etc.) |
+| `notes_per_bar` | Average number of notes per bar |
+| `gap_times` | Distribution of silence gaps between note endings and next note starts |
+| `phrase_shape` | Average pitch direction profile across phrase positions (start/mid/end) |
+
+**Aggregated statistics:**
+
+Grouped by:
+- **Tag** — any tag that appears in ≥3 files gets its own aggregate (e.g., `chill`, `heavy`, `dnb`)
+- **Type** — melody, bass, chords (auto-detected)
+- **Tag × Type** — cross-product for finer granularity (e.g., `chill_melody`, `heavy_bass`)
+- **Overall** — all files combined
+
+**Output:**
+- `data/analysis/stats.json` — full machine-readable JSON with per-file + all aggregates
+- Terminal summary — human-readable highlights printed to stdout
+
+#### Step 2 — `scripts/download_bulk_midis.py` (bulk downloader, done later)
+
+**Features:**
+- Clone [ldrolez/free-midi-chords](https://github.com/ldrolez/free-midi-chords) → `data/midi/bulk_chords/`
+- Optionally scrape selected free MIDI packs for melodies/basslines
+- Respects gitignore, idempotent (won't re-download if folder exists)
+
+### Future uses for the analysis infrastructure
+
+- **Library search** — find MIDIs by vibe using extracted feature vectors
+- **AI Studio context** — feed real statistical patterns to chat instead of hardcoded KB
+- **Comparison tool** — compare a new MIDI to corpus ("this melody is unusually sparse for your taste")
+- **Melody completion** — given a seed, suggest continuations from corpus patterns
+- **Generator diagnostics** — compare generator output to real MIDI stats side-by-side
+
+### Generator Rework (after analysis)
+
+Each generator gets rewritten using extracted statistics:
 
 #### Melody Generator (`plugins/melody_generator/plugin.py`)
-- Add rest insertion (genre-dependent density)
-- Add phrase contour (ascend → peak → descend)
-- Better interval selection per genre
-- Genre-specific velocity profiles
+- Replace `PRandomWalk` on scale degrees with an interval transition model sampled from corpus data
+- Add rest insertion at corpus-observed density (genre/vibe-dependent)
+- Add phrase contour (ascend → peak → descend) from corpus phrase shapes
+- Replace static velocity patterns with corpus-derived beat-position velocity profiles
 
 #### Bassline Generator (`plugins/bassline_generator/plugin.py`)
-- Harmonic anchoring (follow chord progression roots)
-- Better rhythm patterns from real examples
-- Genre-specific note lengths and octaves
+- Replace hardcoded patterns (root_fifth, walking, etc.) with corpus-derived pitch and rhythm distributions
+- Add harmonic anchoring (follow chord progression roots at corpus rate)
+- Use corpus duration distributions per vibe
 
 #### Chord Generator (`plugins/chord_generator/plugin.py`)
-- Inversions and spread voicings (drop 2, drop 3)
-- Extended chords (9th, sus4, add9 in advanced mode)
-- Genre-aware template selection
-- Better voice leading across full progression
+- Add inversions and spread voicings (drop 2, drop 3) at corpus frequency
+- Add extended chords (9th, sus4, add9) based on corpus prevalence
+- Replace template selection with corpus-derived transition probabilities between roman numerals
+- Better voice leading informed by corpus voice-leading patterns
 
 #### Approach
-1. User shares MIDI files per genre/culture/instrument
-2. Analyze for: note distributions, interval preferences, rest density, velocity profiles, rhythm patterns
-3. Build genre-specific pattern tables
-4. Implement improved generators
-5. Test: compare output patterns to real MIDI statistics
+1. ✅ Write `scripts/analyze_midi.py` — scan, cache, extract, aggregate, output
+2. ⬜ Write `scripts/download_bulk_midis.py` — bulk chord repo + optional packs
+3. ⬜ User drops curated files → first full analysis run
+4. ⬜ Review statistics together, identify patterns
+5. ⬜ Rewrite generators one at a time, comparing output to corpus stats
+6. ⬜ Iterate: add more MIDIs, re-analyze, refine generators
