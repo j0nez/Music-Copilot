@@ -1,0 +1,257 @@
+{
+  "files": {
+    "data\\midi\\test_bassline_heavy_dnb.mid": {
+      "name": "test",
+      "tags": [
+        "bassline",
+        "heavy",
+        "dnb"
+      ],
+      "type": "bass",
+      "num_notes": 16,
+      "beat_interval": 0.5,
+      "notes_per_bar": 4.03,
+      "pitch_hist_raw": {
+        "36": 8,
+        "38": 6,
+        "40": 2
+      },
+      "pitch_class_raw": {
+        "0": 8,
+        "2": 6,
+        "4": 2
+      },
+      "interval_raw": {
+        "-2": 6,
+        "0": 3,
+        "2": 6
+      },
+      "vel_sums": {
+        "0.0": 210,
+        "1.0": 420,
+        "2.0": 420,
+        "3.0": 420,
+        "4.0": 210
+      },
+      "vel_counts": {
+        "0.0": 2,
+        "1.0": 4,
+        "2.0": 4,
+        "3.0": 4,
+        "4.0": 2
+      },
+      "vel_hist_raw": {
+        "105": 16
+      },
+      "duration_raw": {
+        "0.875": 16
+      },
+      "gap_raw": {
+        "0.0": 15
+      },
+      "phrase_shape": {
+        "start_avg": 37.6,
+        "mid_avg": 36.8,
+        "end_avg": 37.3,
+        "contour": "flat"
+      },
+      "pitch_min": 36,
+      "pitch_max": 40,
+      "pitch_range": 4
+    },
+    "data\\midi\\test_chords_melodic.mid": {
+      "name": "test",
+      "tags": [
+        "chords",
+        "melodic"
+      ],
+      "type": "chords",
+      "num_notes": 12,
+      "beat_interval": 2.0,
+      "notes_per_bar": 12.0,
+      "pitch_hist_raw": {
+        "60": 1,
+        "62": 1,
+        "64": 2,
+        "65": 2,
+        "67": 2,
+        "69": 2,
+        "71": 1,
+        "72": 1
+      },
+      "pitch_class_raw": {
+        "0": 2,
+        "2": 1,
+        "4": 2,
+        "5": 2,
+        "7": 2,
+        "9": 2,
+        "11": 1
+      },
+      "interval_raw": {
+        "-6": 1,
+        "-5": 2,
+        "3": 4,
+        "4": 4
+      },
+      "vel_sums": {
+        "0.0": 270,
+        "1.0": 270,
+        "2.0": 270,
+        "3.0": 270
+      },
+      "vel_counts": {
+        "0.0": 3,
+        "1.0": 3,
+        "2.0": 3,
+        "3.0": 3
+      },
+      "vel_hist_raw": {
+        "90": 12
+      },
+      "duration_raw": {
+        "0.875": 12
+      },
+      "gap_raw": {
+        "0.0": 3
+      },
+      "phrase_shape": {
+        "start_avg": 63.2,
+        "mid_avg": 66.2,
+        "end_avg": 69.2,
+        "contour": "ascending"
+      },
+      "pitch_min": 60,
+      "pitch_max": 72,
+      "pitch_range": 12
+    },
+    "data\\midi\\test_melody_chill.mid": {
+      "name": "test",
+      "tags": [
+        "melody",
+        "chill"
+      ],
+      "type": "melody",
+      "num_notes": 16,
+      "beat_interval": 0.5,
+      "notes_per_bar": 4.05,
+      "pitch_hist_raw": {
+        "60": 3,
+        "62": 2,
+        "64": 2,
+        "65": 2,
+        "67": 2,
+        "69": 2,
+        "71": 2,
+        "72": 1
+      },
+      "pitch_class_raw": {
+        "0": 4,
+        "2": 2,
+        "4": 2,
+        "5": 2,
+        "7": 2,
+        "9": 2,
+        "11": 2
+      },
+      "interval_raw": {
+        "-2": 5,
+        "-1": 2,
+        "0": 1,
+        "1": 2,
+        "2": 5
+      },
+      "vel_sums": {
+        "0.0": 400,
+        "1.0": 320,
+        "2.0": 320,
+        "3.0": 320
+      },
+      "vel_counts": {
+        "0.0": 4,
+        "1.0": 4,
+        "2.0": 4,
+        "3.0": 4
+      },
+      "vel_hist_raw": {
+        "80": 12,
+        "100": 4
+      },
+      "duration_raw": {
+        "0.75": 16
+      },
+      "gap_raw": {
+        "0.25": 15
+      },
+      "phrase_shape": {
+        "start_avg": 63.6,
+        "mid_avg": 70.4,
+        "end_avg": 63,
+        "contour": "flat"
+      },
+      "pitch_min": 60,
+      "pitch_max": 72,
+      "pitch_range": 12
+    }
+  },
+  "aggregates": {
+    "overall": {
+      "file_count": 3,
+      "total_notes": 44,
+      "notes_per_bar": 6.21,
+      "pitch_class_pct": {
+        "0": 31.8,
+        "2": 20.5,
+        "4": 13.6,
+        "5": 9.1,
+        "7": 9.1,
+        "9": 9.1,
+        "11": 6.8
+      },
+      "interval_pct": {
+        "-6": 2.4,
+        "-5": 4.9,
+        "-2": 26.8,
+        "-1": 4.9,
+        "0": 9.8,
+        "1": 4.9,
+        "2": 26.8,
+        "3": 9.8,
+        "4": 9.8
+      },
+      "vel_profile": {
+        "0.0": 98,
+        "1.0": 92,
+        "2.0": 92,
+        "3.0": 92,
+        "4.0": 105
+      },
+      "vel_hist_pct": {
+        "80": 27.3,
+        "90": 27.3,
+        "100": 9.1,
+        "105": 36.4
+      },
+      "duration_pct": {
+        "0.75": 36.4,
+        "0.875": 63.6
+      },
+      "gap_pct": {
+        "0.0": 54.5,
+        "0.25": 45.5
+      },
+      "phrase_start_avg": 54.8,
+      "phrase_mid_avg": 57.8,
+      "phrase_end_avg": 56.5
+    },
+    "by_tag": {},
+    "by_type": {},
+    "by_tag_type": {}
+  },
+  "scan_stats": {
+    "total_found": 3,
+    "new_or_changed": 0,
+    "cached_skipped": 3,
+    "valid_analyzed": 3
+  }
+}
