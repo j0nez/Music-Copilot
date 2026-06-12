@@ -2,7 +2,7 @@
 
 Counterpoint, voice-leading, cadence detection, key modulation, and algorithmic composition. Tools and libraries for offline symbolic music analysis beyond the current key/scale detection.
 
-**Last updated:** 2026-06-05
+**Last updated:** 2026-06-13
 
 ## Overview
 
@@ -639,3 +639,305 @@ In 12-tone equal temperament (12-TET), every semitone is exactly 2¹⁄¹² ≈ 
 25. Lerdahl, F. (1996). *Calculating Tonal Tension.* Music Perception, 13(3), 319–363.
 26. Bigand, E., Parncutt, R. & Lerdahl, F. (1996). *Perception of Musical Tension in Short Chord Sequences.* Perception & Psychophysics, 58, 125–141.
 27. Farbood, M. *musical-tension-model.* GitHub. https://github.com/mfarbood/musical-tension-model
+
+---
+
+## 9. Genre-Specific Harmonic Vocabulary for Electronic Music
+
+Electronic music genres have distinct harmonic fingerprints that go beyond simple "major=happy, minor=sad." Each genre favors specific chord types, voicings, progression templates, and bass-chord relationships. This section documents the vocabulary per genre for use in the Chord Progression Generator and arrangement algorithms.
+
+### 9.1 Deep House (110–125 BPM)
+
+**Harmonic profile:** Jazz-influenced, extended chords (7ths, 9ths, 13ths), soulful.
+
+**Preferred chord types (ranked by frequency):**
+1. Minor 7th (m7) — dominant chord type
+2. Major 7th (maj7) — warm, dreamy sound
+3. Minor 9th (m9) — rich, complex
+4. Dominant 7th (7) — used sparingly for tension
+5. Sus chords (sus2, sus4) — ambiguous, floating
+6. Major 9th (maj9) — lush, cinematic
+7. Minor 7th flat 5 (m7b5) — occasional, for darker sections
+
+**Typical progression templates:**
+```
+i - VII - VI - VII  (Am - G - F - G)         — Most common, hypnotic
+i - iv - VII - III  (Am - Dm - G - C)          — Grooves through subdominant
+i - VI - III - VII  (Am - F - C - G)           — Minor-major blur
+im7 - IVmaj7 - VIImaj7 - IIImaj7               — Full 7th chord version
+iim7 - V7 - Imaj7                              — Jazz turnaround (Dm7 - G7 - Cmaj7)
+```
+
+**Voicing characteristics:**
+- Wide voicings (spread across 2+ octaves) to leave room for kick/sub
+- 7th often placed in the middle of the voicing (not top/bottom) for warmth
+- Rootless voicings in left hand (jazz piano influence)
+- "Passing chords" — brief chords that connect two target chords (e.g., Ddim7 between Dm7 and G7)
+
+**Bass characteristics:**
+- Sub-bass follows chord roots (85%+ on beat 1)
+- Occasional chromatic approach to next root
+- Never plays chord 3rd or 7th — those are for the chord voices
+
+### 9.2 Uplifting Trance (128–145 BPM)
+
+**Harmonic profile:** Emotional, diatonic, cadence-driven, major-key dominant.
+
+**Preferred chord types:**
+1. Major triad (maj) — bright, open
+2. Minor triad (min) — emotional contrast
+3. Major 7th (maj7) — dreamy breakdowns
+4. Minor 7th (m7) — smoother minor
+5. Suspended 4th (sus4) — build-up tension before drop
+6. Diminished (dim) — bridge sections, rare
+
+**Typical progression templates (mostly major-key):**
+```
+I - V - vi - IV  (C - G - Am - F)             — Pop chord template
+vi - IV - I - V  (Am - F - C - G)              — Emotional, anthemic
+I - IV - V - IV  (C - F - G - F)               — Classic house/trance
+i - VI - III - VII  (Am - F - C - G)           — Same as deep house but brighter
+V - vi - IV - V   (G - Am - F - G)             — Continuous dominant motion
+```
+
+**Voicing characteristics:**
+- Chord "stabs" on beat 1 only, or sustained pads
+- Power chords (root+5th) in breakdowns for maximum space
+- Wide arpeggios (up/down patterns over 2-3 octaves)
+- Build-ups use sus4 → major resolution (Csus4 → C) for pre-drop tension
+- "Supertonic" chords (ii) used as pre-dominant almost always
+
+**Key difference from Deep House:** Trance is cadence-driven (V→I constantly), while Deep House is modal (loops without strong resolution).
+
+### 9.3 Melodic Techno / Progressive (124–130 BPM)
+
+**Harmonic profile:** Dark, minimal, slow-changing, atmospheric, tension-building.
+
+**Preferred chord types:**
+1. Minor triad (min) — primary color
+2. Minor 7th (m7) — standard
+3. Minor 9th (m9) — deep, dark
+4. Diminished 7th (dim7) — transition, bridge
+5. Suspended (sus2/sus4) — ambiguity
+6. Augmented (aug) — rare, for surreal moments
+
+**Typical progression templates:**
+```
+i - VII - VI - VII  (Am - G - F - G)          — Hypnotic loop (same as deep house, darker sound design)
+i - iv - i - VII   (Am - Dm - Am - G)          — Minimal, effective
+i - VI - VII - i   (Am - F - G - Am)          — Dark circular movement
+i - bVII - bVI - bVII                          — Darker, borrowed from phrygian
+One chord for 8-16 bars                        — True minimal techno
+```
+
+**Voicing characteristics:**
+- Extremely slow harmonic rhythm (one chord per 4-8 bars)
+- Pads with slow filter sweeps (not MIDI-controllable but affects how chords feel)
+- Close voicings in higher register (atmospheric)
+- Open 5ths (no 3rd) for ambiguity — lets the bass define the chord quality
+- "Tension pads" — adding single non-chord tone (e.g., #4 over minor chord) for unease
+
+**Key difference from Trance:** Melodic Techno avoids strong cadences entirely. Chords flow into each other without V→I resolution.
+
+### 9.4 Melodic Drum & Bass (170–180 BPM)
+
+**Harmonic profile:** Complex, jazz-influenced, surprising, wide range of emotion.
+
+**Preferred chord types:**
+1. Minor 7th (m7) — standard
+2. Minor 9th (m9) — rich
+3. Major 7th (maj7) — bright sections
+4. Dominant 7th sharp 9 (7#9) — "Hendrix chord," surprising
+5. Minor major 7th (mMaj7) — haunting, bittersweet
+6. Altered dominants (7b9, 7#11) — jazz flavor
+7. Augmented 7th (aug7) — transition tension
+
+**Typical progression templates:**
+```
+i - vi - IV - V   (Am - Fmaj7 - Dm9 - G13)    — Jazz-tinged
+i - bVI - bVII - i  (Am - F - G - Am)          — Standard dark
+imaj7 - ivm9 - VII - IIImaj9                   — Extensions galore
+ii - V - I - VI   (Dm7 - G7 - Cmaj7 - Am7)     — Full jazz turnaround
+```
+
+**Voicing characteristics:**
+- Chord hits on the "2 and 4" (off the kick pattern)
+- Extended and altered chords everywhere
+- Rapid chord changes in breakdowns (2 beats per chord)
+- "Suspended" bass — bass note often NOT the chord root (creates tension)
+- Chord melody integration — top note of chord = melody note
+
+**Key difference from all above:** DnB uses jazz harmony (ii-V-I, altered dominants, extended chords) more than any other electronic genre. The harmonic language is closer to jazz fusion than pop.
+
+### 9.5 Dubstep / Brostep (140-150 BPM, half-time feel)
+
+**Harmonic profile:** Minimal, riff-based, heavy on the tonic, harmonic rhythm tied to "wobble" rate.
+
+**Preferred chord types:**
+1. Minor triad (min) — almost universal
+2. Power chord (root+5th) — on the wobble
+3. Diminished 5th (tritone) — for "evil" sections
+4. Suspended 4th (sus4) — pre-drop
+5. Minor 7th (m7) — occasional, for melody parts
+
+**Typical progression templates:**
+```
+i - i - i - i  (one chord for entire drop)     — Very common
+i - bVII - i - bVII                            — Phrygian standard
+i - bVI - bVII - bVI                           — Dark but melodic
+i - iv - i - v                                 — Functional minor
+i - bII - i - bII                              — Phrygian / neapolitan flavor
+```
+
+**Voicing characteristics:**
+- Single notes / power chords in the bass/mid-range (not full chords)
+- Wide interval leaps in the "wobble" line
+- Call-and-response between bass riff and chord stab
+- Tritone used as a structural interval (not just passing)
+- Harmonic rhythm tied to LFO rate (not traditional chord changes)
+
+### 9.6 Genre Comparison Summary
+
+| Aspect | Deep House | Trance | Melodic Techno | DnB | Dubstep |
+|--------|-----------|--------|----------------|-----|---------|
+| **Primary chord type** | m7 | maj | min | m7, m9 | power chord |
+| **Chord density** | 2-4 per bar | 1-2 per bar | 1 per 4-8 bars | 2-4 per bar | 1 per 2-4 bars |
+| **Rhythm** | Syncopated, swung | On-beat stabs | Slow, atmospheric | Off-beat stabs | LFO-driven |
+| **Cadences** | Rare (modal) | Constant V→I | Never | Jazz (ii-V-I) | Rare |
+| **Jazz influence** | High | Low | Medium | Very high | None |
+| **Bass role** | Harmonic root | Harmonic root | Tonal center | Melodic, suspended | Rhythmic, riff |
+| **Emotion** | Warm, soulful | Euphoric, anthemic | Dark, hypnotic | Complex, bittersweet | Aggressive, dark |
+
+---
+
+## 10. Instrument & Register Conventions for Natural-Sounding Parts
+
+Different parts of an electronic track have distinct register behavior that generators must respect.
+
+### 10.1 Register Ranges by Part
+
+| Part | MIDI Range | Typical Octave | Notes |
+|------|-----------|----------------|-------|
+| **Kick / Sub-bass** | 24-48 | C1-C3 | Fundamental frequency band. Never play above 60Hz (C2≈65Hz). Kick occupies 40-60Hz, sub-bass 30-80Hz. |
+| **Bassline (mid)** | 36-72 | C2-C4 | Pluck, Reese, synth bass. Can overlap with kick briefly if sidechained. |
+| **Chord pad / organ** | 48-84 | C3-C6 | Standard chord range. Wide spread voicings leave room below for bass. |
+| **Rhythm chords** | 60-84 | C4-C6 | Stab chords, piano chords. Higher register for clarity. |
+| **Lead melody** | 60-96 | C4-C7 | Main melodic hook. Above chords for clarity. Occasionally drops into chord range for "call" effect. |
+| **Arpeggios** | 48-84 | C3-C6 | Cover wide range. Often spans 2-3 octaves. |
+| **Hi-hats / cymbals** | 42-81 | F#2-C#6 | Actually MIDI drum notes 42(closed), 46(open), 49(crash), 51(ride). Don't overlap with melodic ranges in pitch space. |
+| **FX / risers** | Any | Scans up | Pitch-based effects that sweep registers. Not harmonic. |
+
+### 10.2 The "Frequency Slot" Principle
+
+In a professional mix, each part occupies a specific frequency region:
+```
+Sub-bass:    20-80 Hz     (kick + sub)     - One element at a time
+Low-mid:     80-250 Hz    (bass body)       - Bassline lives here
+Mid:         250-2000 Hz  (chords + melody) - Harmonic content
+High-mid:    2-6 kHz      (presence)        - Attack of chords, lead
+High:        6-20 kHz     (air)             - Hi-hats, cymbals, reverb tails
+```
+
+For MIDI generation (which doesn't control sound design), the implication is:
+- **Don't put bass and melody in the same octave** - maintain at least 1-2 octave gap
+- **Chords should sit between bass and melody** - act as harmonic bridge
+- **Parts that share the same register** should not play simultaneously (use call-and-response or sidechain)
+
+### 10.3 Interval Preferences by Register
+
+Research shows that interval sizes in melodies are not uniform across registers:
+
+| Register | Preferred Intervals | Reason |
+|----------|-------------------|--------|
+| **Low (bass, C2-C4)** | Steps, 4ths, 5ths | Wide leaps sound muddy in low register. Roots and fifths are clearest. |
+| **Mid (C3-C5)** | Steps, 3rds, 4ths, 5ths | All intervals work. Closest to vocal range. Most versatile. |
+| **High (C5+)** | 3rds, 4ths, 5ths, octaves, larger | Wider leaps sound clear and dramatic in high register. Steps can sound weak. |
+| **Very high (C6+)** | 5ths, octaves, large leaps | Stepwise motion loses definition above C6. Use for punctuation/accent. |
+
+---
+
+## 11. Putting It Together - The Theory-Generation Feedback Loop
+
+### 11.1 How Theory Feeds the Generator
+
+```
+Chord Progression Generator
+  ↓ (chord sequence + key)
+Knowledge of genre vocabulary
+  ↓ (which chords to prefer, voicings, harmonic rhythm)
+Melody Generator
+  ↓ (scale + chord tones)
+Non-Chord Tone Engine (section 11 of advanced-midi-generation.md)
+  ↓ (NCT rate per genre, approach/leave rules)
+Motif Development Engine (section 12)
+  ↓ (PReVaDe cycle, antecedent-consequent)
+Voice-Leading Check
+  ↓ (chord-tone anchoring, contrary motion, register bounds)
+Microtiming + Humanization (section 16)
+  ↓
+MIDI Output
+```
+
+### 11.2 The Five-Question Check Before Any Generation
+
+For every generated bar, verify:
+
+1. **"Is every strong-beat melody note a chord tone?"** — If not, the melody will clash with the harmony.
+2. **"Does the bass hit the chord root on beat 1?"** — If not, the harmonic foundation is ambiguous.
+3. **"Are melody and bass moving in contrary motion?"** — If same direction for 3+ beats, it lacks voice-leading depth.
+4. **"Are there non-chord tones on weak beats?"** — If all notes are chord tones, the melody sounds rigid.
+5. **"Is there a motif being developed?"** — If every bar is new material, the melody lacks coherence.
+
+### 11.3 The "Human Element" Checklist
+
+A checklist for evaluating whether a generated MIDI file sounds human:
+
+| Check | Human | Robotic |
+|-------|-------|---------|
+| Timing | Systematic micro-deviations | Perfectly quantized to grid |
+| Velocity | Per-beat mountain profile + phrase arc | All notes within ±5 of same velocity |
+| Note lengths | Slightly vary (±5-10%) | Exactly quantized lengths |
+| Articulation | ~90% note length (legato) or ~50% (staccato) | Always exactly 100% |
+| NCT usage | ~30% of notes are non-chord tones | All notes are chord tones |
+| Phrase shape | Ascend → peak → descend arch | Random up/down/no direction |
+| Motif | Repeats + varies 1-2 motifs | Completely new notes every bar |
+| Ornamentation | 1-2 grace notes/trills per 8 bars | None |
+| Rests | ~15-25% of beats are rests | Note every single beat |
+| Ending | Has a cadence gesture (anticipation, fall-off) | Just stops on last note |
+
+### 11.4 Genre Adaptation Summary
+
+To adapt the same generator framework to any electronic genre, tune these parameters:
+
+| Parameter | Deep House | Trance | Melodic Techno | Melodic DnB | Dubstep |
+|-----------|-----------|--------|----------------|-------------|---------|
+| Chord types | m7, maj7, m9 | maj, maj7, sus4 | min, m7, dim7 | m7, m9, 7#9 | power chord, min |
+| Harmonic rhythm | Every 2-4 beats | Every 2 bars | Every 4-8 bars | Every 1-2 beats | Every 1-2 bars |
+| NCT rate | 35% | 20% | 25% | 30% | 15% |
+| Syncopation | 40% | 15% | 20% | 50% | 30% |
+| Ornament density | High (turns, grace) | High (trills, slides) | Low (mordents) | Medium (grace, turns) | Low (falls only) |
+| Bass anchor | 85% | 75% | 90% | 60% | 70% |
+| Contrary motion | 60% | 50% | 70% | 40% | 30% |
+| Microtiming | 40% (swung) | 10% (straight) | 15% (slight drift) | 30% (shuffle) | 20% (groove) |
+
+---
+
+## References (Supplement - Sections 9-11)
+
+28. Attack Magazine. *Deep House Chords — Passing Notes.* https://www.attackmagazine.com/technique/passing-notes/deep-house-chords
+29. Ben Rainey. *House Music Chord Progressions.* https://www.benrainey.co.uk/blog/house-music-chord-progressions
+30. EDMProd. *How to Make Classic Deep House: The Ultimate Guide.* https://www.edmprod.com/how-to-make-classic-deep-house
+31. Orphiq. *Types of Electronic Music: A Genre Guide.* https://orphiq.com/resources/types-of-electronic-music
+32. LANDR. *EDM, House & Techno Chord Progressions.* https://blog.landr.com/edm-chord-progression/
+33. Fiveable. *Motivic Development Techniques.* https://fiveable.me/music-theory-and-composition/unit-7/motivic-development-techniques
+34. Caplin, W. (1998). *Classical Form: A Theory of Formal Functions.* Oxford University Press.
+35. Lerdahl, F. & Jackendoff, R. (1983). *A Generative Theory of Tonal Music.* MIT Press.
+36. Meyer, L. B. (1956). *Emotion and Meaning in Music.* University of Chicago Press.
+37. Narmour, E. (1990). *The Analysis and Cognition of Basic Melodic Structures.* University of Chicago Press.
+38. Schellenberg, E. G. (1996). *Expectancy in Melody: Tests of the Implication-Realization Model.* Cognition, 58(1), 75-125.
+39. Datseris, G. et al. (2019). *Microtiming Deviations and Swing Feel in Jazz.* Scientific Reports, 9, 19824.
+40. Nelias, C. et al. (2022). *Downbeat delays are a key component of swing in jazz.* Communications Physics, 5, 237.
+41. Longuet-Higgins, H. C. & Lee, C. S. (1984). *The Rhythmic Interpretation of Monophonic Music.* Music Perception, 1(4), 424-441.
+42. Fitch, W. T. & Rosenfeld, A. J. (2007). *Perception and Production of Syncopated Rhythms.* Music Perception, 25(1), 43-58.
+43. Fram, N. R. et al. (2023). *Syncopation as Probabilistic Expectation.* Cognitive Science, 47(12), e13390.
+44. Whitman College Music Theory. *Non-Chord Tones.* https://musictheory.pugetsound.edu/mt21c/NonChordTonesIntroduction.html
